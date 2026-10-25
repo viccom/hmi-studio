@@ -22,6 +22,8 @@
 | F6 | maotu 无原生画面跳转；事件动作 `changeAttr/customCode/eventFlow`；`ILeftAsideConfigItemPublic.events` 支持默认事件模板 | 0.6.5 bundle 全量 grep |
 | F7 | 活数据可用：`rsiot.uptime_s`（单调增）、`rsiot.cpu_percent`、`rsiot.alarm_active`；命令 `POST /api/v1/command/send {instance,devid,cmd,data}` 需 `devid→inst_id` 解析 | curl + CommandReq 源码 |
 | F8 | 环境：rs-iot 0.0.0.0:8790（pid 在跑）、gateway 0.0.0.0:18080、hmi-studio dev 5273 | ss 实测 |
+| F9 | maotu registerConfig 同名标题为**覆盖语义**（覆盖 + info 提示）——重复挂载需自行防重（symbols/index.ts has() 守卫）；`IDeviceInfo` 未从包主入口导出（"./*" exports 映射 TS bundler 下命不中无扩展名 .d.ts），按 d.ts 结构本地定义 | T4 bundle 实读 + tsc 实测 |
+| F10 | maotu 拖拽 = HTML5 DnD：左面板 `div[draggable=true]` dragstart 设 store intention → 画布 `#mtCanvasArea` dragover(preventDefault)/drop 建元；Playwright `dragTo()` 原生走通；保存按钮 `button .el-icon[title="保存"]`；图元节点 id=`{symbol_id}-{随机}`（重载后 img 渲染、拖入时内联 svg，断言以节点 id 为准） | T4 Playwright 实测（e2e m1 段3 路径资产） |
 
 **风险与对策**：① maotu SVG 复合图元内文本注入未验 → T11 首个图元即验，文本一律走内置文本图元；② SSE token 过期 → T5 重连时重登录换 token；③ 默认事件模板拖拽实例化未验 → T13 nav-button 首验，退路为使用文档提示手写一行 custom_code；④ 画面规模 N+1 列表 → T17 并发上限 + 后续 rs-iot 轻端点。
 
@@ -49,7 +51,7 @@
 | T1 | auth composable + 登录页 + 路由守卫 | M1 | 单测 + E2E 登录段 | ☑ | 744d7d8..8128a5c |
 | T2 | screens API 模块（wrap/unwrap/CRUD） | M1 | 单测 round-trip | ☑ | 14118a6 |
 | T3 | 画面列表页（卡片墙+新建+删除） | M1 | E2E m1 列表段 | ☑ | 93b49b0 |
-| T4 | 编辑页（MtEdit+deviceInfo+存取 round-trip） | M1 | G-M1 全绿 | ☐ | |
+| T4 | 编辑页（MtEdit+deviceInfo+存取 round-trip） | M1 | G-M1 全绿 | ☑ | bb7d6d6..fc66435 |
 | T5 | SSE 客户端（解析/归一化/重连/换 token） | M2 | 单测 | ☐ | |
 | T6 | collectBinds + 运行页分发桥 | M2 | 单测 + E2E 数据段 | ☐ | |
 | T7 | 命令桥（状态机/inst 解析/编辑态守卫） | M2 | 单测 + E2E 命令段 | ☐ | |
