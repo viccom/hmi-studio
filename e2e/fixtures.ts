@@ -11,8 +11,12 @@ import { rsiotPutScreen } from './helpers'
  */
 
 const TEXT_PEL_ID = 'text-vue-e2et60001'
+const NAV_A_PEL_ID = 'text-vue-e2enavA'
+const NAV_B_PEL_ID = 'text-vue-e2enavB'
 
 export function textPelId(): string { return TEXT_PEL_ID }
+export function navAPelId(): string { return NAV_A_PEL_ID }
+export function navBPelId(): string { return NAV_B_PEL_ID }
 
 /**
  * M2 命令段种子画面（T7）——在文本图元上加 click(customCode) 事件：
@@ -61,6 +65,47 @@ export async function seedScreen(slug: string): Promise<void> {
         bind_attr: 'props.text.val', bind_mapping: [], triggers: [],
       }],
     }],
+    eventList: [], eventFlow: [],
+  })
+}
+
+/**
+ * M2 互跳段种子画面组（T9）：
+ * - A（源）：click custom_code `$mtEventCallBack('nav', $item_info.id, '<B>')`——bundle 实证
+ *   custom_code 经 new Function('$item_info','$args',code) 编译且以图元信息实参调用，$item_info 运行时可用；
+ *   兼绑 uptime_s 制造初始 SSE 流——容器内跳转后 resubscribe 关旧开新，订阅数 1→2 是重订直接证据。
+ * - B（目标）：uptime 绑定文本（复用段1 机制），断言新流 snapshot 到达。
+ */
+export async function seedNavScreens(slugA: string, slugB: string): Promise<void> {
+  const canvasCfg = {
+    width: 800, height: 600, scale: 1, color: '#141414', img: '',
+    guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
+  }
+  const gridCfg = { enabled: true, align: true, size: 10 }
+  const pel = (id: string, text: string) => ({
+    active: false, hide: false, lock: false, resize: true, rotate: true,
+    id, title: '文字', type: 'vue', tag: 'text-vue',
+    binfo: { angle: 0, height: 50, left: 200, top: 150, width: 220 },
+    common_animations: { val: '', delay: 'delay-0s', speed: 'slow', repeat: 'infinite' },
+    events: [] as unknown[], ports: [],
+    props: { fill: '#FFF700', fontFamily: '黑体', fontSize: 18, text, vertical: false },
+    binds: [{
+      id: `bd-${id}`, pel_id: id, bind_id: 'rsiot.uptime_s', bind_name: '运行时长',
+      bind_attr: 'props.text.val', bind_mapping: [], triggers: [],
+    }],
+  })
+  await rsiotPutScreen(slugA, {
+    name: 'E2E-T9 跳转源', canvasCfg, gridCfg,
+    json: [{ ...pel(NAV_A_PEL_ID, '跳转到B'), events: [{
+      id: 'ev-nav', type: 'click', action: 'customCode', change_attr: [],
+      custom_code: `$mtEventCallBack('nav', $item_info.id, '${slugB}');`,
+      event_flow_ids: [], trigger_rule: {},
+    }] }],
+    eventList: [], eventFlow: [],
+  })
+  await rsiotPutScreen(slugB, {
+    name: 'E2E-T9 跳转目标', canvasCfg, gridCfg,
+    json: [pel(NAV_B_PEL_ID, 'B-待机')],
     eventList: [], eventFlow: [],
   })
 }

@@ -13,9 +13,10 @@ import { MtPreview } from 'maotu'
 import type { IExportJson } from 'maotu'
 import { screensApi, unwrapDoc } from '../lib/screens'
 import { collectBinds } from '../lib/binds'
-import { createRtdataStream, type StreamState } from '../lib/sse'
+import { createRtdataStream, type RtPoint, type StreamState } from '../lib/sse'
 import { api, tokenStore } from '../lib/api'
 import { installBridge } from '../lib/bridge'
+import { createDispatcher, createNavStack } from '../lib/nav'
 import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
 import AlarmBanner from '../components/AlarmBanner.vue'
 import AlarmDrawer from '../components/AlarmDrawer.vue'
@@ -29,11 +30,12 @@ const previewRef = ref<InstanceType<typeof MtPreview>>()
 const meta = ref<{ name?: string; group?: string }>({})
 const state = ref<StreamState>('offline')
 const deadFields = ref<string[]>([])
+/** 当前画面 slug：容器内跳转只换 doc 不换组件实例（router-view 无 key），route.params 不再可信 */
+const currentSlug = ref(slug)
 
 let stream: ReturnType<typeof createRtdataStream> | undefined
 const received = new Set<string>()
 let bindFields: string[] = []
-const bridge = installBridge({ mode: 'view', router })
 
 // ---- T8 告警骨架 ----
 const alarmStore = new AlarmStore()
@@ -64,6 +66,90 @@ async function clearAlarm(key: string): Promise<void> {
 // 横幅轮播 5s（空表/抽屉打开照常推进——纯下标变化，无副作用）
 useIntervalFn(() => { alarmStore.next(); refreshAlarms() }, 5000)
 
+// ---- T9 事件分发器 + 容器内跳转 ----
+const navStack = createNavStack()
+
+const onPoint = (p: RtPoint): void => {
+  received.add(p.field)
+  deadFields.value = bindFields.filter((f) => !received.has(f))
+  previewRef.value?.setDevicePointByID(p.field, p.value)
+}
+
+/** SSE 按新画面 bind 集重订（挂载/跳转共用）：关旧流（或改订）+ 清收数；无绑定 → 关流离线 */
+const resubscribe = (done: IExportJson): void => {
+  const { fields, devs } = collectBinds(done)
+  bindFields = fields
+  received.clear()
+  deadFields.value = []
+  if (devs.length === 0) {
+    stream?.close()
+    stream = undefined
+    state.value = 'offline'
+    return
+  }
+  if (stream) stream.resubscribe(devs)
+  else stream = createRtdataStream({
+    devs,
+    getToken: tokenStore.get,
+    onPoint,
+    onState: (s) => { state.value = s },
+  })
+}
+
+/** 容器内跳转：GET 目标 doc → setImportJson → URL 同步（replace）→ SSE 重订；404 报错停留当前画面 */
+const jump = async (target: string): Promise<boolean> => {
+  if (target === currentSlug.value) return false
+  try {
+    const { doc } = await sApi.get(target)
+    const { done, meta: m } = unwrapDoc(doc)
+    previewRef.value?.setImportJson(done)
+    meta.value = m
+    currentSlug.value = target
+    void router.replace(`/view/${target}`)
+    resubscribe(done)
+    return true
+  } catch {
+    ElMessage.error(`画面 ${target} 加载失败`)
+    return false
+  }
+}
+
+const dispatcher = createDispatcher({
+  onNav(target) {
+    void jump(target).then((ok) => {
+      if (!ok) return
+      navStack.nav(target)
+      // E2E 钩子（G-M2 跳转段）：__navCount 递增证明容器内跳转无整页刷新（刷新会清零 window）
+      const w = window as Window & { __navCount?: number }
+      w.__navCount = (w.__navCount ?? 0) + 1
+    })
+  },
+  onBack() {
+    const dest = navStack.back()
+    if (dest === '/') void router.push('/')
+    else void jump(dest)
+  },
+  onHome() { void router.push('/') },
+  onAlarm() { drawerOpen.value = true },
+})
+
+/** $mtEventCallBack(type, id, ...rest) → emit onEventCallBack(type, id, ...rest) → 词表分发。
+ *  监听必须写 @onEventCallBack（kebab 写法大小写失配收不到事件——见 nav.ts 文件头实证） */
+const onMtEvent = (type: unknown, id: unknown, ...rest: unknown[]): void => {
+  dispatcher.dispatch([type, id, ...rest])
+}
+
+const bridge = installBridge({
+  mode: 'view',
+  router,
+  // $rsiot.nav/back/home 与 $mtEventCallBack('nav') 同源同栈（设计 §5 等价别名）
+  navHandler: {
+    nav: (target) => dispatcher.dispatch(['nav', '', target]),
+    back: () => dispatcher.dispatch(['back', '']),
+    home: () => dispatcher.dispatch(['home']),
+  },
+})
+
 onMounted(async () => {
   // 告警双源（与画面加载独立——画面失败告警仍可见）：REST 快照 + events SSE 命名事件
   void api().get('/api/v1/alarms')
@@ -85,19 +171,8 @@ onMounted(async () => {
     ElMessage.error('画面加载失败')
     return
   }
-  const { fields, devs } = collectBinds(done)
-  bindFields = fields
-  if (devs.length === 0) return
-  stream = createRtdataStream({
-    devs,
-    getToken: tokenStore.get,
-    onPoint: (p) => {
-      received.add(p.field)
-      deadFields.value = bindFields.filter((f) => !received.has(f))
-      previewRef.value?.setDevicePointByID(p.field, p.value)
-    },
-    onState: (s) => { state.value = s },
-  })
+  navStack.nav(slug) // 历史栈起点（back 弹空 → '/' 画面列表）
+  resubscribe(done)
 })
 
 onUnmounted(() => {
@@ -110,13 +185,13 @@ onUnmounted(() => {
 <template>
   <main class="view-page">
     <header class="view-topbar">
-      <span class="screen-name">{{ meta.name ?? slug }}</span>
-      <span class="screen-slug">{{ slug }}</span>
+      <span class="screen-name">{{ meta.name ?? currentSlug }}</span>
+      <span class="screen-slug">{{ currentSlug }}</span>
       <span class="state" :class="state" :data-state="state">{{ state === 'online' ? '在线' : '离线' }}</span>
       <span v-if="deadFields.length" class="dead" :title="deadFields.join('、')">无数据 {{ deadFields.length }} 点</span>
     </header>
     <AlarmBanner :alarm="currentAlarm" @open="drawerOpen = true" />
-    <MtPreview ref="previewRef" :show-popover="false" class="view-body" />
+    <MtPreview ref="previewRef" :show-popover="false" class="view-body" @onEventCallBack="onMtEvent" />
     <AlarmDrawer v-model="drawerOpen" :active="activeAlarms" :history="historyAlarms" @clear="clearAlarm" />
   </main>
 </template>

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { loginAsAdmin, rsiotSweepScreens } from './helpers'
-import { seedCommandScreen, seedScreen } from './fixtures'
+import { seedCommandScreen, seedScreen, seedNavScreens, navAPelId, navBPelId } from './fixtures'
 
 // G-M2 段1（T6）：运行页数据驱动——seed 文本图元（bind rsiot.uptime_s → props.text.val）
 // → /view/:slug → SSE snapshot/datachange 推 uptime → DOM 文本两次采样不等。
@@ -114,5 +114,44 @@ test.describe('M2 告警骨架', () => {
     await page.goto(`/view/${slug}`)
     await alarmed // 快照已回（避免 app 未启动时假绿）
     await expect(page.getByTestId('alarm-banner')).toBeHidden()
+  })
+})
+
+// G-M2 段4（T9）：画面互跳——A 图元 click custom_code `$mtEventCallBack('nav', $item_info.id, '<B>')`
+// → ViewView 分发器 onNav → GET B doc + setImportJson + router.replace + SSE 重订（同一组件实例，
+// 无整页刷新）。__navCount 是防刷新作弊钩子：window 状态在整页刷新时清零，SPA 内跳转才可能递增。
+// 订阅数 1→2 = resubscribe 关旧开新的直接证据（A 也绑了 uptime，初始必有一流）。
+test.describe('M2 画面互跳', () => {
+  const stamp = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+  const slugA = `e2e-t9a-${stamp}`
+  const slugB = `e2e-t9b-${stamp}`
+  test.beforeAll(async () => { await seedNavScreens(slugA, slugB) })
+  test.afterAll(async () => { await rsiotSweepScreens(/^e2e-t9[ab]-/) })
+
+  test('点 nav 图元 → URL 变 /view/B + __navCount≥1（无刷新）+ B 图元渲染 + SSE 重订', async ({ page }) => {
+    await loginAsAdmin(page)
+    let subscribes = 0
+    page.on('response', (r) => { if (r.url().includes('/api/v1/rtdatas/subscribe')) subscribes += 1 })
+
+    await page.goto(`/view/${slugA}`)
+    await expect(page.locator('.state.online')).toBeVisible({ timeout: 10_000 })
+    expect(subscribes).toBe(1)
+
+    await page.locator(`[id^="${navAPelId()}"]`).click()
+    // maotu click 事件 300ms 去抖 + onNav 异步取 doc——以 __navCount 轮询收敛
+    await expect.poll(
+      () => page.evaluate(() => (window as unknown as { __navCount?: number }).__navCount ?? 0),
+      { timeout: 10_000 },
+    ).toBeGreaterThanOrEqual(1)
+
+    await expect(page).toHaveURL(new RegExp(`/view/${slugB}$`))
+    // B 图元在容器内渲染（setImportJson 已换掉 A 的内容）
+    await expect(page.locator(`[id^="${navBPelId()}"]`)).toHaveCount(1)
+    // SSE 重订：旧流关闭、按 B 的 bind 集新开（订阅响应 1→2）
+    await expect.poll(() => subscribes, { timeout: 10_000 }).toBe(2)
+    // 新流数据到达：B 的绑定文本被 snapshot 推的 uptime 覆盖为数字
+    await expect.poll(async () =>
+      /^\d+$/.test((await page.locator(`[id^="${navBPelId()}"] .break-words`).textContent()) ?? ''),
+    { timeout: 10_000 }).toBe(true)
   })
 })

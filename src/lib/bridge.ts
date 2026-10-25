@@ -4,7 +4,8 @@
  * - send：ElMessageBox 二次确认（编辑态按钮「取消/真实下发」防误触，运行态普通「确定」）
  *   → owner_inst 解析 → POST /api/v1/command/send → CommandTracker 跟踪（5s 超时）
  *   → ElMessage 结果 → 命令历史环形 20 条（状态栏消费）。
- * - nav/back/home：T7 最小实现直挂 vue-router；T9 重构为事件分发器同源。
+ * - nav/back/home：经 navHandler（ViewView 注入的事件分发器——与 $mtEventCallBack('nav')
+ *   同源同栈）；编辑态缺省直连 vue-router。
  */
 import { ref, type Ref } from 'vue'
 import type { Router } from 'vue-router'
@@ -34,6 +35,9 @@ export interface BridgeOptions {
   /** view=运行态（普通确认）；edit=编辑态（D6 显式「真实下发」） */
   mode: 'view' | 'edit'
   router: Router
+  /** T9 容器内导航回调（ViewView 注入，与 $mtEventCallBack('nav') 同源同栈——设计 §5 等价别名）；
+   *  缺省（编辑态）直连 router */
+  navHandler?: Pick<RsiotBridgeApi, 'nav' | 'back' | 'home'>
 }
 
 export interface BridgeHandle {
@@ -99,9 +103,18 @@ export function installBridge(opts: BridgeOptions): BridgeHandle {
       else if (tracker.state === 'timeout') ElMessage.warning(`命令超时（${SEND_TIMEOUT_MS / 1000}s 未确认）：${devid}.${tag}`)
       else ElMessage.error(`命令失败：${devid}.${tag}（${tracker.message}）`)
     },
-    nav(target) { void opts.router.push(`/view/${target}`) },
-    back() { opts.router.back() },
-    home() { void opts.router.push('/') },
+    nav(target) {
+      if (opts.navHandler) opts.navHandler.nav(target)
+      else void opts.router.push(`/view/${target}`)
+    },
+    back() {
+      if (opts.navHandler) opts.navHandler.back()
+      else opts.router.back()
+    },
+    home() {
+      if (opts.navHandler) opts.navHandler.home()
+      else void opts.router.push('/')
+    },
   }
 
   ;(window as Window & { $rsiot?: RsiotBridgeApi }).$rsiot = apiFace
