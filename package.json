@@ -1,0 +1,26 @@
+{
+  "name": "hmi-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@vueuse/core": "^15.0.0",
+    "echarts": "^6.1.0",
+    "element-plus": "^2.14.7",
+    "maotu": "0.6.5",
+    "vue": "^3.5.44",
+    "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.10",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vue-tsc": "^3.3.13"
+  }
+}
