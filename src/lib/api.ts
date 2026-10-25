@@ -10,6 +10,12 @@ export class ApiError extends Error {
 
 export interface ApiOptions { base?: string; onUnauthorized?: () => void }
 
+// 全局 401 兜底（main.ts 接线：清 token 回登录页）；api({onUnauthorized}) 显式传入者优先
+let defaultOnUnauthorized: (() => void) | undefined
+export function setOnUnauthorized(fn: (() => void) | undefined): void {
+  defaultOnUnauthorized = fn
+}
+
 const TOKEN_KEY = 'hmi_token'
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
@@ -32,7 +38,7 @@ async function request(opts: ApiOptions, method: string, path: string, body?: un
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
-  if (res.status === 401) { opts.onUnauthorized?.(); throw new ApiError(401, await parseBody(res), 'unauthorized') }
+  if (res.status === 401) { (opts.onUnauthorized ?? defaultOnUnauthorized)?.(); throw new ApiError(401, await parseBody(res), 'unauthorized') }
   if (!res.ok) throw new ApiError(res.status, await parseBody(res))
   return parseBody(res)
 }

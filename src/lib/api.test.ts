@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { api, ApiError } from './api'
+import { api, ApiError, setOnUnauthorized } from './api'
 
 describe('api client', () => {
   beforeEach(() => { localStorage.clear(); vi.restoreAllMocks(); vi.unstubAllGlobals() })
@@ -31,5 +31,18 @@ describe('api client', () => {
     vi.stubGlobal('fetch', fetchText)
     const err2 = await client.get('/oops').catch((e: unknown) => e) as ApiError
     expect(err2.body).toBe('plain oops')
+  })
+
+  it('默认 401 兜底：未显式传 onUnauthorized 的客户端走 setOnUnauthorized 全局钩子', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('unauthorized', { status: 401 })))
+    const handler = vi.fn()
+    setOnUnauthorized(handler)
+    try {
+      const client = api({ base: 'http://x' })
+      await expect(client.get('/bad')).rejects.toBeInstanceOf(ApiError)
+      expect(handler).toHaveBeenCalledOnce()
+    } finally {
+      setOnUnauthorized(undefined)
+    }
   })
 })
