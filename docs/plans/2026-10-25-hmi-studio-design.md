@@ -1,6 +1,6 @@
-# hmi-studio 设计（v0.2 草案，讨论中）
+# hmi-studio 设计（v0.3 草案，讨论中）
 
-- 日期：2026-10-25（v0.1 同日；v0.2 吸收三问质询修订）
+- 日期：2026-10-25（v0.1 同日；v0.2 三问质询；v0.3 画面互跳 maotu 代码研究结论）
 - 状态：六决策锁定（v0.2 新增 D4-D6）；细节待继续讨论
 - 输入：`docs/maotu-rsiot-architecture.md`（maotu 0.6.5 绑定模型实证 + 概念映射）、agent-hmi W1-W6 经验（已封版 `archive-v0.6.0`，作为视觉参考与桥层代码移植源）
 - 图例：🔒=用户已锁定；⚖️=设计推荐待确认；❓=开放问题
@@ -64,7 +64,12 @@ rs-iot screens API（`routes_meta.rs` 实测形状）：`GET /screens`（id 升�
 - **保存**：编辑器 onSaveClick → PUT 全量（含 name/group meta）
 - **删除**：卡片删除（确认弹窗）→ DELETE
 - **列表**：GET 全部 id → 并发 GET 各 doc 拼卡片（量级几十可接受 ❓画面过百时给 rs-iot 加轻量 meta 列表端点，后续项）
-- **互跳**：运行页骨架层常驻导航（画面切换下拉/平铺）；图元 click custom_code 调 `$rsiot.nav/back/home`。编辑器侧栏提供当前画面 slug 清单供抄写
+- **互跳**（maotu 代码研究结论：**无原生跳转能力，需 hmi-studio 建，但官方通道现成、零侵入**）：
+  - maotu 事实：事件动作只有 `changeAttr/customCode/eventFlow`，事件流节点词汇（取/设属性/判断/HTTP/代码/定时器）全部画布内，无 link/jump 语义；bundle 内 `window.open` 仅关于页开官网，`router` 是库内 demo 自用——单画布组件，无画面集合概念
+  - 官方通道：`$mtEventCallBack(type, $item_info.id, ...args)`——编辑器 custom_code 自动补全内置提示（"执行订阅回调函数"），运行时透传到 MtPreview `onEventCallBack` 且多余参数透传（0.6.5 bundle + probe 双实证）
+  - 机制：图元 click → custom_code `$mtEventCallBack('nav', $item_info.id, 'water-intake-2')` → 运行页宿主分发 → 同一 MtPreview `setImportJson` 换画面（**当前容器内打开**）+ 路由同步 + SSE 桥按新画面 bind 集重订
+  - 事件词表约定：`nav/back/home/cmd/alarm`（小词表，不做通配）；`window.$rsiot.nav()` 作为等价别名保留（命令桥同源）
+  - 组态体验：预置**跳转按钮图元**（`ILeftAsideConfigItemPublic.events` 支持默认事件模板，拖入即带 click→nav 事件，改 `target` 属性即完成配置——对齐经典 HMI"按钮→打开画面"体验）；编辑器侧栏提供画面 slug 清单供 target 抄写
 - 画面真相在 rs-iot DB，保存即生效 ❓是否需要发布隔离（draft/publish）待议
 
 ## 6. 图元工作流：手工重建 + 绑定友好约定 ⚖️
