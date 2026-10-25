@@ -24,6 +24,8 @@
 | F8 | 环境：rs-iot 0.0.0.0:8790（pid 在跑）、gateway 0.0.0.0:18080、hmi-studio dev 5273 | ss 实测 |
 | F9 | maotu registerConfig 同名标题为**覆盖语义**（覆盖 + info 提示）——重复挂载需自行防重（symbols/index.ts has() 守卫）；`IDeviceInfo` 未从包主入口导出（"./*" exports 映射 TS bundler 下命不中无扩展名 .d.ts），按 d.ts 结构本地定义 | T4 bundle 实读 + tsc 实测 |
 | F10 | maotu 拖拽 = HTML5 DnD：左面板 `div[draggable=true]` dragstart 设 store intention → 画布 `#mtCanvasArea` dragover(preventDefault)/drop 建元；Playwright `dragTo()` 原生走通；保存按钮 `button .el-icon[title="保存"]`；图元节点 id=`{symbol_id}-{随机}`（重载后 img 渲染、拖入时内联 svg，断言以节点 id 为准） | T4 Playwright 实测（e2e m1 段3 路径资产） |
+| F11 | SSE 实测（vs 任务书假设两处修正）：① 消息是**命名事件** `event: snapshot`（data=`{dev,points:{"dev.tag":[ts,localTime,"值串"]}}`）/ `event: datachange`（data=`{changes:{...},removed,ts}`）——`onmessage` 收不到，须 addEventListener；值一律字符串化 JSON（"0"/"true"），客户端 parseCell 归一化；`rsiot.uptime_s` 采集周期 ~5s（datachange 节奏）；② rs-iot 鉴权只认 Authorization/Cookie `token=`/X-Access-Key，**不认 `?token=` 查询参**（那是 agent-hmi gateway 约定）——EventSource 设不了 header → 走同源 Cookie（连接前 `document.cookie` 同步，vite proxy 转发即通） | T5 curl + routes_rtdata_subscribe.rs/auth.rs 源读 + m2 E2E 实证 |
+| F12 | maotu 内置「系统组件·文字」图元：tag `text-vue`、type `vue`、保存态 props 为**平面值**（text/fill/fontFamily/fontSize/vertical）但**导入运行时归一化为描述符形 `props.text.val`**（bundle Jr 函数：注册表默认描述符 + `i[r].val = n.props[r]`）——bind_attr 必须指 `props.text.val`（指 `props.text` 会砸掉描述符 → 渲染空白）；bind triggers 为空时 `setDevicePointByID` 直写 bind_attr（vP 语义）；vue 图元渲染为**真实 DOM 文本**（`[id^="text-vue-"] .break-words`，非 img dataURI）——E2E 断言直接读 textContent；其余系统组件：sys-line×2/card-vue/now-time-vue/kv-vue/sys-button-vue（T7 命令按钮可复用 sys-button-vue） | T6 Playwright 拖拽实测 + bundle vP/Jr/Nl 实读 + BindProbe 直写验证 |
 
 **风险与对策**：① maotu SVG 复合图元内文本注入未验 → T11 首个图元即验，文本一律走内置文本图元；② SSE token 过期 → T5 重连时重登录换 token；③ 默认事件模板拖拽实例化未验 → T13 nav-button 首验，退路为使用文档提示手写一行 custom_code；④ 画面规模 N+1 列表 → T17 并发上限 + 后续 rs-iot 轻端点。
 
@@ -52,8 +54,8 @@
 | T2 | screens API 模块（wrap/unwrap/CRUD） | M1 | 单测 round-trip | ☑ | 14118a6 |
 | T3 | 画面列表页（卡片墙+新建+删除） | M1 | E2E m1 列表段 | ☑ | 93b49b0 |
 | T4 | 编辑页（MtEdit+deviceInfo+存取 round-trip） | M1 | G-M1 全绿 | ☑ | bb7d6d6..fc66435 |
-| T5 | SSE 客户端（解析/归一化/重连/换 token） | M2 | 单测 | ☐ | |
-| T6 | collectBinds + 运行页分发桥 | M2 | 单测 + E2E 数据段 | ☐ | |
+| T5 | SSE 客户端（解析/归一化/重连/换 token） | M2 | 单测 | ☑ | 03d4a5c |
+| T6 | collectBinds + 运行页分发桥 | M2 | 单测 + E2E 数据段 | ☑ | 30387f1..cae9e86 |
 | T7 | 命令桥（状态机/inst 解析/编辑态守卫） | M2 | 单测 + E2E 命令段 | ☐ | |
 | T8 | 告警骨架（双源合并/横幅/抽屉） | M2 | 单测 + E2E 显隐段 | ☐ | |
 | T9 | 事件分发器（词表/历史栈/容器内跳转） | M2 | 单测 + G-M2 全绿 | ☐ | |
