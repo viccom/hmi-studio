@@ -46,7 +46,7 @@
 | ID | 任务 | 里程碑 | 验证 | 状态 | commit |
 |----|------|--------|------|------|--------|
 | T0 | 工程基建：目录/路由壳/API client/测试基座 | M1 | `npm test` 基线绿 | ☑ | ce6ba1b..05c9e90 |
-| T1 | auth composable + 登录页 + 路由守卫 | M1 | 单测 + E2E 登录段 | ☐ | |
+| T1 | auth composable + 登录页 + 路由守卫 | M1 | 单测 + E2E 登录段 | ☑ | 744d7d8..8128a5c |
 | T2 | screens API 模块（wrap/unwrap/CRUD） | M1 | 单测 round-trip | ☐ | |
 | T3 | 画面列表页（卡片墙+新建+删除） | M1 | E2E m1 列表段 | ☐ | |
 | T4 | 编辑页（MtEdit+deviceInfo+存取 round-trip） | M1 | G-M1 全绿 | ☐ | |
