@@ -51,11 +51,11 @@ const probe = {
   setPoint(id: string, val: unknown) { return pv.value?.setDevicePointByID(id, val) },
   readAttr(id: string, key: string) {
     const doc = (pv.value as unknown as { done_json?: Array<Record<string, unknown>> }) ?? null
-    return JSON.stringify((exportJson.json as Array<Record<string, unknown>>).find(n => n.id === id)?.[(key.split('.')[0])])
+    return JSON.stringify((exportJson.json as unknown as Array<Record<string, unknown>>).find(n => n.id === id)?.[(key.split('.')[0])])
   },
   getPelFill(): string {
     // svg 图元经 dataURL 渲染成 <img>——DOM 无 rect；从 done_json 对象直读（preview 就地改写）
-    const p = (exportJson.json as Array<{ id: string; props?: { fill?: { val: string } } }>).find(n => n.id === 'p1')
+    const p = (exportJson.json as unknown as Array<{ id: string; props?: { fill?: { val: string } } }>).find(n => n.id === 'p1')
     return p?.props?.fill?.val ?? 'no-prop'
   },
   pelBox(): { x: number; y: number; w: number; h: number } | null {
