@@ -24,7 +24,7 @@ async function parseBody(res: Response): Promise<unknown> {
 
 async function request(opts: ApiOptions, method: string, path: string, body?: unknown): Promise<unknown> {
   const token = tokenStore.get()
-  const res = await fetch(opts.base + path, {
+  const res = await fetch((opts.base ?? '') + path, {
     method,
     headers: {
       ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
