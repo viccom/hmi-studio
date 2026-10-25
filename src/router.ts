@@ -16,4 +16,6 @@ export const router = createRouter({ history: createWebHistory(), routes })
 router.beforeEach((to) => {
   const publicPath = to.path === '/login' || to.path.startsWith('/dev/')
   if (!publicPath && !tokenStore.get()) return '/login'
+  // 已登录不再回登录页（登录成功 replace('/') 后守卫兜底）
+  if (to.path === '/login' && tokenStore.get()) return '/'
 })

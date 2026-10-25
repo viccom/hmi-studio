@@ -11,7 +11,7 @@ describe('auth', () => {
   beforeEach(() => { localStorage.clear(); vi.unstubAllGlobals() })
 
   it('login 成功：POST F1 形状，存 token+user，返回 ok', async () => {
-    const fetchMock = vi.fn(async () => okLogin())
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => okLogin())
     vi.stubGlobal('fetch', fetchMock)
     const res = await login('admin', 'admin')
     expect(res).toMatchObject({ ok: true })
