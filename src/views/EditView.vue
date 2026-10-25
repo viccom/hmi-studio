@@ -2,13 +2,14 @@
 // T4 编辑页：MtEdit 挂载 + 在线设备树（F5）+ 画面存取 round-trip（G-M1 主战场）。
 // 装配契约（d.ts 实证）：MtEdit expose setImportJson(done)；onSaveClick payload=IExportJson；
 // onReturnClick 无参。doc 真相在 rs-iot（wrapDoc/unwrapDoc 同体契约，见 lib/screens.ts）。
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { MtEdit } from 'maotu'
 import type { IExportJson } from 'maotu'
 import { screensApi, unwrapDoc, wrapDoc } from '../lib/screens'
 import { fetchDeviceTree, type IDeviceInfo } from '../lib/device-tree'
+import { installBridge } from '../lib/bridge'
 import { registerSymbols } from '../symbols'
 
 const route = useRoute()
@@ -19,6 +20,10 @@ const slug = route.params.id as string
 const editRef = ref<InstanceType<typeof MtEdit>>()
 const deviceInfo = ref<IDeviceInfo[]>([])
 const meta = ref<{ name?: string; group?: string }>({})
+
+// D6 编辑态守卫：编辑页同注入 $rsiot，send 确认框按钮为「取消/真实下发」
+const bridge = installBridge({ mode: 'edit', router })
+onUnmounted(() => bridge.uninstall())
 
 onMounted(async () => {
   registerSymbols()

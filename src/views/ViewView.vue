@@ -4,7 +4,7 @@
 // + 评估 triggers）。鉴权走同源 Cookie（rs-iot SSE 不认 ?token=，EventSource 无 header——sse.ts）。
 // deadFields 简化：静态点集差（bind 集内有、流内未到的字段），不做超时判定——报告已注明。
 import { onMounted, onUnmounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { MtPreview } from 'maotu'
 import type { IExportJson } from 'maotu'
@@ -12,8 +12,10 @@ import { screensApi, unwrapDoc } from '../lib/screens'
 import { collectBinds } from '../lib/binds'
 import { createRtdataStream, type StreamState } from '../lib/sse'
 import { tokenStore } from '../lib/api'
+import { installBridge } from '../lib/bridge'
 
 const route = useRoute()
+const router = useRouter()
 const slug = route.params.id as string
 const sApi = screensApi()
 
@@ -25,6 +27,7 @@ const deadFields = ref<string[]>([])
 let stream: ReturnType<typeof createRtdataStream> | undefined
 const received = new Set<string>()
 let bindFields: string[] = []
+const bridge = installBridge({ mode: 'view', router })
 
 onMounted(async () => {
   let done: IExportJson
@@ -53,7 +56,10 @@ onMounted(async () => {
   })
 })
 
-onUnmounted(() => stream?.close())
+onUnmounted(() => {
+  stream?.close()
+  bridge.uninstall()
+})
 </script>
 
 <template>
