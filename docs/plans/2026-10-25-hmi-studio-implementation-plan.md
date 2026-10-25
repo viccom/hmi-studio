@@ -26,6 +26,8 @@
 | F10 | maotu 拖拽 = HTML5 DnD：左面板 `div[draggable=true]` dragstart 设 store intention → 画布 `#mtCanvasArea` dragover(preventDefault)/drop 建元；Playwright `dragTo()` 原生走通；保存按钮 `button .el-icon[title="保存"]`；图元节点 id=`{symbol_id}-{随机}`（重载后 img 渲染、拖入时内联 svg，断言以节点 id 为准） | T4 Playwright 实测（e2e m1 段3 路径资产） |
 | F11 | SSE 实测（vs 任务书假设两处修正）：① 消息是**命名事件** `event: snapshot`（data=`{dev,points:{"dev.tag":[ts,localTime,"值串"]}}`）/ `event: datachange`（data=`{changes:{...},removed,ts}`）——`onmessage` 收不到，须 addEventListener；值一律字符串化 JSON（"0"/"true"），客户端 parseCell 归一化；`rsiot.uptime_s` 采集周期 ~5s（datachange 节奏）；② rs-iot 鉴权只认 Authorization/Cookie `token=`/X-Access-Key，**不认 `?token=` 查询参**（那是 agent-hmi gateway 约定）——EventSource 设不了 header → 走同源 Cookie（连接前 `document.cookie` 同步，vite proxy 转发即通） | T5 curl + routes_rtdata_subscribe.rs/auth.rs 源读 + m2 E2E 实证 |
 | F12 | maotu 内置「系统组件·文字」图元：tag `text-vue`、type `vue`、保存态 props 为**平面值**（text/fill/fontFamily/fontSize/vertical）但**导入运行时归一化为描述符形 `props.text.val`**（bundle Jr 函数：注册表默认描述符 + `i[r].val = n.props[r]`）——bind_attr 必须指 `props.text.val`（指 `props.text` 会砸掉描述符 → 渲染空白）；bind triggers 为空时 `setDevicePointByID` 直写 bind_attr（vP 语义）；vue 图元渲染为**真实 DOM 文本**（`[id^="text-vue-"] .break-words`，非 img dataURI）——E2E 断言直接读 textContent；其余系统组件：sys-line×2/card-vue/now-time-vue/kv-vue/sys-button-vue（T7 命令按钮可复用 sys-button-vue） | T6 Playwright 拖拽实测 + bundle vP/Jr/Nl 实读 + BindProbe 直写验证 |
+| F13 | devid→inst 解析源（T7 实测）：`GET /api/v1/devices` 每设备条目含 `owner_inst`（宿主实例 ID；多宿主逗号串取首段；无归属则缺字段）——rsiot 系统设备 `owner_inst:"self"`，`self` 实例在 `/api/v1/inst/roster` 中 running；命令实测 `POST /api/v1/command/send {instance:"self",devid:"rsiot",cmd:"write",data:'{"tag":"uptime_s","value":1}'}` → `{"status":"ok"}`（实例未跑是 **404** "instance not running"，非任务书假设的 500） | T7 curl 实测 + routes_device.rs/routes_command.rs 源读 |
+| F14 | 告警三接口实测（T8）：① `GET /api/v1/alarms` → `[{key,level:'info'\|'warn'\|'error',source,message,ts(ISO8601),count}]` 按 ts 倒序、空表 `[]`、**无 query 参数**（无 status 过滤）；② SSE `GET /api/v1/events?types=alarm` → **命名事件** `alarm`（addEventListener），data `{kind:'alarm',action:'fire'\|'clear',key,level,source,message,ts}`——fire/clear 同变体靠 action 区分，keepalive 为 `:` 注释帧，Bearer/Cookie 均可鉴权；③ **无 confirm 路由**——人工清除是 `DELETE /api/v1/alarms?key=`（幂等 + 后端发 Clear 事件收敛多客户端）；④ 告警事件流与数据流**无法复用同一连接**：`/api/v1/rtdatas/subscribe` 仅 dev_id/tag/interval 参数（SubQuery 源读），是独立于 `/api/v1/events` 的另一端点——告警走第二条 EventSource | T8 curl 实测 + routes_alarm.rs/event_bus.rs/routes_events.rs/routes_rtdata_subscribe.rs 源读 |
 
 **风险与对策**：① maotu SVG 复合图元内文本注入未验 → T11 首个图元即验，文本一律走内置文本图元；② SSE token 过期 → T5 重连时重登录换 token；③ 默认事件模板拖拽实例化未验 → T13 nav-button 首验，退路为使用文档提示手写一行 custom_code；④ 画面规模 N+1 列表 → T17 并发上限 + 后续 rs-iot 轻端点。
 
@@ -56,8 +58,8 @@
 | T4 | 编辑页（MtEdit+deviceInfo+存取 round-trip） | M1 | G-M1 全绿 | ☑ | bb7d6d6..fc66435 |
 | T5 | SSE 客户端（解析/归一化/重连/换 token） | M2 | 单测 | ☑ | 03d4a5c |
 | T6 | collectBinds + 运行页分发桥 | M2 | 单测 + E2E 数据段 | ☑ | 30387f1..cae9e86 |
-| T7 | 命令桥（状态机/inst 解析/编辑态守卫） | M2 | 单测 + E2E 命令段 | ☐ | |
-| T8 | 告警骨架（双源合并/横幅/抽屉） | M2 | 单测 + E2E 显隐段 | ☐ | |
+| T7 | 命令桥（状态机/inst 解析/编辑态守卫） | M2 | 单测 + E2E 命令段 | ☑ | a4bba48 |
+| T8 | 告警骨架（双源合并/横幅/抽屉） | M2 | 单测 + E2E 显隐段 | ☑ | 12657e7 |
 | T9 | 事件分发器（词表/历史栈/容器内跳转） | M2 | 单测 + G-M2 全绿 | ☐ | |
 | T10 | M2 E2E 汇总门 | M2 | G-M2 | ☐ | |
 | T11 | 图元基建：注册管道 + 约定 lint + 首个图元（泵）验证文本注入边界 | M3 | lint 单测 | ☐ | |
@@ -230,7 +232,7 @@ it('初始快照 + SSE 增量：同 id 去重（后到覆盖），按时间倒�
 it('confirm(id) 后从 active 剔除、入历史；轮播索引在 confirm 后收敛', () => { /* ... */ })
 ```
 
-数据源：`GET /api/v1/alarms?status=active` + `/api/v1/events?types=alarm` SSE；横幅轮播 5s（`useIntervalFn`）；抽屉确认 `POST /api/v1/alarms/.../confirm`（以 rs-iot 实际路由为准，T8 开工时 curl 核实并回填此处）。E2E：active>0 横幅可见 / =0 隐藏。commit ×2。
+数据源：`GET /api/v1/alarms?status=active` + `/api/v1/events?types=alarm` SSE；横幅轮播 5s（`useIntervalFn`）；抽屉确认 ~~`POST /api/v1/alarms/.../confirm`~~ **T8 实测回填（F14）**：GET 无 query 参数；**无 confirm 路由**，抽屉「确认清除」= `DELETE /api/v1/alarms?key=`（后端发 Clear 事件收敛）；events SSE 为命名事件 `alarm`（action=fire/clear）；与数据流（`/rtdatas/subscribe`，无 types 参数）**无法复用连接**——第二条 EventSource。E2E：active>0 横幅可见 / =0 隐藏（route 拦截假数据，merge 逻辑单测覆盖）。
 
 ### T9 事件分发器 + 容器内跳转
 
