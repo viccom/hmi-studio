@@ -28,6 +28,7 @@
 | F12 | maotu 内置「系统组件·文字」图元：tag `text-vue`、type `vue`、保存态 props 为**平面值**（text/fill/fontFamily/fontSize/vertical）但**导入运行时归一化为描述符形 `props.text.val`**（bundle Jr 函数：注册表默认描述符 + `i[r].val = n.props[r]`）——bind_attr 必须指 `props.text.val`（指 `props.text` 会砸掉描述符 → 渲染空白）；bind triggers 为空时 `setDevicePointByID` 直写 bind_attr（vP 语义）；vue 图元渲染为**真实 DOM 文本**（`[id^="text-vue-"] .break-words`，非 img dataURI）——E2E 断言直接读 textContent；其余系统组件：sys-line×2/card-vue/now-time-vue/kv-vue/sys-button-vue（T7 命令按钮可复用 sys-button-vue） | T6 Playwright 拖拽实测 + bundle vP/Jr/Nl 实读 + BindProbe 直写验证 |
 | F13 | devid→inst 解析源（T7 实测）：`GET /api/v1/devices` 每设备条目含 `owner_inst`（宿主实例 ID；多宿主逗号串取首段；无归属则缺字段）——rsiot 系统设备 `owner_inst:"self"`，`self` 实例在 `/api/v1/inst/roster` 中 running；命令实测 `POST /api/v1/command/send {instance:"self",devid:"rsiot",cmd:"write",data:'{"tag":"uptime_s","value":1}'}` → `{"status":"ok"}`（实例未跑是 **404** "instance not running"，非任务书假设的 500） | T7 curl 实测 + routes_device.rs/routes_command.rs 源读 |
 | F14 | 告警三接口实测（T8）：① `GET /api/v1/alarms` → `[{key,level:'info'\|'warn'\|'error',source,message,ts(ISO8601),count}]` 按 ts 倒序、空表 `[]`、**无 query 参数**（无 status 过滤）；② SSE `GET /api/v1/events?types=alarm` → **命名事件** `alarm`（addEventListener），data `{kind:'alarm',action:'fire'\|'clear',key,level,source,message,ts}`——fire/clear 同变体靠 action 区分，keepalive 为 `:` 注释帧，Bearer/Cookie 均可鉴权；③ **无 confirm 路由**——人工清除是 `DELETE /api/v1/alarms?key=`（幂等 + 后端发 Clear 事件收敛多客户端）；④ 告警事件流与数据流**无法复用同一连接**：`/api/v1/rtdatas/subscribe` 仅 dev_id/tag/interval 参数（SubQuery 源读），是独立于 `/api/v1/events` 的另一端点——告警走第二条 EventSource | T8 curl 实测 + routes_alarm.rs/event_bus.rs/routes_events.rs/routes_rtdata_subscribe.rs 源读 |
+| F15 | 事件回调监听拼写（T9 Vue 3.5 实测）：maotu `emit('onEventCallBack')` 按属性名 `onOnEventCallBack` **精确大小写**查找处理器——模板必须写 `@onEventCallBack`（编译为该键）；kebab 写法 `@on-event-callback` 编译为 `onOnEventCallback`（Back 的 b 小写），大小写失配**静默收不到事件**（src/dev/Probe.vue 旧监听即此失效写法，未改——研究资产）。另：custom_code 经 `new Function('$item_info','$args',code)` 编译并以图元信息实参调用（bundle L30329/L30333），`$item_info.id` 运行时可用，E2E 实证透传链路全通 | T9 编译产物对照 + jsdom 双键实证 + m2 段4 E2E |
 
 **风险与对策**：① maotu SVG 复合图元内文本注入未验 → T11 首个图元即验，文本一律走内置文本图元；② SSE token 过期 → T5 重连时重登录换 token；③ 默认事件模板拖拽实例化未验 → T13 nav-button 首验，退路为使用文档提示手写一行 custom_code；④ 画面规模 N+1 列表 → T17 并发上限 + 后续 rs-iot 轻端点。
 
@@ -60,8 +61,8 @@
 | T6 | collectBinds + 运行页分发桥 | M2 | 单测 + E2E 数据段 | ☑ | 30387f1..cae9e86 |
 | T7 | 命令桥（状态机/inst 解析/编辑态守卫） | M2 | 单测 + E2E 命令段 | ☑ | a4bba48 |
 | T8 | 告警骨架（双源合并/横幅/抽屉） | M2 | 单测 + E2E 显隐段 | ☑ | 12657e7 |
-| T9 | 事件分发器（词表/历史栈/容器内跳转） | M2 | 单测 + G-M2 全绿 | ☐ | |
-| T10 | M2 E2E 汇总门 | M2 | G-M2 | ☐ | |
+| T9 | 事件分发器（词表/历史栈/容器内跳转） | M2 | 单测 + G-M2 全绿 | ☑ | 596dc2d |
+| T10 | M2 E2E 汇总门 | M2 | G-M2 | ☑ | d781928 |
 | T11 | 图元基建：注册管道 + 约定 lint + 首个图元（泵）验证文本注入边界 | M3 | lint 单测 | ☐ | |
 | T12 | 图元批 1：阀×2/罐/液位计/流量计（fill 约定） | M3 | lint + 快照 | ☐ | |
 | T13 | 图元批 2：电机/隔离开关/nav-button（默认事件）/值牌 | M3 | 默认事件实证 | ☐ | |
@@ -70,6 +71,8 @@
 | T16 | 主题(dark 默认)/状态栏/命令历史/断线 UX | M4 | E2E 断线段 | ☐ | |
 | T17 | 缩略图 + 列表性能（并发上限） | M4 | 画面列表 E2E | ☐ | |
 | T18 | build + gateway 部署 + LAN 验证 | M4 | G-M4 | ☐ | |
+
+**G-M2 达成 2026-10-25 · e2e 15/15**（数据段 uptime 双采样变化 / 命令段 payload 契约 {instance:'self',devid,cmd:'write'} / 跳转段 URL+`__navCount` 防刷新 / 断链段 offline→online；单测 65/65 含事件词表）
 
 ## 4. 任务详情
 
