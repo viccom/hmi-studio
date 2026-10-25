@@ -35,6 +35,21 @@ export async function rsiotDeleteScreen(id: string): Promise<void> {
   await authedFetch(`/api/v1/screens/${id}`, { method: 'DELETE' })
 }
 
+/** 直接打 rs-iot 预置画面（PUT 全量 upsert），body 为完整 doc */
+export async function rsiotPutScreen(id: string, doc: unknown): Promise<void> {
+  const res = await authedFetch(`/api/v1/screens/${id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(doc),
+  })
+  if (!res.ok) throw new Error(`rsiotPutScreen: rs-iot ${res.status}`)
+}
+
+/** 直接打 rs-iot 取画面 doc（{id,doc}） */
+export async function rsiotGetScreen(id: string): Promise<{ id: string; doc: Record<string, unknown> }> {
+  const res = await authedFetch(`/api/v1/screens/${id}`)
+  if (!res.ok) throw new Error(`rsiotGetScreen: rs-iot ${res.status}`)
+  return res.json()
+}
+
 /** 清扫匹配的残留画面（前次失败运行遗留的自洁兜底） */
 export async function rsiotSweepScreens(match: RegExp): Promise<void> {
   const res = await authedFetch('/api/v1/screens')
