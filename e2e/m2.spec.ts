@@ -155,3 +155,45 @@ test.describe('M2 画面互跳', () => {
     { timeout: 10_000 }).toBe(true)
   })
 })
+
+// G-M2 段5（T10）：SSE 断链重连。route.abort 只能掐新请求、杀不掉已建立的流——借段4 的
+// 容器内跳转触发 resubscribe 造一条新连接：A 在线 → abort + 点 nav → 新流被掐 →
+// 状态灯 offline（退避重连循环持续失败）→ unroute → 退避（1s 起步）内重连 → online。
+// pageerror 断言 = T5 重连循环健壮性门：abort 期间不允许未捕获异常。
+test.describe('M2 断链重连', () => {
+  const stamp = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+  const slugA = `e2e-t10a-${stamp}`
+  const slugB = `e2e-t10b-${stamp}`
+  test.beforeAll(async () => { await seedNavScreens(slugA, slugB) })
+  test.afterAll(async () => { await rsiotSweepScreens(/^e2e-t10[ab]-/) })
+
+  test('subscribe 掐断 → offline → 解除 → online（重连循环无未捕获异常）', async ({ page }) => {
+    await loginAsAdmin(page)
+    const pageErrors: string[] = []
+    page.on('pageerror', (e) => pageErrors.push(String(e)))
+
+    await page.goto(`/view/${slugA}`)
+    await expect(page.locator('.state.online')).toBeVisible({ timeout: 10_000 })
+
+    await page.route('**/api/v1/rtdatas/subscribe*', (route) => route.abort())
+    await page.locator(`[id^="${navAPelId()}"]`).click()
+    // 跳转本身成功（doc 加载不走被掐端点）；新 SSE 连接被 abort → offline
+    await expect.poll(
+      () => page.evaluate(() => (window as unknown as { __navCount?: number }).__navCount ?? 0),
+      { timeout: 10_000 },
+    ).toBeGreaterThanOrEqual(1)
+    await expect(page).toHaveURL(new RegExp(`/view/${slugB}$`))
+    await expect(page.locator('.state.offline')).toBeVisible({ timeout: 10_000 })
+
+    // 恢复：退避 1s 起步翻倍——解除拦截后下一次重试即通（断言上限放宽 20s）
+    await page.unroute('**/api/v1/rtdatas/subscribe*')
+    await expect(page.locator('.state.online')).toBeVisible({ timeout: 20_000 })
+
+    // 恢复的流真实可用：B 的 uptime 绑定文本数值化（snapshot 到达）
+    await expect.poll(async () =>
+      /^\d+$/.test((await page.locator(`[id^="${navBPelId()}"] .break-words`).textContent()) ?? ''),
+    { timeout: 10_000 }).toBe(true)
+
+    expect(pageErrors).toEqual([]) // abort 重连循环不允许未捕获异常（T5 健壮性门）
+  })
+})
