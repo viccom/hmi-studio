@@ -17,7 +17,7 @@
 | F1 | 登录 `POST /api/v1/user/login` `{user_id,pass}` → `{status,token,user}`；admin/admin 有效；JWT 墙覆盖 `/api/v1/*` | curl 实测 |
 | F2 | `GET /api/v1/devices` → 设备树（`{dev:{children:[{label,value(tag名),type}]}}`）；`GET /api/v1/tags` → 平铺 `{"rsiot.cpu_percent":{desc,...}}`；`GET /api/v1/rtdatas` → 嵌套 `{dev:{field:[ts,localTime,"value"]}}`，value 恒为字符串 | curl 实测 |
 | F3 | SSE `GET /api/v1/rtdatas/subscribe?dev_id=a,b&interval=N&token=`；cell 同 F2 形态；ts 秒 | agent-hmi adapter + rs-iot 源码 |
-| F4 | screens CRUD：`GET /screens`（id 列表）、`GET /screens/:id`→`{id,doc}`、`PUT /screens/:id`（全量，创建=PUT 新 id）、`DELETE` 幂等 | routes_meta.rs 实读 |
+| F4 | screens CRUD：`GET /screens`（`{screens:[id...]}` 包裹，T2 curl 实测修正）、`GET /screens/:id`→`{id,doc}`、`PUT /screens/:id`（全量，创建=PUT 新 id）、`DELETE` 幂等 | routes_meta.rs 实读 + T2 curl |
 | F5 | maotu 绑定：`setDevicePointByID(bind_id,val)` 直写 bind_attr + 评估 triggers；`$mtEventCallBack(type,id,...args)`→`onEventCallBack` 透传；custom_code 有 window 访问 | hmi-studio probe 六项全过 |
 | F6 | maotu 无原生画面跳转；事件动作 `changeAttr/customCode/eventFlow`；`ILeftAsideConfigItemPublic.events` 支持默认事件模板 | 0.6.5 bundle 全量 grep |
 | F7 | 活数据可用：`rsiot.uptime_s`（单调增）、`rsiot.cpu_percent`、`rsiot.alarm_active`；命令 `POST /api/v1/command/send {instance,devid,cmd,data}` 需 `devid→inst_id` 解析 | curl + CommandReq 源码 |
@@ -47,8 +47,8 @@
 |----|------|--------|------|------|--------|
 | T0 | 工程基建：目录/路由壳/API client/测试基座 | M1 | `npm test` 基线绿 | ☑ | ce6ba1b..05c9e90 |
 | T1 | auth composable + 登录页 + 路由守卫 | M1 | 单测 + E2E 登录段 | ☑ | 744d7d8..8128a5c |
-| T2 | screens API 模块（wrap/unwrap/CRUD） | M1 | 单测 round-trip | ☐ | |
-| T3 | 画面列表页（卡片墙+新建+删除） | M1 | E2E m1 列表段 | ☐ | |
+| T2 | screens API 模块（wrap/unwrap/CRUD） | M1 | 单测 round-trip | ☑ | 14118a6 |
+| T3 | 画面列表页（卡片墙+新建+删除） | M1 | E2E m1 列表段 | ☑ | 93b49b0 |
 | T4 | 编辑页（MtEdit+deviceInfo+存取 round-trip） | M1 | G-M1 全绿 | ☐ | |
 | T5 | SSE 客户端（解析/归一化/重连/换 token） | M2 | 单测 | ☐ | |
 | T6 | collectBinds + 运行页分发桥 | M2 | 单测 + E2E 数据段 | ☐ | |
