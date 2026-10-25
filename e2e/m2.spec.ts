@@ -75,3 +75,44 @@ test.describe('M2 命令桥', () => {
     }])
   })
 })
+
+// G-M2 段3（T8）：告警显隐——page.route 拦截 /api/v1/alarms fulfill 假数据（确定性：
+// 不依赖脚本真实 fire 告警）。组件渲染走真实代码路径（ViewView→AlarmBanner），
+// 双源合并/轮播收敛已由 alarms.test.ts 单测覆盖——此分层选择记入任务报告。
+test.describe('M2 告警骨架', () => {
+  const slug = `e2e-t8-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+  test.beforeAll(async () => {
+    await seedScreen(slug)
+  })
+  test.afterAll(async () => {
+    await rsiotSweepScreens(/^e2e-t8-/)
+  })
+
+  test('有活动告警 → 横幅可见且含告警内容', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.route('**/api/v1/alarms*', (route) => route.fulfill({
+      status: 200, contentType: 'application/json',
+      // 实测形状：[{key,level,source,message,ts,count}]（routes_alarm.rs AlarmItem）
+      body: JSON.stringify([{
+        key: 'e2e.temp_high', level: 'error', source: 'self',
+        message: 'E2E 假告警：温度过高', ts: '2026-10-25T07:00:00Z', count: 3,
+      }]),
+    }))
+    const alarmed = page.waitForResponse((r) => r.url().includes('/api/v1/alarms'))
+    await page.goto(`/view/${slug}`)
+    await alarmed
+    await expect(page.getByTestId('alarm-banner')).toBeVisible()
+    await expect(page.getByTestId('alarm-banner')).toContainText('E2E 假告警：温度过高')
+  })
+
+  test('空告警清单 → 横幅隐藏', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.route('**/api/v1/alarms*', (route) => route.fulfill({
+      status: 200, contentType: 'application/json', body: '[]',
+    }))
+    const alarmed = page.waitForResponse((r) => r.url().includes('/api/v1/alarms'))
+    await page.goto(`/view/${slug}`)
+    await alarmed // 快照已回（避免 app 未启动时假绿）
+    await expect(page.getByTestId('alarm-banner')).toBeHidden()
+  })
+})
