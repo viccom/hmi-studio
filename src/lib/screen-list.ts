@@ -1,7 +1,9 @@
 /**
- * 列表页数据源：GET ids → 并发分批 GET doc → 卡片（{id,name,group}）。
- * 并发上限保护 rs-iot（画面多时避免 N+1 全并发打满）。
+ * 列表页数据源：GET ids → 并发分批 GET doc → 卡片（{id,name,group,done}）。
+ * 并发上限保护 rs-iot（画面多时避免 N+1 全并发打满）——T17 既定 6→4。
+ * done（IExportJson）随卡返回：列表缩略图渲染源（T17）。
  */
+import type { IExportJson } from 'maotu'
 import { ApiError } from './api'
 import { screensApi, unwrapDoc } from './screens'
 
@@ -19,19 +21,25 @@ export async function batched<T, R>(
   return out
 }
 
-export interface ScreenCard { id: string; name?: string; group?: string }
+export interface ScreenCard {
+  id: string
+  name?: string
+  group?: string
+  /** 画面完整 done_json（缩略图源；体积小直接随卡持有） */
+  done?: IExportJson
+}
 
 /** 某 id 404（列表与详情之间被并发删除）跳过该卡，不整体失败；其他错误上抛 */
 export async function loadScreenCards(
   client: ReturnType<typeof screensApi> = screensApi(),
-  cap = 6,
+  cap = 4,
 ): Promise<ScreenCard[]> {
   const ids = await client.list()
-  const cards = await batched(ids, cap, async (id) => {
+  const cards = await batched(ids, cap, async (id): Promise<ScreenCard | null> => {
     try {
       const { doc } = await client.get(id)
-      const { meta } = unwrapDoc(doc)
-      return { id, ...meta }
+      const { done, meta } = unwrapDoc(doc)
+      return { id, ...meta, done }
     } catch (e) {
       if (e instanceof ApiError && e.status === 404) return null
       throw e

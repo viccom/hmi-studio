@@ -42,7 +42,7 @@ describe('batched 并发分批器', () => {
 })
 
 describe('loadScreenCards', () => {
-  it('2 个 id → 2 张卡 {id,name,group}；某 id 404 跳过该卡不整体失败', async () => {
+  it('2 个 id → 2 张卡 {id,name,group,done}；某 id 404 跳过该卡不整体失败', async () => {
     const fake = {
       list: async () => ['a', 'gone', 'b'],
       get: async (id: string) => {
@@ -54,10 +54,33 @@ describe('loadScreenCards', () => {
       del: async () => undefined,
     }
     const cards = await loadScreenCards(fake as ReturnType<typeof screensApi>, 6)
-    expect(cards).toEqual([
-      { id: 'a', name: 'N-a', group: 'g1' },
-      { id: 'b', name: 'N-b', group: 'g1' },
-    ])
+    expect(cards).toHaveLength(2)
+    // done（IExportJson）随卡返回——T17 缩略图渲染源
+    expect(cards.map(({ id, name, group, done }) => ({ id, name, group, hasDone: done !== undefined })))
+      .toEqual([
+        { id: 'a', name: 'N-a', group: 'g1', hasDone: true },
+        { id: 'b', name: 'N-b', group: 'g1', hasDone: true },
+      ])
+  })
+
+  it('默认并发 cap=4（T17 既定：6→4 保护 rs-iot）', async () => {
+    let running = 0
+    let peak = 0
+    const fake = {
+      list: async () => ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
+      get: async (id: string) => {
+        running++
+        peak = Math.max(peak, running)
+        await sleep(5)
+        running--
+        return { id, doc: wrapDoc(blankScreen(id), {}) }
+      },
+      put: async () => undefined,
+      del: async () => undefined,
+    }
+    const cards = await loadScreenCards(fake as ReturnType<typeof screensApi>)
+    expect(cards).toHaveLength(8)
+    expect(peak).toBe(4)
   })
 
   it('非 404 错误照常上抛（网络/服务端问题不静默吞掉）', async () => {

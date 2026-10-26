@@ -121,3 +121,44 @@ test.describe('M4 状态栏与命令历史（T16-B）', () => {
     expect(await page.evaluate(() => localStorage.getItem('hmi_token'))).toBeNull()
   })
 })
+
+// T17 缩略图：MtPreview 实测成本（+11MB 堆/6 实例 ≈1.8MB/例，全列表懒挂载 ~2.3s）——
+// 6 画面量级可接受，直接用真渲染；占位降级仅针对非 maotu 格式（agent-hmi 旧画面兼容守卫：
+// 其 doc 无 json/canvasCfg，MtPreview mounted hook 抛 TypeError 且中断同批兄弟挂载——实测）。
+test.describe('M4 缩略图（T17）', () => {
+  const legacySlug = `e2e-t17-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+  test.afterAll(async () => {
+    const { rsiotSweepScreens } = await import('./helpers')
+    await rsiotSweepScreens(/^e2e-t17-/)
+  })
+
+  test('卡片缩略区：maotu 画面挂 MtPreview 真渲染（svg 图元 dataURI img 可见）', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto('/')
+    const demoCard = page.locator('.el-card', { hasText: 'water-demo-m3' }).first()
+    await demoCard.scrollIntoViewIfNeeded()
+    const thumb = demoCard.locator('[data-testid="card-thumb"]')
+    await expect(thumb).toBeVisible()
+    // 进视口 → 懒挂载 → MtPreview 渲染出图元（svg 族 = dataURI <img>；文本图元真实 DOM）
+    await expect(thumb.locator('.thumb-scale img')).not.toHaveCount(0, { timeout: 10_000 })
+  })
+
+  test('兼容守卫：agent-hmi 旧格式画面降级占位徽章（不炸列表）', async ({ page }) => {
+    const { rsiotPutScreen } = await import('./helpers')
+    // agent-hmi 旧格式：无 json/canvasCfg（$schema 布局形）
+    await rsiotPutScreen(legacySlug, {
+      $schema: 'agent-hmi.screen/1', id: legacySlug,
+      meta: { name: `E2E-T17 旧格式 ${legacySlug}` },
+      layout: {}, edges: [],
+    } as unknown as Parameters<typeof rsiotPutScreen>[1])
+    await loginAsAdmin(page)
+    await page.goto('/')
+    const card = page.locator('.el-card', { hasText: legacySlug })
+    await card.scrollIntoViewIfNeeded()
+    await expect(card.locator('.thumb-fallback')).toBeVisible({ timeout: 10_000 })
+    // 其余卡片不受波及（守卫前：一卡抛错中断同批挂载）
+    const demoCard = page.locator('.el-card', { hasText: 'water-demo-m3' }).first()
+    await demoCard.scrollIntoViewIfNeeded()
+    await expect(demoCard.locator('.thumb-scale img').first()).toBeVisible({ timeout: 10_000 })
+  })
+})

@@ -1,12 +1,14 @@
 <script setup lang="ts">
-// 画面列表：卡片墙（名称/slug/group tag）+ 新建（PUT blankScreen）+ 删除（popconfirm）
+// 画面列表：卡片墙（缩略图/名称/slug/group tag）+ 新建（PUT blankScreen）+ 删除（popconfirm）
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { blankScreen, screensApi, wrapDoc } from '../lib/screens'
 import { loadScreenCards, type ScreenCard } from '../lib/screen-list'
+import { registerSymbols } from '../symbols'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import ScreenThumb from '../components/ScreenThumb.vue'
 
 const router = useRouter()
 const sApi = screensApi()
@@ -23,7 +25,11 @@ async function refresh() {
     loading.value = false
   }
 }
-onMounted(refresh)
+onMounted(() => {
+  // 自绘图元注册（幂等）：缩略图 MtPreview 渲染同样查注册表（F18③）
+  registerSymbols()
+  void refresh()
+})
 
 async function remove(id: string) {
   try {
@@ -85,6 +91,7 @@ async function create() {
     <el-row v-else v-loading="loading" :gutter="16">
       <el-col v-for="c in cards" :key="c.id" :xs="24" :sm="12" :md="8" :lg="6" class="card-col">
         <el-card class="screen-card" shadow="hover" @click="router.push(`/edit/${c.id}`)">
+          <ScreenThumb :done="c.done" />
           <div class="card-head">
             <span class="card-name" :title="c.name ?? c.id">{{ c.name ?? c.id }}</span>
             <span class="card-ops" @click.stop>
