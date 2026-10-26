@@ -18,7 +18,7 @@
 - `src/views/` 四业务页（Login/ScreenList/Edit/View）+ `src/components/` 骨架层组件
 - `src/symbols/` 手工重建图元（一图元一 ts，export ILeftAsideConfigItemPublic；21 类目录见 registry.ts 头注释；约定 lint 见 lib/symbol-lint；开发宪法 docs/maotu-symbol-development-guide.md）
 - `src/dev/` 研究资产（spike/probe），不进导航不进守卫
-- `e2e/` Playwright：smoke / m1 / m2 / m3（对应实施方案 §1 的 G 门）
+- `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7 / w8（G 门 + 图元轮 + 用户反馈轮，webServer 自动起 5290）
 
 ## 文档
 

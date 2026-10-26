@@ -97,6 +97,14 @@
 | W7-B | 右面板 tab 头常驻：**根因=maotu 内置 element-plus 把 el-tabs 渲染成 [content, header]**（tab 头在 DOM 底部）；flex+order:-1 重排到顶 + sticky top（滚动容器=el-aside 本体，实测） | e2e w7 段4（sticky + 滚到底钉顶 + 途中切 tab） | 6e31110 |
 | W7-C | e2e/w7.spec.ts 4 例 + 全门（单测 129 / e2e 36 全绿）+ 部署重建（gateway /hmi/ 200，index 指纹 C3zWZb2D→DSpH7jGO，EditView css 含新规则） | 全门 + gateway 资产指纹 | aefd800 |
 
+**W8 用户反馈轮（2026-10-26，绑定面板重做 + 画面分组）**：
+
+| 项 | 内容 | 验证 | commit |
+|----|------|------|--------|
+| W8-A | 绑定面板重做（deviceBind 官方插槽整面板替换，d.ts 拼写为准）：BindPanel.vue（可搜索点位树=**fetchDeviceTreeRich 走 GET /api/v1/devreg** 设备 desc+点位 desc/unit 单点齐活 / 属性下拉 label=描述符 title+路径副文本（默认智能猜 fill→text）/ 绑定列表+删除 / 简易触发器（rule+changeAttr+change_attr 形状照抄 demo-screen trig()；custom_code 高级折叠直编））；**最大技术假设 E2E 落锤：插槽 item=store done_json[n] 响应式对象，直改 item.binds 即驱动 maotu onSaveClick 全量 PUT**（代价已交代：无 bind_mapping、不进 undo，面板底部小字注明） | e2e w8 段1（面板替换→搜索→绑 uptime_s→保存→GET doc binds 落库→/view 数值驱动）+ 段3（触发器 >50→fill=#ff4d4f 结构入库）；探针先行验证 | d7f30a0 |
+| W8-B | 画面分组：ScreenListView 分区卡片墙（组头=组名+数量徽章，未分组区排最后，**组内/组名 zh 拼音序 localeCompare(x,'zh')**——root 码点序对中文不直觉，实测修正）；EditView 新建对话框补分组输入；切换器 el-option-group 两层（组名小字灰、popper 挂 body 须非 scoped 块）；两处新建核上抽 lib/screen-create.ts（探测+创建，结果态 ok/exists/failed）+ groupSections 分区器单源（screen-list.ts） | e2e w8 段2（新建带组→列表区头+徽章→切换器组内选项）；单测 groupSections 3 例 + createScreen 3 例 | 84a8db8 |
+| W8-C | e2e/w8.spec.ts 3 段 + 全门（单测 225 / e2e 43 全绿）+ 部署（gateway /hmi/ 200，index 指纹 CmXtrtRF→CK1cSzNG，EditView chunk 含 BindPanel）；实证修正二则：element-plus `el-select-group__title` 与选项 `ul.el-select-group` 为 **兄弟节点**（子定位器取不到 title）；water-demo-m3 段1 **备份→变更→断言→原样回写**（长期资产不留痕） | 全门 + gateway 资产指纹 + rs-iot 清扫复查 | （本 commit） |
+
 ## 4. 任务详情
 
 ### T0 工程基建
