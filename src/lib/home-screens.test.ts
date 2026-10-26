@@ -22,8 +22,8 @@ type Bind = { bind_id: string; bind_attr: string; triggers: Array<{ rule: { oper
 // 预期规模（svg 型含 vue 型趋势/面板——按 tag ≠ text-vue 统计）+ 预期绑定面
 const EXPECT = {
   power: { sym: 7, text: 13, devs: ['home-meter-e1', 'home-meter-e2'], binds: 22 },
-  water: { sym: 5, text: 17, devs: ['home-meter-w1', 'home-meter-w2'], binds: 14 },
-  gas: { sym: 6, text: 15, devs: ['home-meter-g1', 'home-meter-g2'], binds: 15 },
+  water: { sym: 5, text: 21, devs: ['home-meter-w1', 'home-meter-w2'], binds: 16 },
+  gas: { sym: 6, text: 19, devs: ['home-meter-g1', 'home-meter-g2'], binds: 17 },
 } as const
 
 describe('home-screens 三屏结构', () => {

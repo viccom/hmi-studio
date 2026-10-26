@@ -588,7 +588,7 @@ exports[`home-screens 三屏结构 > 全量快照（防漂移基线） 1`] = `
           "fill": "#8fa3b8",
           "fontFamily": "黑体",
           "fontSize": 13,
-          "text": "1# 有功功率（kW）",
+          "text": "1# 功率盘",
           "vertical": false
         },
         "binds": []
@@ -1552,6 +1552,162 @@ exports[`home-screens 三屏结构 > 全量快照（防漂移基线） 1`] = `
                 "custom_code": ""
               }
             ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-bat1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 660,
+          "top": 120,
+          "width": 130
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "1# 电池(V)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-val-bat1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 660,
+          "top": 160,
+          "width": 130
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmw-val-bat1-text",
+            "pel_id": "text-vue-hmw-val-bat1",
+            "bind_id": "home-meter-w1.battery",
+            "bind_name": "battery",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-bat2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 660,
+          "top": 220,
+          "width": 130
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "2# 电池(V)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-val-bat2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 660,
+          "top": 260,
+          "width": 130
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmw-val-bat2-text",
+            "pel_id": "text-vue-hmw-val-bat2",
+            "bind_id": "home-meter-w2.battery",
+            "bind_name": "battery",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
           }
         ]
       },
@@ -3205,10 +3361,166 @@ exports[`home-screens 三屏结构 > 全量快照（防漂移基线） 1`] = `
           "fill": "#faad14",
           "fontFamily": "黑体",
           "fontSize": 14,
-          "text": "安全提示：泄漏报警联动关阀——leak_alarm=1 自动关阀，请立即检修",
+          "text": "安全提示：泄漏报警联动关阀——leak_alarm=1 即自动关阀",
           "vertical": false
         },
         "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-bat1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 500,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "1# 电池(V)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-val-bat1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 480,
+          "top": 500,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmg-val-bat1-text",
+            "pel_id": "text-vue-hmg-val-bat1",
+            "bind_id": "home-meter-g1.battery",
+            "bind_name": "battery",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-bat2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 540,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "2# 电池(V)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-val-bat2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 480,
+          "top": 540,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmg-val-bat2-text",
+            "pel_id": "text-vue-hmg-val-bat2",
+            "bind_id": "home-meter-g2.battery",
+            "bind_name": "battery",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
       },
       {
         "active": false,

@@ -181,7 +181,7 @@ export function buildHomeScreens(): { power: ScreenDoc; water: ScreenDoc; gas: S
       textItem('text-vue-hmp-lbl-m2', { text: '2# 电表 home-meter-e2', left: 20, top: 340, width: 220, height: 24, fill: '#8fa3b8', fontSize: 13 }),
       svgItem('ah-meter-panel', P_E2, { left: 20, top: 380, scale: 1.4, binds: panelBinds(P_E2, 'home-meter-e2') }),
       // 中区：功率盘（e1）+ 趋势（power kW 金 / current A 蓝，tick 直写）
-      textItem('text-vue-hmp-lbl-gauge', { text: '1# 有功功率（kW）', left: 320, top: 80, width: 150, height: 24, fill: '#8fa3b8', fontSize: 13 }),
+      textItem('text-vue-hmp-lbl-gauge', { text: '1# 功率盘', left: 320, top: 80, width: 150, height: 24, fill: '#8fa3b8', fontSize: 13 }),
       svgItem('ah-power-gauge', P_GAUGE, {
         left: 320, top: 120, scale: 1.3,
         binds: [bind(P_GAUGE, 'home-meter-e1.power', 'props.value.val'), ...switchChain(P_GAUGE, 'pulse', 'home-meter-e1.pulse')],
@@ -234,6 +234,11 @@ export function buildHomeScreens(): { power: ScreenDoc; water: ScreenDoc; gas: S
           ...switchChain(W_M2, 'reverse', 'home-meter-w2.reverse_flag'),
         ],
       }),
+      // 右侧栏：双表电池电压值牌（维护点，补衡右上网格空档）
+      textItem('text-vue-hmw-lbl-bat1', { text: '1# 电池(V)', left: 660, top: 120, width: 130, height: 24, fill: '#8fa3b8', fontSize: 13 }),
+      textItem('text-vue-hmw-val-bat1', { text: '—', left: 660, top: 160, width: 130, height: 32, fontSize: 18, bindId: 'home-meter-w1.battery' }),
+      textItem('text-vue-hmw-lbl-bat2', { text: '2# 电池(V)', left: 660, top: 220, width: 130, height: 24, fill: '#8fa3b8', fontSize: 13 }),
+      textItem('text-vue-hmw-val-bat2', { text: '—', left: 660, top: 260, width: 130, height: 32, fontSize: 18, bindId: 'home-meter-w2.battery' }),
       // 左下：趋势（双表瞬时流量 m³/h，蓝/青双线）
       trendItem(W_TREND, {
         left: 20, top: 380, scale: 1.4, yUnit: 'm³/h',
@@ -304,8 +309,12 @@ export function buildHomeScreens(): { power: ScreenDoc; water: ScreenDoc; gas: S
       textItem('text-vue-hmg-val-bal2', { text: '—', left: 480, top: 420, width: 110, height: 32, fontSize: 18, bindId: 'home-meter-g2.balance', bindTriggers: balanceTriggers('text-vue-hmg-val-bal2') }),
       textItem('text-vue-hmg-lbl-t2', { text: '2# 累计(m³)', left: 360, top: 460, width: 120, height: 24, fill: '#8fa3b8', fontSize: 13 }),
       textItem('text-vue-hmg-val-t2', { text: '—', left: 480, top: 460, width: 110, height: 32, fontSize: 18, bindId: 'home-meter-g2.gas_total' }),
-      // 右下：导航；中区下：安全提示条（静态）
-      textItem('text-vue-hmg-lbl-safe', { text: '安全提示：泄漏报警联动关阀——leak_alarm=1 自动关阀，请立即检修', left: 360, top: 380, width: 430, height: 28, fill: '#faad14', fontSize: 14 }),
+      // 右下：导航；中区下：安全提示条（静态）；电池电压值牌
+      textItem('text-vue-hmg-lbl-safe', { text: '安全提示：泄漏报警联动关阀——leak_alarm=1 即自动关阀', left: 360, top: 380, width: 430, height: 28, fill: '#faad14', fontSize: 14 }),
+      textItem('text-vue-hmg-lbl-bat1', { text: '1# 电池(V)', left: 360, top: 500, width: 120, height: 24, fill: '#8fa3b8', fontSize: 13 }),
+      textItem('text-vue-hmg-val-bat1', { text: '—', left: 480, top: 500, width: 110, height: 32, fontSize: 18, bindId: 'home-meter-g1.battery' }),
+      textItem('text-vue-hmg-lbl-bat2', { text: '2# 电池(V)', left: 360, top: 540, width: 120, height: 24, fill: '#8fa3b8', fontSize: 13 }),
+      textItem('text-vue-hmg-val-bat2', { text: '—', left: 480, top: 540, width: 110, height: 32, fontSize: 18, bindId: 'home-meter-g2.battery' }),
       svgItem('ah-nav-button', 'ah-nav-button-hmg-e', { left: 660, top: 420, scale: 1.2, props: { target: HOME_E } }),
       textItem('text-vue-hmg-lbl-nav-e', { text: '← 用电画面', left: 640, top: 460, width: 140, height: 22, fill: '#8fa3b8', fontSize: 13 }),
       svgItem('ah-nav-button', 'ah-nav-button-hmg-w', { left: 660, top: 500, scale: 1.2, props: { target: HOME_W } }),
