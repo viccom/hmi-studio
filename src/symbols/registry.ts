@@ -16,6 +16,12 @@ import { safetyValve } from './safety-valve'
 import { solenoidValve } from './solenoid-valve'
 import { fan } from './fan'
 import { agitator } from './agitator'
+import { digitalDisplay } from './digital-display'
+import { gaugePressure } from './gauge-pressure'
+import { thermometer } from './thermometer'
+import { stackLight } from './stack-light'
+import { pushButton } from './push-button'
+import { selectorSwitch } from './selector-switch'
 
 const SYMBOLS: HmiSymbol[] = [
   pumpCentrifugal,
@@ -33,6 +39,12 @@ const SYMBOLS: HmiSymbol[] = [
   solenoidValve,
   fan,
   agitator,
+  digitalDisplay,
+  gaugePressure,
+  thermometer,
+  stackLight,
+  pushButton,
+  selectorSwitch,
 ]
 
 export function allSymbols(): HmiSymbol[] {

@@ -1,0 +1,241 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`三色警示灯（vue/custom-svg 批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 120,
+  "id": "ah-stack-light",
+  "ports": [],
+  "props": {
+    "fill": {
+      "title": "灯杆/底座色",
+      "type": "color",
+      "val": "#57606a",
+    },
+    "green": {
+      "title": "绿灯亮",
+      "type": "switch",
+      "val": true,
+    },
+    "red": {
+      "title": "红灯亮",
+      "type": "switch",
+      "val": false,
+    },
+    "yellow": {
+      "title": "黄灯亮",
+      "type": "switch",
+      "val": false,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-stack-light%22%20viewBox%3D%220%200%2064%20120%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%2216%22%20y%3D%2212%22%20width%3D%2232%22%20height%3D%2226%22%20rx%3D%226%22%20fill%3D%22%23f5222d%22%20opacity%3D%220.3%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%2214%22%20width%3D%2224%22%20height%3D%2222%22%20rx%3D%225%22%20fill%3D%22%23f5222d%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%2244%22%20width%3D%2224%22%20height%3D%2222%22%20rx%3D%225%22%20fill%3D%22%23262d36%22%20stroke%3D%22%233a424c%22%2F%3E%0A%20%20%3Crect%20x%3D%2216%22%20y%3D%2272%22%20width%3D%2232%22%20height%3D%2226%22%20rx%3D%226%22%20fill%3D%22%2352c41a%22%20opacity%3D%220.3%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%2274%22%20width%3D%2224%22%20height%3D%2222%22%20rx%3D%225%22%20fill%3D%22%2352c41a%22%2F%3E%0A%20%20%3Crect%20x%3D%2229%22%20y%3D%2296%22%20width%3D%226%22%20height%3D%2216%22%20fill%3D%22%2357606a%22%2F%3E%0A%20%20%3Crect%20x%3D%2216%22%20y%3D%22110%22%20width%3D%2232%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%2357606a%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "三色警示灯",
+  "type": "custom-svg",
+  "width": 64,
+}
+`;
+
+exports[`压力表盘（vue/custom-svg 批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 96,
+  "id": "ah-gauge-pressure",
+  "ports": [],
+  "props": {
+    "alarm": {
+      "title": "报警（指针变红）",
+      "type": "switch",
+      "val": false,
+    },
+    "fill": {
+      "title": "弧/指针色",
+      "type": "color",
+      "val": "#e6b32a",
+    },
+    "label": {
+      "title": "标签",
+      "type": "input",
+      "val": "压力",
+    },
+    "max": {
+      "title": "量程上限",
+      "type": "number",
+      "val": 100,
+    },
+    "min": {
+      "title": "量程下限",
+      "type": "number",
+      "val": 0,
+    },
+    "unit": {
+      "title": "单位",
+      "type": "input",
+      "val": "kPa",
+    },
+    "value": {
+      "title": "测量值",
+      "type": "number",
+      "val": 60,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-gauge-pressure%22%20viewBox%3D%220%200%20120%2096%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Cpath%20d%3D%22M%2017.79%2079.09%20A%2052%2052%200%201%201%20102.21%2079.09%22%20fill%3D%22none%22%20stroke%3D%22%2330363d%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M%2017.79%2079.09%20A%2052%2052%200%201%201%2060%208%22%20fill%3D%22none%22%20stroke%3D%22%23e6b32a%22%20stroke-width%3D%228%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%3Cline%20x1%3D%2260%22%20y1%3D%2258%22%20x2%3D%2288%22%20y2%3D%2230%22%20stroke%3D%22%23e6b32a%22%20stroke-width%3D%223%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2260%22%20cy%3D%2258%22%20r%3D%225%22%20fill%3D%22%23e6b32a%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "压力表盘",
+  "type": "custom-svg",
+  "width": 120,
+}
+`;
+
+exports[`操作按钮（vue/custom-svg 批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "events": [
+    {
+      "action": "customCode",
+      "change_attr": [],
+      "custom_code": "$rsiot.send($getItemAttrByID($item_info.id, 'props.devid.val'), $getItemAttrByID($item_info.id, 'props.tag.val'), $getItemAttrByID($item_info.id, 'props.value.val'));",
+      "event_flow_ids": [],
+      "id": "ev-cmd",
+      "trigger_rule": {},
+      "type": "click",
+    },
+  ],
+  "height": 80,
+  "id": "ah-push-button",
+  "ports": [],
+  "props": {
+    "devid": {
+      "title": "目标设备 ID",
+      "type": "input",
+      "val": "rsiot",
+    },
+    "fill": {
+      "title": "按钮帽色",
+      "type": "color",
+      "val": "#1677ff",
+    },
+    "label": {
+      "title": "标签",
+      "type": "input",
+      "val": "启动",
+    },
+    "tag": {
+      "title": "目标点位",
+      "type": "input",
+      "val": "uptime_s",
+    },
+    "value": {
+      "title": "下发值",
+      "type": "number",
+      "val": 1,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-push-button%22%20viewBox%3D%220%200%2080%2080%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Ccircle%20cx%3D%2240%22%20cy%3D%2240%22%20r%3D%2236%22%20fill%3D%22%2330363d%22%20stroke%3D%22%231c2128%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2240%22%20cy%3D%2240%22%20r%3D%2228%22%20fill%3D%22%231c2128%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2240%22%20cy%3D%2238%22%20r%3D%2224%22%20fill%3D%22%231677ff%22%2F%3E%0A%20%20%3Cellipse%20cx%3D%2240%22%20cy%3D%2230%22%20rx%3D%2214%22%20ry%3D%227%22%20fill%3D%22rgba(255%2C255%2C255%2C0.22)%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "操作按钮",
+  "type": "vue",
+  "width": 80,
+}
+`;
+
+exports[`数显面板（vue/custom-svg 批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 64,
+  "id": "ah-digital-display",
+  "ports": [],
+  "props": {
+    "fill": {
+      "title": "读数色",
+      "type": "color",
+      "val": "#39d353",
+    },
+    "label": {
+      "title": "标签",
+      "type": "input",
+      "val": "标签",
+    },
+    "unit": {
+      "title": "单位",
+      "type": "input",
+      "val": "℃",
+    },
+    "value": {
+      "title": "读数值",
+      "type": "number",
+      "val": 0,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-digital-display%22%20viewBox%3D%220%200%20120%2064%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%22118%22%20height%3D%2262%22%20rx%3D%226%22%20fill%3D%22%230d1117%22%20stroke%3D%22%2330363d%22%2F%3E%0A%20%20%3Crect%20x%3D%2210%22%20y%3D%2210%22%20width%3D%2230%22%20height%3D%225%22%20rx%3D%222%22%20fill%3D%22%238b949e%22%2F%3E%0A%20%20%3Crect%20x%3D%2210%22%20y%3D%2224%22%20width%3D%2298%22%20height%3D%2224%22%20rx%3D%223%22%20fill%3D%22none%22%20stroke%3D%22%2339d353%22%20stroke-dasharray%3D%224%202%22%2F%3E%0A%20%20%3Crect%20x%3D%2218%22%20y%3D%2230%22%20width%3D%2260%22%20height%3D%2212%22%20rx%3D%222%22%20fill%3D%22%2339d353%22%2F%3E%0A%20%20%3Crect%20x%3D%2284%22%20y%3D%2232%22%20width%3D%2216%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%238b949e%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "数显面板",
+  "type": "vue",
+  "width": 120,
+}
+`;
+
+exports[`温度计（vue/custom-svg 批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 150,
+  "id": "ah-thermometer",
+  "ports": [],
+  "props": {
+    "fill": {
+      "title": "液色",
+      "type": "color",
+      "val": "#f5222d",
+    },
+    "label": {
+      "title": "标签",
+      "type": "input",
+      "val": "温度",
+    },
+    "max": {
+      "title": "量程上限",
+      "type": "number",
+      "val": 160,
+    },
+    "min": {
+      "title": "量程下限",
+      "type": "number",
+      "val": -40,
+    },
+    "unit": {
+      "title": "单位",
+      "type": "input",
+      "val": "°C",
+    },
+    "value": {
+      "title": "测量值",
+      "type": "number",
+      "val": 25,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-thermometer%22%20viewBox%3D%220%200%2064%20150%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%2224%22%20y%3D%2240%22%20width%3D%2212%22%20height%3D%2280%22%20fill%3D%22%23f5222d%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%22130%22%20r%3D%2213%22%20fill%3D%22%23f5222d%22%2F%3E%0A%20%20%3Crect%20x%3D%2222%22%20y%3D%2214%22%20width%3D%2216%22%20height%3D%22106%22%20rx%3D%228%22%20fill%3D%22none%22%20stroke%3D%22%236e7681%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2230%22%20cy%3D%22130%22%20r%3D%2213%22%20fill%3D%22none%22%20stroke%3D%22%236e7681%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%3Cline%20x1%3D%2242%22%20y1%3D%2214%22%20x2%3D%2249%22%20y2%3D%2214%22%20stroke%3D%22%23c9d1d9%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%3Cline%20x1%3D%2242%22%20y1%3D%2266%22%20x2%3D%2249%22%20y2%3D%2266%22%20stroke%3D%22%23c9d1d9%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%3Cline%20x1%3D%2242%22%20y1%3D%22118%22%20x2%3D%2249%22%20y2%3D%22118%22%20stroke%3D%22%23c9d1d9%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "温度计",
+  "type": "custom-svg",
+  "width": 64,
+}
+`;
+
+exports[`选择开关（vue/custom-svg 批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 96,
+  "id": "ah-selector-switch",
+  "ports": [],
+  "props": {
+    "fill": {
+      "title": "旋钮色",
+      "type": "color",
+      "val": "#faad14",
+    },
+    "label": {
+      "title": "标签",
+      "type": "input",
+      "val": "模式",
+    },
+    "value": {
+      "title": "档位（0/1/2）",
+      "type": "number",
+      "val": 1,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-selector-switch%22%20viewBox%3D%220%200%2080%2096%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Ccircle%20cx%3D%2240%22%20cy%3D%2248%22%20r%3D%2230%22%20fill%3D%22%231c2128%22%20stroke%3D%22%2330363d%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%3Cg%20transform%3D%22rotate(0%2040%2048)%22%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2240%22%20cy%3D%2248%22%20r%3D%2217%22%20fill%3D%22%23faad14%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.45)%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2240%22%20y1%3D%2248%22%20x2%3D%2240%22%20y2%3D%2234%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.65)%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Ccircle%20cx%3D%2240%22%20cy%3D%2248%22%20r%3D%224%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%3Ctext%20x%3D%2212%22%20y%3D%2282%22%20font-size%3D%2210%22%20fill%3D%22%23c9d1d9%22%3E0%3C%2Ftext%3E%0A%20%20%3Ctext%20x%3D%2240%22%20y%3D%2210%22%20font-size%3D%2210%22%20fill%3D%22%23c9d1d9%22%3E1%3C%2Ftext%3E%0A%20%20%3Ctext%20x%3D%2268%22%20y%3D%2282%22%20font-size%3D%2210%22%20fill%3D%22%23c9d1d9%22%3E2%3C%2Ftext%3E%0A%3C%2Fsvg%3E",
+  "title": "选择开关",
+  "type": "vue",
+  "width": 80,
+}
+`;

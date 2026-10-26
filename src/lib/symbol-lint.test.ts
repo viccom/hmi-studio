@@ -72,4 +72,32 @@ describe('lintSymbol 五规则', () => {
     })
     expect(lintSymbol(cssVar)).toEqual([])
   })
+
+  it('vue/custom-svg 型无 svg 串不误报 SVG_VIEWBOX（批 B 路线扩展：kf symbol 化仅 svg 型）', () => {
+    const vueType = broken({ type: 'vue', svg: undefined })
+    expect(lintSymbol(vueType)).not.toContain('SVG_VIEWBOX')
+  })
+
+  it('ANIM_CLASS：svg 型声明 animation prop 却缺影子链配对 → 静默不转（types.ts ③ 缺一环）', () => {
+    const noSelector = broken({
+      props: { fill: OK.props.fill, animation: { title: '旋转动画', type: 'switch', val: false } },
+      svg: '<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><style>.r{animation:spin 1s infinite}</style><rect/></svg>',
+    })
+    expect(lintSymbol(noSelector)).toContain('ANIM_CLASS')
+    const okAnim = broken({
+      props: { fill: OK.props.fill, animation: { title: '旋转动画', type: 'switch', val: false } },
+      svg: '<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><style>use[animation="true"]{--ah-run:running}.r{animation-play-state: var(--ah-run, paused)}</style><rect/></svg>',
+    })
+    expect(lintSymbol(okAnim)).not.toContain('ANIM_CLASS')
+    // 无 animation prop 的 svg 型不受此规则（静态阀族）
+    expect(lintSymbol(OK)).not.toContain('ANIM_CLASS')
+  })
+
+  it('VUE_EMPTY_STR：vue/custom-svg 型 input prop 默认值空串 → jT 替换为 #mt_slot 占位（bundle 960697）', () => {
+    const empty = broken({ type: 'vue', svg: undefined, props: { fill: OK.props.fill, label: { title: '标签', type: 'input', val: '' } } })
+    expect(lintSymbol(empty)).toContain('VUE_EMPTY_STR')
+    // svg 型空串 val 无 jT 管线，不误报
+    const svgEmpty = broken({ props: { fill: OK.props.fill, label: { title: '标签', type: 'input', val: '' } } })
+    expect(lintSymbol(svgEmpty)).not.toContain('VUE_EMPTY_STR')
+  })
 })
