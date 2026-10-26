@@ -3,6 +3,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { login } from '../lib/auth'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const router = useRouter()
 const userId = ref('')
@@ -23,6 +24,7 @@ async function submit() {
 
 <template>
   <main class="login-wrap">
+    <span class="login-theme"><ThemeToggle /></span>
     <el-card class="login-card" header="HMI 组态登录">
       <el-form @submit.prevent="submit">
         <el-form-item>
@@ -49,6 +51,7 @@ async function submit() {
   align-items: center;
   justify-content: center;
 }
+.login-theme { position: fixed; top: 12px; right: 16px; }
 .login-card {
   width: 360px;
 }

@@ -11,6 +11,7 @@ import { screensApi, unwrapDoc, wrapDoc } from '../lib/screens'
 import { fetchDeviceTree, type IDeviceInfo } from '../lib/device-tree'
 import { installBridge } from '../lib/bridge'
 import { registerSymbols } from '../symbols'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -55,11 +56,17 @@ async function save(payload: IExportJson) {
       <span class="screen-name">{{ meta.name ?? slug }}</span>
       <span class="screen-slug">{{ slug }}</span>
       <el-tag v-if="meta.group" size="small" type="info">{{ meta.group }}</el-tag>
+      <span class="topbar-right">
+        <ThemeToggle />
+      </span>
     </header>
+    <!-- use-theme-toggle=false：隐藏 maotu 自带夜间按钮（其 useDark 只切 #mt-edit、
+         与全局 html.dark 双源分叉）——编辑器配色经 .dark 祖先选择器随全局主题 -->
     <MtEdit
       ref="editRef"
       class="edit-body"
       :device-info="deviceInfo"
+      :use-theme-toggle="false"
       @on-save-click="(payload: IExportJson) => save(payload)"
       @on-return-click="router.replace('/')"
     />
@@ -75,5 +82,6 @@ async function save(payload: IExportJson) {
 }
 .screen-name { font-weight: 600; }
 .screen-slug { color: var(--el-text-color-secondary); font-size: 12px; font-family: monospace; }
+.topbar-right { margin-left: auto; display: inline-flex; align-items: center; }
 .edit-body { flex: 1; min-height: 0; }
 </style>

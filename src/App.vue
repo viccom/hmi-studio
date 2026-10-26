@@ -5,3 +5,9 @@
 <template>
   <router-view />
 </template>
+
+<style>
+/* 全局底色随主题（element-plus css-vars：html.dark 切深色盘；T16） */
+html { background: var(--el-bg-color); color: var(--el-text-color-primary); }
+html.dark { color-scheme: dark; }
+</style>

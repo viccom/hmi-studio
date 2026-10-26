@@ -21,6 +21,7 @@ import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
 import { registerSymbols } from '../symbols'
 import AlarmBanner from '../components/AlarmBanner.vue'
 import AlarmDrawer from '../components/AlarmDrawer.vue'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -192,6 +193,7 @@ onUnmounted(() => {
       <span class="screen-slug">{{ currentSlug }}</span>
       <span class="state" :class="state" :data-state="state">{{ state === 'online' ? '在线' : '离线' }}</span>
       <span v-if="deadFields.length" class="dead" :title="deadFields.join('、')">无数据 {{ deadFields.length }} 点</span>
+      <ThemeToggle />
     </header>
     <AlarmBanner :alarm="currentAlarm" @open="drawerOpen = true" />
     <MtPreview ref="previewRef" :show-popover="false" class="view-body" @onEventCallBack="onMtEvent" />

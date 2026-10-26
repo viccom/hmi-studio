@@ -6,6 +6,7 @@ import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { blankScreen, screensApi, wrapDoc } from '../lib/screens'
 import { loadScreenCards, type ScreenCard } from '../lib/screen-list'
+import ThemeToggle from '../components/ThemeToggle.vue'
 
 const router = useRouter()
 const sApi = screensApi()
@@ -73,7 +74,10 @@ async function create() {
   <main class="list-page">
     <header class="list-head">
       <h2>画面列表</h2>
-      <el-button type="primary" @click="openCreate">新建画面</el-button>
+      <span class="head-right">
+        <ThemeToggle />
+        <el-button type="primary" @click="openCreate">新建画面</el-button>
+      </span>
     </header>
 
     <el-empty v-if="!loading && cards.length === 0" description="暂无画面，点击右上角新建" />
@@ -129,6 +133,7 @@ async function create() {
 <style scoped>
 .list-page { padding: 24px; }
 .list-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.head-right { display: inline-flex; align-items: center; gap: 12px; }
 .list-head h2 { margin: 0; }
 .card-col { margin-bottom: 16px; }
 .screen-card { cursor: pointer; }
