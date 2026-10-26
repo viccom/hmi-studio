@@ -216,7 +216,31 @@ fill" .../>`，组件单测 + e2e decode img src 双锁定）。脚本化 SVG �
 | svg 型（拖入瞬间） | 内联 `<svg>` | 节点计数 `[id^="ah-"]` |
 | vue/custom-svg 型 | 真实组件 DOM | 文本/子元素直接断言（text-vue 同款） |
 
-## 7. 已知陷阱速查（全部实证过，勿踩）
+## 7. 页签切换配方（同型设备一屏，纯组态，W10 实证）
+
+**机制链**（maotu 0.6.5 bundle 实证）：元素 click 事件 action=changeAttr → 生成
+`$setItemAttrByID(sign, target_id, target_attr, value)` → Nl 深路径 setter（target_attr 按
+`.` 分割写任意字段）→ 渲染层对 `hide=true` 整元素 v-if（编辑/预览同路径）。
+
+**手工组态步骤**（每块同型设备面板一组）：
+1. 每台设备的面板图元全选 → 右键「组合」；
+2. 图层面板眼睛按钮：2# 组出厂点灭（hide=true）；
+3. 页签按钮（内置按钮图元）挂 click 事件 → 属性更改：目标=1# 组 / 目标属性=「隐藏」/
+   值=关；再加一条目标=2# 组 / 隐藏 / 值=开（change_attr 数组一次全收口）；
+4. 激活态高亮：再加两条属性更改写**按钮自己的** `type` prop（primary/info），
+   激活色随页签移动；
+5. 切页过渡：目标属性换成「动画效果」（common_animations.val）即可。
+
+**限制（重要）**：
+- **组合（group）内的图元绑定收不到数据**——Jr/G 只收顶层 binds、Nl 缺省不深查
+  children（bundle 实证）。带数据的面板页签切换用「逐元素 hide」（平铺，参考
+  src/lib/home-tab-screens.ts），组合只用于纯静态装饰。
+- changeAttr 的 target_value 布尔走 JS 字面量、其余按字符串引号包裹（bundle Md 实证）。
+
+**程序化参照**：src/lib/home-tab-screens.ts（三张页签屏：click→changeAttr hide 平铺
++ 按钮激活色互换 + 触发器极性 alarm/normal）；e2e/w10-tabs.spec.ts。
+
+## 8. 已知陷阱速查（全部实证过，勿踩）
 
 | # | 陷阱 | 后果 | 对策 |
 |---|------|------|------|
@@ -232,3 +256,4 @@ fill" .../>`，组件单测 + e2e decode img src 双锁定）。脚本化 SVG �
 | 10 | 保存态 props 是平面值、导入态是描述符 | 混淆数据形状 | 始终以描述符表为编程面（F12） |
 | 11 | 模板内 `<svg><style>`（custom-svg 闪烁） | SFC 编译期剥除，静默无效 | 声明式动画用 SMIL `<animate>`（§4.1.1 v1.2） |
 | 12 | bool 点位直写（parseCell 归一真布尔 true/false） | 组件侧 truthy 判断须兼容 boolean | 视觉态直接消费直写值；触发链 `= 1/0` 命中与否不影响正确性（不命中即直写值收口） |
+| 13 | group children 内挂绑定 | 绑定收不到 SSE 数据（Jr/G 只收顶层） | 数据图元平铺放顶层；组合仅静态装饰（§7 页签配方） |

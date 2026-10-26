@@ -1,6 +1,7 @@
 import { rsiotPutScreen } from './helpers'
 import { buildDemoScreen, buildCatalogScreen, DEMO_CATALOG } from '../src/lib/demo-screen'
 import { buildHomeScreens, HOME_E, HOME_W, HOME_G } from '../src/lib/home-screens'
+import { buildHomeTabScreens, HOME_E_TABS, HOME_W_TABS, HOME_G_TABS } from '../src/lib/home-tab-screens'
 
 /**
  * M2 数据段种子画面（T6）——形状全部来自 2026-10-25 编辑器/BindProbe 实测：
@@ -144,6 +145,18 @@ export async function seedHomeScreens(): Promise<void> {
   await rsiotPutScreen(HOME_E, power)
   await rsiotPutScreen(HOME_W, water)
   await rsiotPutScreen(HOME_G, gas)
+}
+
+/**
+ * W10 页签三屏（长期资产）：slug 恒定 home-meter-*-tabs，PUT upsert 幂等——
+ * **任何测试不得删除**（同 water-demo-m3 约定）。组态源 = home-tab-screens.ts（纯函数）；
+ * 数据面 = 真实活数据 home-meter-e/w/g 系列。
+ */
+export async function seedHomeTabScreens(): Promise<void> {
+  const { power, water, gas } = buildHomeTabScreens()
+  await rsiotPutScreen(HOME_E_TABS, power)
+  await rsiotPutScreen(HOME_W_TABS, water)
+  await rsiotPutScreen(HOME_G_TABS, gas)
 }
 
 /**

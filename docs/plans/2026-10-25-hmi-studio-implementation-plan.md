@@ -39,6 +39,8 @@
 | F23 | maotu 深色主题语义（T16 实证）：style.css 深色规则全为**祖先选择器**（`.dark .el-button`、tailwind `.dark .dark\:bg-myDarkBgColor`）——`html.dark` 即可驱动 MtEdit/MtPreview 全量深色，无需各自接线；maotu 自带夜间按钮 = `useDark({selector:'#mt-edit'})` 只切编辑器自身 class（独立于 html），与全局双源分叉 → 传 `:use-theme-toggle="false"` 隐藏，主题单源 = html.dark（element-plus dark css-vars 同选择器） | bundle Hd/useDark + header-panel setup 实读 + e2e 编辑器无自带按钮/切换持久化 |
 
 **风险与对策**：① ~~maotu SVG 复合图元内文本注入未验~~ **已关闭（F16：不可行，文本一律走内置文本图元）**；② SSE token 过期 → T5 重连时重登录换 token；③ ~~默认事件模板拖拽实例化未验~~ **已关闭（F19①：events 随注册项实例化，nav-button 实证）**；④ 画面规模 N+1 列表 → T17 并发上限 + 后续 rs-iot 轻端点。
+| F24 | maotu 页签切换纯组态能力（W10 实证）：changeAttr 是通用深路径 setter（Nl：target_attr 按 `.` 分割），事件编辑器目标属性下拉原生含「隐藏(hide)/switch」+ 全部 props；渲染层 hide=true 整元素 v-if（编辑/预览同路径）；click 事件 change_attr 数组一次收口多目标；target_value 布尔走 JS 字面量、其余字符串包裹（bundle Md 实证）。**限制**：group children 的 binds 收不到 SSE 数据（Jr/G 只收顶层 + Nl 缺省不深查）——带数据面板页签切换必须平铺逐元素 hide（组合仅静态装饰）；changeAttr 可写 props.type.val 移动按钮激活色 | bundle Nl/Md/G/Jr 实读 + home-tab-screens 三屏 + w10 e2e（切换互斥/激活色/隐藏面板持续喂数） |
+| F25 | ViewView 自适应缩放（W10）：MtPreview 无视口自适应（固定设计分辨率 + canvasCfg.scale + Ctrl 滚轮），宿主层补——wrapper `translate(-50%,-50%) scale(min(vw/dw, vh/dh))` + ResizeObserver，fit-scale.ts 纯函数；对 maotu 零改动，画面跳转自动跟随；data-fit 属性为 e2e 断言锚点（4K 放大铺满/640 缩小全可见） | fit-scale 4 用例 + w10 段2 三档视口实测 |
 
 ## 1. 可验证目标（Definition of Done）
 

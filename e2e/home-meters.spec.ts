@@ -11,12 +11,14 @@ import { HOME_E, HOME_W, HOME_G } from '../src/lib/home-screens'
 // 水表/燃气表 = custom-svg SSR 串化 img（src 含 data:image/svg）。趋势攒点：bind 直写 tick →
 // 环形缓冲（节流 ≥1s 重绘）——2s 周期数据 12s 应攒 ≥3 点，断言 ≥2（留重连退避余量）。
 
-/** 活数据双采样：值牌 snapshot 到达（脱离初值）→ 下一次 datachange 后文本必变 */
+/** 活数据双采样：值牌 snapshot 到达（脱离初值）→ 下一次 datachange 后文本必变。
+ *  窗口 60s：断言目标含慢累加量（energy/gas_total）——夜间相位功率/瞬时量走低，4~5 位小数
+ *  显示下 15s 内增量可低于显示精度（2026-10-26 22:06 夜间实测翻车），60s 覆盖全相位 */
 async function assertLiveText(page: import('@playwright/test').Page, pelId: string): Promise<void> {
   const txt = page.locator(`#${pelId} .break-words`)
   await expect.poll(async () => (await txt.textContent()) ?? '', { timeout: 10_000 }).not.toBe('—')
   const first = (await txt.textContent())?.trim()
-  await expect.poll(async () => (await txt.textContent())?.trim() !== first, { timeout: 15_000 }).toBe(true)
+  await expect.poll(async () => (await txt.textContent())?.trim() !== first, { timeout: 60_000 }).toBe(true)
 }
 
 /** 趋势攒点：.ah-trc-n = 「N 点」（双曲线缓冲合计），2s 周期 + 1s 节流 → ≥2 点 */

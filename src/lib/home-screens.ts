@@ -35,8 +35,9 @@ const sym = (id: string): HmiSymbol => {
   return s
 }
 
-/** 画布骨架：800x600 深色、20px 吸附网格（fixtures 种子同形，size=20 对齐组态网格约定） */
-const canvas = (): Pick<IExportJson, 'canvasCfg' | 'gridCfg'> => ({
+/** 画布骨架：800x600 深色、20px 吸附网格（fixtures 种子同形，size=20 对齐组态网格约定）
+ *  ——W10 起导出供 home-tab-screens.ts（页签画面）复用同一骨架 */
+export const canvas = (): Pick<IExportJson, 'canvasCfg' | 'gridCfg'> => ({
   canvasCfg: {
     width: 800, height: 600, scale: 1, color: '#141414', img: '',
     guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
@@ -45,7 +46,7 @@ const canvas = (): Pick<IExportJson, 'canvasCfg' | 'gridCfg'> => ({
 })
 
 /** 触发器：rule 命中 → changeAttr 点路径写入（vP 评估序：直写 bind_attr 在前，触发在后收口） */
-function trig(id: string, operator: CompareOperator, value: unknown, targetId: string, targetValue: string | boolean, targetAttr = 'props.fill.val'): IDoneJsonBindList['triggers'][number] {
+export function trig(id: string, operator: CompareOperator, value: unknown, targetId: string, targetValue: string | boolean, targetAttr = 'props.fill.val'): IDoneJsonBindList['triggers'][number] {
   return {
     id, rule: { operator, value }, action: 'changeAttr',
     change_attr: [{ id: `ca-${id}`, target_id: targetId, target_attr: targetAttr, target_value: targetValue }],
@@ -53,7 +54,7 @@ function trig(id: string, operator: CompareOperator, value: unknown, targetId: s
   }
 }
 
-function bind(pelId: string, bindId: string, attr: string, triggers: IDoneJsonBindList['triggers'] = []): IDoneJsonBindList {
+export function bind(pelId: string, bindId: string, attr: string, triggers: IDoneJsonBindList['triggers'] = []): IDoneJsonBindList {
   return {
     id: `bd-${pelId}-${attr.split('.')[1]}`, pel_id: pelId, bind_id: bindId,
     bind_name: bindId.split('.')[1] ?? bindId,
@@ -63,26 +64,26 @@ function bind(pelId: string, bindId: string, attr: string, triggers: IDoneJsonBi
 
 /** 布尔开关链（switch prop 两档互斥收口）：SSE 布尔 parseCell 后为 true/false，
  * Lc '=' 串比较——规则值用布尔原样（实证见文件头，勿改 1/0） */
-const switchChain = (pelId: string, attr: string, bindId: string): IDoneJsonBindList[] =>
+export const switchChain = (pelId: string, attr: string, bindId: string): IDoneJsonBindList[] =>
   [bind(pelId, bindId, `props.${attr}.val`, [
     trig(`${pelId}-${attr}-on`, '=', true, pelId, true, `props.${attr}.val`),
     trig(`${pelId}-${attr}-off`, '=', false, pelId, false, `props.${attr}.val`),
   ])]
 
 /** 文本色两档触发（布尔点位 → 值牌 fill 变色）：返回 triggers，由 textItem 挂 props.text.val 直写 bind */
-const fillTriggers = (pelId: string, hot: string, cold: string): IDoneJsonBindList['triggers'] => [
+export const fillTriggers = (pelId: string, hot: string, cold: string): IDoneJsonBindList['triggers'] => [
   trig(`${pelId}-fill-on`, '=', true, pelId, hot),
   trig(`${pelId}-fill-off`, '=', false, pelId, cold),
 ]
 
 /** 余额预警触发（数值点位 → fill 变色）：<20 橙预警 / >=20 常态白（Number 比较通道） */
-const balanceTriggers = (pelId: string): IDoneJsonBindList['triggers'] => [
+export const balanceTriggers = (pelId: string): IDoneJsonBindList['triggers'] => [
   trig(`${pelId}-bal-low`, '<', 20, pelId, '#faad14'),
   trig(`${pelId}-bal-ok`, '>=', 20, pelId, '#FFF700'),
 ]
 
 /** 自绘图元实例（几何 = 注册宽高 × scale；props 平面值，缺键回落注册默认——demo 同款） */
-function svgItem(symbolId: string, id: string, o: {
+export function svgItem(symbolId: string, id: string, o: {
   left: number; top: number; scale?: number
   props?: Record<string, unknown>
   binds?: IDoneJsonBindList[]
@@ -103,7 +104,7 @@ function svgItem(symbolId: string, id: string, o: {
 }
 
 /** 内置文本图元（F12）：标签（无 bind）与值牌（props.text.val 直写）共用 */
-function textItem(id: string, o: {
+export function textItem(id: string, o: {
   text: string; left: number; top: number; width: number; height?: number
   fill?: string; fontSize?: number; bindId?: string; bindTriggers?: IDoneJsonBindList['triggers']
 }): IExportDoneJson {
@@ -133,7 +134,7 @@ const G_TREND = 'ah-trend-chart-hmg-1'
 const G_LIGHT = 'ah-stack-light-hmg-1'
 
 /** 电表面板全套绑定：v/i/p/pf/freq/status 六直写 + pulse 布尔开关链 */
-const panelBinds = (pelId: string, dev: string): IDoneJsonBindList[] => [
+export const panelBinds = (pelId: string, dev: string): IDoneJsonBindList[] => [
   bind(pelId, `${dev}.voltage`, 'props.v.val'),
   bind(pelId, `${dev}.current`, 'props.i.val'),
   bind(pelId, `${dev}.power`, 'props.p.val'),
@@ -144,7 +145,7 @@ const panelBinds = (pelId: string, dev: string): IDoneJsonBindList[] => [
 ]
 
 /** 趋势图实例：points JSON 串（field 与 bind_id 同值）+ tick0..2 直写通道 */
-function trendItem(id: string, o: {
+export function trendItem(id: string, o: {
   left: number; top: number; scale?: number
   curves: Array<{ field: string; label: string; unit: string; color: string }>
   yUnit: string

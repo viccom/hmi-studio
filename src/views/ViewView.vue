@@ -5,7 +5,7 @@
 // deadFields 简化：静态点集差（bind 集内有、流内未到的字段），不做超时判定——报告已注明。
 // T8 告警：初始 GET /api/v1/alarms 快照 + /api/v1/events?types=alarm 命名事件流
 // （与数据流是两个端点，subscribe 无 types 参数——第二条连接，routes_rtdata_subscribe.rs 实证）。
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useIntervalFn } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
@@ -20,6 +20,7 @@ import { installBridge } from '../lib/bridge'
 import { createDispatcher, createNavStack } from '../lib/nav'
 import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
 import { registerSymbols } from '../symbols'
+import { computeFitScale } from '../lib/fit-scale'
 import AlarmBanner from '../components/AlarmBanner.vue'
 import AlarmDrawer from '../components/AlarmDrawer.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
@@ -82,6 +83,29 @@ useIntervalFn(() => { alarmStore.next(); refreshAlarms() }, 5000)
 // ---- T9 事件分发器 + 容器内跳转 ----
 const navStack = createNavStack()
 
+// ---- W10 自适应缩放（宿主层，零 maotu 改动）：设计分辨率画布 contain 缩放居中于可视区。
+// 设计尺寸来自每次加载画面的 canvasCfg（默认 800x600）；缩放施加在本页 wrapper 的 transform，
+// MtPreview 内部 canvasCfg.scale 保持原值（多为 1）——画面跳转（jump）换 doc 后自动跟随。
+const viewportRef = ref<HTMLElement>()
+const design = ref({ w: 800, h: 600 })
+const fit = ref(1)
+const stageStyle = computed(() => ({
+  width: `${design.value.w}px`,
+  height: `${design.value.h}px`,
+  transform: `translate(-50%, -50%) scale(${fit.value})`,
+}))
+function applyFit(): void {
+  const el = viewportRef.value
+  fit.value = computeFitScale(design.value.w, design.value.h, el?.clientWidth ?? 0, el?.clientHeight ?? 0)
+}
+let resizeObs: ResizeObserver | undefined
+
+/** 每次画面装载后调用：记录设计分辨率并重算缩放（装载改 layout，等一帧再量） */
+async function adoptDesign(done: IExportJson): Promise<void> {
+  design.value = { w: done.canvasCfg?.width ?? 800, h: done.canvasCfg?.height ?? 600 }
+  await nextTick(applyFit)
+}
+
 const onPoint = (p: RtPoint): void => {
   received.add(p.field)
   deadFields.value = bindFields.value.filter((f) => !received.has(f))
@@ -124,6 +148,7 @@ const jump = async (target: string): Promise<boolean> => {
     previewRef.value?.setImportJson(done)
     meta.value = m
     currentSlug.value = target
+    void adoptDesign(done)
     void router.replace(`/view/${target}`)
     resubscribe(done)
     return true
@@ -182,6 +207,8 @@ const stateTagType = (s: string): 'success' | 'danger' | 'warning' | 'info' =>
   s === 'confirmed' ? 'success' : s === 'error' ? 'danger' : s === 'timeout' ? 'warning' : 'info'
 
 onMounted(async () => {
+  resizeObs = new ResizeObserver(applyFit)
+  if (viewportRef.value) resizeObs.observe(viewportRef.value)
   // 自绘图元注册（幂等）：MtPreview 渲染 svg 图元同样查注册表——不注册则自绘图元静默空白
   registerSymbols()
   // 告警双源（与画面加载独立——画面失败告警仍可见）：REST 快照 + events SSE 命名事件
@@ -200,6 +227,7 @@ onMounted(async () => {
     done = unwrapped.done
     meta.value = unwrapped.meta
     previewRef.value?.setImportJson(done)
+    await adoptDesign(done)
   } catch {
     ElMessage.error('画面加载失败')
     return
@@ -209,6 +237,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  resizeObs?.disconnect()
   stream?.close()
   alarmStream?.close()
   bridge.uninstall()
@@ -218,7 +247,11 @@ onUnmounted(() => {
 <template>
   <main class="view-page">
     <AlarmBanner :alarm="currentAlarm" @open="drawerOpen = true" />
-    <MtPreview ref="previewRef" :show-popover="false" class="view-body" @onEventCallBack="onMtEvent" />
+    <div ref="viewportRef" class="fit-viewport">
+      <div class="fit-stage" :style="stageStyle" :data-fit="fit.toFixed(4)">
+        <MtPreview ref="previewRef" :show-popover="false" class="view-body" @onEventCallBack="onMtEvent" />
+      </div>
+    </div>
     <AlarmDrawer v-model="drawerOpen" :active="activeAlarms" :history="historyAlarms" @clear="clearAlarm" />
 
     <!-- T16 底部状态栏：左 画面名/在线灯/订阅点数/deadFields；右 命令历史/用户/登出。
@@ -270,7 +303,10 @@ onUnmounted(() => {
 
 <style scoped>
 .view-page { height: 100vh; display: flex; flex-direction: column; }
-.view-body { flex: 1; min-height: 0; }
+/* W10 自适应：视口裁剪 + 设计分辨率舞台居中缩放（contain），letterbox 随主题底色 */
+.fit-viewport { flex: 1; min-height: 0; position: relative; overflow: hidden; background: var(--el-bg-color-page); }
+.fit-stage { position: absolute; left: 50%; top: 50%; transform-origin: center; }
+.view-body { width: 100%; height: 100%; }
 .view-statusbar {
   display: flex; align-items: center; gap: 12px;
   height: 32px; padding: 0 16px; flex-shrink: 0;
