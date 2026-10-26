@@ -1,4 +1,5 @@
 import { rsiotPutScreen } from './helpers'
+import { buildDemoScreen } from '../src/lib/demo-screen'
 
 /**
  * M2 数据段种子画面（T6）——形状全部来自 2026-10-25 编辑器/BindProbe 实测：
@@ -110,6 +111,17 @@ export async function seedValueTag(slug: string, name = 'E2E 值牌'): Promise<v
     json: [valueTagItem('text-vue-e2eval01', { left: 320, top: 280 })],
     eventList: [], eventFlow: [],
   })
+}
+
+/**
+ * T14 水处理演示画面（长期 LAN 演示资产）：slug 恒定 water-demo-m3 / water-demo-m3-b，
+ * PUT 全量 upsert 幂等——与 e2e-t* 清扫语义相反，**任何测试不得删除这两个画面**。
+ * 组态源 = src/lib/demo-screen.ts buildDemoScreen()（纯函数，结构防漂移快照在彼处单测）。
+ */
+export async function seedDemoScreens(): Promise<void> {
+  const { a, b } = buildDemoScreen()
+  await rsiotPutScreen('water-demo-m3', a)
+  await rsiotPutScreen('water-demo-m3-b', b)
 }
 
 /**
