@@ -5,7 +5,7 @@
      触发链入口：value(连续直写) / pulse(离散 change_attr)。 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { gaugeAngle, gaugeArcPath, polarPt, clampNum } from './gauge-math'
+import { gaugeAngle, gaugeArcBetween, gaugeArcPath, polarPt, clampNum } from './gauge-math'
 
 const props = withDefaults(defineProps<{
   value?: number | string
@@ -20,8 +20,8 @@ const MAX_KW = 5
 const accent = computed(() => props.fill ?? '#e6b32a')
 const baselineD = computed(() => gaugeArcPath(CX, CY, 64, MAX_KW, 0, MAX_KW))
 const progressD = computed(() => gaugeArcPath(CX, CY, 64, props.value, 0, MAX_KW))
-// 静态报警区（>4.5kW）：自 4.5 角扫到满量程角（gaugeArcPath 的 min 参数即起始角，复用）
-const alarmD = computed(() => gaugeArcPath(CX, CY, 64, MAX_KW, 4.5, MAX_KW))
+// 静态报警区（>4.5kW）：4.5 值角 → 满量程值角（30° 短弧；区间起点 = 4.5 的值角）
+const alarmD = computed(() => gaugeArcBetween(CX, CY, 64, 4.5, MAX_KW, 0, MAX_KW))
 const needleDeg = computed(() => gaugeAngle(props.value, 0, MAX_KW))
 const needleTip = computed(() => polarPt(CX, CY, 50, needleDeg.value))
 

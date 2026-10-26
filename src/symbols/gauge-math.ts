@@ -35,8 +35,14 @@ export function polarPt(cx: number, cy: number, r: number, deg: number): { x: nu
 
 /** 表盘进度弧 path（stroke 用）：自 min 角扫到当前值角；>180° 走大弧标志 */
 export function gaugeArcPath(cx: number, cy: number, r: number, value: unknown, min: number, max: number): string {
-  const a0 = GAUGE_START_DEG
-  const a1 = gaugeAngle(value, min, max)
+  return gaugeArcBetween(cx, cy, r, min, clampNum(value, min, max, min), min, max)
+}
+
+/** 任意值区间弧 path（v0→v1，按量程角内插）：报警区段/分段着色用——注意区间起点是
+ * v0（值角），不是 min 角（P2 实测：把 min 参数当区间起点会把整条量程弧画满） */
+export function gaugeArcBetween(cx: number, cy: number, r: number, v0: number, v1: number, min: number, max: number): string {
+  const a0 = gaugeAngle(v0, min, max)
+  const a1 = gaugeAngle(v1, min, max)
   const p0 = polarPt(cx, cy, r, a0)
   const p1 = polarPt(cx, cy, r, a1)
   const largeArc = a1 - a0 > 180 ? 1 : 0

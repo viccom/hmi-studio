@@ -3,7 +3,7 @@
 // 给脏数据（非数串）时行为可预期——这是现场组态最常见的故障注入面。
 import { describe, it, expect } from 'vitest'
 import {
-  clampNum, fracOf, gaugeAngle, gaugeArcPath, polarPt, thermoY, selectorAngle,
+  clampNum, fracOf, gaugeAngle, gaugeArcPath, gaugeArcBetween, polarPt, thermoY, selectorAngle,
   GAUGE_START_DEG, GAUGE_SWEEP_DEG,
 } from './gauge-math'
 
@@ -54,6 +54,20 @@ describe('polarPt/gaugeArcPath', () => {
     expect(zero).toMatch(/^M [\d.]+ [\d.]+ A 44 44 0 0 1 /)
     expect(gaugeArcPath(60, 58, 44, 100, 0, 100)).toContain(' 0 1 ')
     expect(gaugeArcPath(60, 58, 44, 80, 0, 100)).toContain(' 1 1 ') // >180° 大弧
+  })
+})
+
+describe('gaugeArcBetween 任意值区间弧（报警区段用，P2）', () => {
+  it('区间起点 = v0 的值角（非 min 角）：4.5→5 段自 366° 到 390°，短弧标志 0', () => {
+    // 起点 = gaugeAngle(4.5,0,5)=150+216=366°≡6°：cos6°·44≈43.76, sin6°·44≈4.60（锚 60,58）
+    const seg = gaugeArcBetween(60, 58, 44, 4.5, 5, 0, 5)
+    expect(seg).toMatch(/^M 103\.76 62\.60 A 44 44 0 0 1 /)
+    // 终点 = 满量程角 390°≡30°：cos30°·44≈38.11, sin30°·44=22
+    expect(seg).toMatch(/ 1 98\.11 80\.00$/)
+  })
+  it('跨大弧区间走 largeArc=1；整量程区间 = gaugeArcPath 满值形', () => {
+    expect(gaugeArcBetween(60, 58, 44, 0, 5, 0, 5)).toContain(' 1 1 ')
+    expect(gaugeArcBetween(60, 58, 44, 0, 5, 0, 5)).toBe(gaugeArcPath(60, 58, 44, 5, 0, 5))
   })
 })
 

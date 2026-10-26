@@ -10,12 +10,12 @@ import type { HmiSymbol } from './types'
 import { svgThumbnail } from './kit'
 
 const THUMB = `<svg viewBox="0 0 120 106" xmlns="http://www.w3.org/2000/svg">
-  <path d="M 23.11 88.55 A 62 62 0 1 1 96.89 88.55" fill="none" stroke="#30363d" stroke-width="8" stroke-linecap="round"/>
-  <path d="M 71.21 25.02 A 62 62 0 0 1 96.89 88.55" fill="none" stroke="#f5222d" stroke-width="8"/>
-  <path d="M 23.11 88.55 A 62 62 0 0 1 60 16" fill="none" stroke="#e6b32a" stroke-width="8" stroke-linecap="round"/>
-  <line x1="60" y1="82" x2="88" y2="40" stroke="#e6b32a" stroke-width="3"/>
-  <circle cx="60" cy="82" r="5" fill="#e6b32a"/>
-  <circle cx="105" cy="12" r="6" fill="#ff4d4f"/>
+  <path d="M 23.05 82.67 A 42.67 42.67 0 1 1 96.95 82.67" fill="none" stroke="#30363d" stroke-width="8" stroke-linecap="round"/>
+  <path d="M 102.43 65.79 A 42.67 42.67 0 0 1 96.95 82.67" fill="none" stroke="#f5222d" stroke-width="8"/>
+  <path d="M 23.05 82.67 A 42.67 42.67 0 0 1 89.21 30.22" fill="none" stroke="#e6b32a" stroke-width="8" stroke-linecap="round"/>
+  <line x1="60" y1="61.33" x2="80.54" y2="39.46" stroke="#e6b32a" stroke-width="3"/>
+  <circle cx="60" cy="61.33" r="4" fill="#e6b32a"/>
+  <circle cx="105" cy="12" r="6" fill="#262d36" stroke="#30363d"/>
 </svg>`
 
 export const powerGauge: HmiSymbol = {
