@@ -1,7 +1,7 @@
 // 正式图元注册表（T11 起）：allSymbols() 是左面板注册与 lint 全量检查的唯一事实源。
 // 新图元 = 一个 ts 文件 export HmiSymbol + 在此追加，lint 全绿（symbol-lint.test 全量循环）即可注册。
 //
-// 图元目录（22 类，2026-10-25 图元批量轮 + P2 表计轮；id——能力）：
+// 图元目录（26 类，2026-10-25 图元批量轮 + P2 表计轮；id——能力）：
 //   ah-pump            离心泵——叶轮旋转动画 + fill 状态色
 //   ah-gate-valve      闸阀——领结阀体 + 手轮，fill 状态色
 //   ah-butterfly-valve 蝶阀——蝶板 + 阀杆，fill 状态色
@@ -24,6 +24,10 @@
 //   ah-push-button     操作按钮（vue）——按下视觉反馈 + 默认事件模板 $rsiot.send(devid,tag,value)
 //   ah-selector-switch 选择开关（vue）——三态旋钮 value 0/1/2 + update:modelValue 回写
 //   ah-trend-chart     趋势图表（vue，P2）——echarts 折线×3；bind 直写 tick0-2 → 环形缓冲 → 节流重绘
+//   ah-power-gauge     电表功率盘（custom-svg，P2）——0~5kW 指针盘 + >4.5kW 红区 + pulse 指示灯
+//   ah-meter-panel     电表面板（vue，P2）——V/I/P/PF/Hz 五行数显 + 脉冲灯 + status 告警
+//   ah-water-meter     水表盘（custom-svg，P2）——机械字轮累计 + 瞬时小盘 + 逆向流标记
+//   ah-gas-meter       燃气表盘（custom-svg，P2）——字轮累计 + 余额预警 + 阀标 + 泄漏红闪
 import type { HmiSymbol } from './types'
 import { pumpCentrifugal } from './pump-centrifugal'
 import { gateValve } from './gate-valve'
@@ -47,6 +51,10 @@ import { stackLight } from './stack-light'
 import { pushButton } from './push-button'
 import { selectorSwitch } from './selector-switch'
 import { trendChart } from './trend-chart'
+import { powerGauge } from './power-gauge'
+import { meterPanel } from './meter-panel'
+import { waterMeter } from './water-meter'
+import { gasMeter } from './gas-meter'
 
 const SYMBOLS: HmiSymbol[] = [
   pumpCentrifugal,
@@ -71,6 +79,10 @@ const SYMBOLS: HmiSymbol[] = [
   pushButton,
   selectorSwitch,
   trendChart,
+  powerGauge,
+  meterPanel,
+  waterMeter,
+  gasMeter,
 ]
 
 export function allSymbols(): HmiSymbol[] {

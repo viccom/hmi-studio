@@ -1250,7 +1250,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
           "bind_mapping": [],
           "triggers": [
             {
-              "id": "ah-stack-light-cat-1-on",
+              "id": "ah-stack-light-cat-1-red-on",
               "rule": {
                 "operator": "=",
                 "value": 1
@@ -1258,7 +1258,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
               "action": "changeAttr",
               "change_attr": [
                 {
-                  "id": "ca-ah-stack-light-cat-1-on",
+                  "id": "ca-ah-stack-light-cat-1-red-on",
                   "target_id": "ah-stack-light-cat-1",
                   "target_attr": "props.red.val",
                   "target_value": true
@@ -1267,7 +1267,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
               "custom_code": ""
             },
             {
-              "id": "ah-stack-light-cat-1-off",
+              "id": "ah-stack-light-cat-1-red-off",
               "rule": {
                 "operator": "=",
                 "value": 0
@@ -1275,7 +1275,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
               "action": "changeAttr",
               "change_attr": [
                 {
-                  "id": "ca-ah-stack-light-cat-1-off",
+                  "id": "ca-ah-stack-light-cat-1-red-off",
                   "target_id": "ah-stack-light-cat-1",
                   "target_attr": "props.red.val",
                   "target_value": false
@@ -1619,6 +1619,465 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
           "bind_attr": "props.tick0.val",
           "bind_mapping": [],
           "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-meter-panel-cat-1",
+      "title": "电表面板",
+      "type": "vue",
+      "tag": "ah-meter-panel",
+      "binfo": {
+        "angle": 0,
+        "width": 200,
+        "height": 150,
+        "left": 260,
+        "top": 624
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#39d353",
+        "v": 0,
+        "i": 0,
+        "p": 0,
+        "pf": 0,
+        "freq": 0,
+        "pulse": false,
+        "status": 0
+      },
+      "binds": [
+        {
+          "id": "bd-ah-meter-panel-cat-1",
+          "pel_id": "ah-meter-panel-cat-1",
+          "bind_id": "home-meter-e1.voltage",
+          "bind_name": "voltage",
+          "bind_attr": "props.v.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-cat-1i",
+          "pel_id": "ah-meter-panel-cat-1",
+          "bind_id": "home-meter-e1.current",
+          "bind_name": "current",
+          "bind_attr": "props.i.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-cat-1p",
+          "pel_id": "ah-meter-panel-cat-1",
+          "bind_id": "home-meter-e1.power",
+          "bind_name": "power",
+          "bind_attr": "props.p.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-cat-1pf",
+          "pel_id": "ah-meter-panel-cat-1",
+          "bind_id": "home-meter-e1.pf",
+          "bind_name": "pf",
+          "bind_attr": "props.pf.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-cat-1f",
+          "pel_id": "ah-meter-panel-cat-1",
+          "bind_id": "home-meter-e1.frequency",
+          "bind_name": "frequency",
+          "bind_attr": "props.freq.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-cat-1st",
+          "pel_id": "ah-meter-panel-cat-1",
+          "bind_id": "home-meter-e1.status",
+          "bind_name": "status",
+          "bind_attr": "props.status.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-cat-1",
+          "pel_id": "ah-meter-panel-cat-1",
+          "bind_id": "home-meter-e1.pulse",
+          "bind_name": "pulse",
+          "bind_attr": "props.pulse.val",
+          "bind_mapping": [],
+          "triggers": [
+            {
+              "id": "ah-meter-panel-cat-1-pulse-on",
+              "rule": {
+                "operator": "=",
+                "value": 1
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-meter-panel-cat-1-pulse-on",
+                  "target_id": "ah-meter-panel-cat-1",
+                  "target_attr": "props.pulse.val",
+                  "target_value": true
+                }
+              ],
+              "custom_code": ""
+            },
+            {
+              "id": "ah-meter-panel-cat-1-pulse-off",
+              "rule": {
+                "operator": "=",
+                "value": 0
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-meter-panel-cat-1-pulse-off",
+                  "target_id": "ah-meter-panel-cat-1",
+                  "target_attr": "props.pulse.val",
+                  "target_value": false
+                }
+              ],
+              "custom_code": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-power-gauge-cat-1",
+      "title": "电表功率盘",
+      "type": "custom-svg",
+      "tag": "ah-power-gauge",
+      "binfo": {
+        "angle": 0,
+        "width": 180,
+        "height": 160,
+        "left": 480,
+        "top": 624
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#e6b32a",
+        "value": 0,
+        "pulse": false
+      },
+      "binds": [
+        {
+          "id": "bd-ah-power-gauge-cat-1",
+          "pel_id": "ah-power-gauge-cat-1",
+          "bind_id": "home-meter-e1.power",
+          "bind_name": "power",
+          "bind_attr": "props.value.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-power-gauge-cat-1",
+          "pel_id": "ah-power-gauge-cat-1",
+          "bind_id": "home-meter-e1.pulse",
+          "bind_name": "pulse",
+          "bind_attr": "props.pulse.val",
+          "bind_mapping": [],
+          "triggers": [
+            {
+              "id": "ah-power-gauge-cat-1-pulse-on",
+              "rule": {
+                "operator": "=",
+                "value": 1
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-power-gauge-cat-1-pulse-on",
+                  "target_id": "ah-power-gauge-cat-1",
+                  "target_attr": "props.pulse.val",
+                  "target_value": true
+                }
+              ],
+              "custom_code": ""
+            },
+            {
+              "id": "ah-power-gauge-cat-1-pulse-off",
+              "rule": {
+                "operator": "=",
+                "value": 0
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-power-gauge-cat-1-pulse-off",
+                  "target_id": "ah-power-gauge-cat-1",
+                  "target_attr": "props.pulse.val",
+                  "target_value": false
+                }
+              ],
+              "custom_code": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-water-meter-cat-1",
+      "title": "水表盘",
+      "type": "custom-svg",
+      "tag": "ah-water-meter",
+      "binfo": {
+        "angle": 0,
+        "width": 180,
+        "height": 140,
+        "left": 24,
+        "top": 790
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#58a6ff",
+        "total": 0,
+        "flow": 0,
+        "reverse": false
+      },
+      "binds": [
+        {
+          "id": "bd-ah-water-meter-cat-1",
+          "pel_id": "ah-water-meter-cat-1",
+          "bind_id": "home-meter-w1.flow_total",
+          "bind_name": "flow_total",
+          "bind_attr": "props.total.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-water-meter-cat-1f",
+          "pel_id": "ah-water-meter-cat-1",
+          "bind_id": "home-meter-w1.flow_instant",
+          "bind_name": "flow_instant",
+          "bind_attr": "props.flow.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-water-meter-cat-1",
+          "pel_id": "ah-water-meter-cat-1",
+          "bind_id": "home-meter-w1.reverse_flag",
+          "bind_name": "reverse_flag",
+          "bind_attr": "props.reverse.val",
+          "bind_mapping": [],
+          "triggers": [
+            {
+              "id": "ah-water-meter-cat-1-reverse-on",
+              "rule": {
+                "operator": "=",
+                "value": 1
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-water-meter-cat-1-reverse-on",
+                  "target_id": "ah-water-meter-cat-1",
+                  "target_attr": "props.reverse.val",
+                  "target_value": true
+                }
+              ],
+              "custom_code": ""
+            },
+            {
+              "id": "ah-water-meter-cat-1-reverse-off",
+              "rule": {
+                "operator": "=",
+                "value": 0
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-water-meter-cat-1-reverse-off",
+                  "target_id": "ah-water-meter-cat-1",
+                  "target_attr": "props.reverse.val",
+                  "target_value": false
+                }
+              ],
+              "custom_code": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-gas-meter-cat-1",
+      "title": "燃气表盘",
+      "type": "custom-svg",
+      "tag": "ah-gas-meter",
+      "binfo": {
+        "angle": 0,
+        "width": 180,
+        "height": 140,
+        "left": 220,
+        "top": 790
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#e6f7ff",
+        "total": 0,
+        "balance": 0,
+        "valve": false,
+        "leak": false
+      },
+      "binds": [
+        {
+          "id": "bd-ah-gas-meter-cat-1",
+          "pel_id": "ah-gas-meter-cat-1",
+          "bind_id": "home-meter-g1.gas_total",
+          "bind_name": "gas_total",
+          "bind_attr": "props.total.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-gas-meter-cat-1b",
+          "pel_id": "ah-gas-meter-cat-1",
+          "bind_id": "home-meter-g1.balance",
+          "bind_name": "balance",
+          "bind_attr": "props.balance.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-gas-meter-cat-1",
+          "pel_id": "ah-gas-meter-cat-1",
+          "bind_id": "home-meter-g1.valve",
+          "bind_name": "valve",
+          "bind_attr": "props.valve.val",
+          "bind_mapping": [],
+          "triggers": [
+            {
+              "id": "ah-gas-meter-cat-1-valve-on",
+              "rule": {
+                "operator": "=",
+                "value": 1
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-gas-meter-cat-1-valve-on",
+                  "target_id": "ah-gas-meter-cat-1",
+                  "target_attr": "props.valve.val",
+                  "target_value": true
+                }
+              ],
+              "custom_code": ""
+            },
+            {
+              "id": "ah-gas-meter-cat-1-valve-off",
+              "rule": {
+                "operator": "=",
+                "value": 0
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-gas-meter-cat-1-valve-off",
+                  "target_id": "ah-gas-meter-cat-1",
+                  "target_attr": "props.valve.val",
+                  "target_value": false
+                }
+              ],
+              "custom_code": ""
+            }
+          ]
+        },
+        {
+          "id": "bd-ah-gas-meter-cat-1",
+          "pel_id": "ah-gas-meter-cat-1",
+          "bind_id": "home-meter-g1.leak_alarm",
+          "bind_name": "leak_alarm",
+          "bind_attr": "props.leak.val",
+          "bind_mapping": [],
+          "triggers": [
+            {
+              "id": "ah-gas-meter-cat-1-leak-on",
+              "rule": {
+                "operator": "=",
+                "value": 1
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-gas-meter-cat-1-leak-on",
+                  "target_id": "ah-gas-meter-cat-1",
+                  "target_attr": "props.leak.val",
+                  "target_value": true
+                }
+              ],
+              "custom_code": ""
+            },
+            {
+              "id": "ah-gas-meter-cat-1-leak-off",
+              "rule": {
+                "operator": "=",
+                "value": 0
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-gas-meter-cat-1-leak-off",
+                  "target_id": "ah-gas-meter-cat-1",
+                  "target_attr": "props.leak.val",
+                  "target_value": false
+                }
+              ],
+              "custom_code": ""
+            }
+          ]
         }
       ]
     }

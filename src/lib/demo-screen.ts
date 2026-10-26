@@ -50,9 +50,9 @@ function trig(id: string, operator: CompareOperator, value: unknown, targetId: s
   }
 }
 
-function bind(pelId: string, bindId: string, attr: string, triggers: IDoneJsonBindList['triggers'] = []): IDoneJsonBindList {
+function bind(pelId: string, bindId: string, attr: string, triggers: IDoneJsonBindList['triggers'] = [], key = ''): IDoneJsonBindList {
   return {
-    id: `bd-${pelId}`, pel_id: pelId, bind_id: bindId, bind_name: bindId.split('.')[1] ?? bindId,
+    id: `bd-${pelId}${key}`, pel_id: pelId, bind_id: bindId, bind_name: bindId.split('.')[1] ?? bindId,
     bind_attr: attr, bind_mapping: [], triggers,
   }
 }
@@ -173,11 +173,13 @@ export function buildDemoScreen(): { a: ScreenDoc; b: ScreenDoc } {
 const C = 'cat'
 const cid = (key: string): string => `ah-${key}-${C}-1`
 
-/** 陈列室触发链：布尔点位 → switch prop 两档互斥收口（三色灯 red 用） */
-const boolBinds = (pelId: string, attr: string): IDoneJsonBindList[] => [bind(pelId, 'rsiot.alarm_active', `props.${attr}.val`, [
-  trig(`${pelId}-on`, '=', 1, pelId, true, `props.${attr}.val`),
-  trig(`${pelId}-off`, '=', 0, pelId, false, `props.${attr}.val`),
-])]
+/** 陈列室触发链：布尔点位 → switch prop 两档互斥收口（三色灯 red / P2 表计 bool props 用）；
+ * 触发/ca id 带 attr 后缀——同一图元多条 bool 链（燃气表 valve+leak）不撞 id */
+const boolBinds = (pelId: string, attr: string, bindId = 'rsiot.alarm_active'): IDoneJsonBindList[] =>
+  [bind(pelId, bindId, `props.${attr}.val`, [
+    trig(`${pelId}-${attr}-on`, '=', 1, pelId, true, `props.${attr}.val`),
+    trig(`${pelId}-${attr}-off`, '=', 0, pelId, false, `props.${attr}.val`),
+  ])]
 
 /** 纯函数组态：图元陈列室（registry 全量覆盖判据的承载画面）。无随机、无副作用。
  * 画布 800×950（P2 三表与趋势节自 y596 起追加，出界/重叠判据由布局测试按 canvasCfg 推导）。 */
@@ -232,6 +234,46 @@ export function buildCatalogScreen(): ScreenDoc {
         left: 24, top: 624,
         props: { points: JSON.stringify([{ field: 'rsiot.cpu_percent', label: 'CPU', unit: '%', color: '#f5a623' }]) },
         binds: [bind(cid('trend-chart'), 'rsiot.cpu_percent', 'props.tick0.val')],
+      }),
+      // 电表面板：五行数显 + status 全接 home-meter-e1 真实字段（数据面语义一一对应）；
+      // status(u16) 纯直写（非 0 告警由组件解释，无触发链）；pulse 走二值触发链
+      svgItem('ah-meter-panel', cid('meter-panel'), {
+        left: 260, top: 624,
+        binds: [
+          bind(cid('meter-panel'), 'home-meter-e1.voltage', 'props.v.val'),
+          bind(cid('meter-panel'), 'home-meter-e1.current', 'props.i.val', [], 'i'),
+          bind(cid('meter-panel'), 'home-meter-e1.power', 'props.p.val', [], 'p'),
+          bind(cid('meter-panel'), 'home-meter-e1.pf', 'props.pf.val', [], 'pf'),
+          bind(cid('meter-panel'), 'home-meter-e1.frequency', 'props.freq.val', [], 'f'),
+          bind(cid('meter-panel'), 'home-meter-e1.status', 'props.status.val', [], 'st'),
+          ...boolBinds(cid('meter-panel'), 'pulse', 'home-meter-e1.pulse'),
+        ],
+      }),
+      // 电表功率盘：value 直写 + pulse 二值链（home-meter-e1）
+      svgItem('ah-power-gauge', cid('power-gauge'), {
+        left: 480, top: 624,
+        binds: [
+          bind(cid('power-gauge'), 'home-meter-e1.power', 'props.value.val'),
+          ...boolBinds(cid('power-gauge'), 'pulse', 'home-meter-e1.pulse'),
+        ],
+      }),
+      // 水表盘 / 燃气表盘：home-meter-w1 / home-meter-g1 真实字段
+      svgItem('ah-water-meter', cid('water-meter'), {
+        left: 24, top: 790,
+        binds: [
+          bind(cid('water-meter'), 'home-meter-w1.flow_total', 'props.total.val'),
+          bind(cid('water-meter'), 'home-meter-w1.flow_instant', 'props.flow.val', [], 'f'),
+          ...boolBinds(cid('water-meter'), 'reverse', 'home-meter-w1.reverse_flag'),
+        ],
+      }),
+      svgItem('ah-gas-meter', cid('gas-meter'), {
+        left: 220, top: 790,
+        binds: [
+          bind(cid('gas-meter'), 'home-meter-g1.gas_total', 'props.total.val'),
+          bind(cid('gas-meter'), 'home-meter-g1.balance', 'props.balance.val', [], 'b'),
+          ...boolBinds(cid('gas-meter'), 'valve', 'home-meter-g1.valve'),
+          ...boolBinds(cid('gas-meter'), 'leak', 'home-meter-g1.leak_alarm'),
+        ],
       }),
     ],
     eventList: [], eventFlow: [],
