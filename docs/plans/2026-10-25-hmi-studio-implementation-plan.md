@@ -79,6 +79,7 @@
 | T16 | 主题(dark 默认)/状态栏/命令历史/断线 UX | M4 | E2E 断线段 | ☑ | d1d885d..376bfcc |
 | T17 | 缩略图 + 列表性能（并发上限） | M4 | 画面列表 E2E | ☑ | 5f9eccb |
 | T18 | build + gateway 部署 + LAN 验证 | M4 | G-M4 | ☑ | 4b6db13 |
+| SY-A/B/C | 图元批量轮：svg 工艺 6（止回阀/球阀/安全阀/电磁阀/风机/搅拌器）+ vue/custom-svg 仪表操作 6（数显/压力表盘/温度计/三色灯/操作按钮/选择开关）+ 图元陈列室 catalog-demo + e2e/symbols.spec（21 类全渲染/SSE 读数/触发链） | W8 | lint 七规则 + 单测 82 + e2e symbols 3 段 | ☑ | 19ca106..（批C） |
 
 **G-M2 达成 2026-10-25 · e2e 15/15**（数据段 uptime 双采样变化 / 命令段 payload 契约 {instance:'self',devid,cmd:'write'} / 跳转段 URL+`__navCount` 防刷新 / 断链段 offline→online；单测 65/65 含事件词表）
 

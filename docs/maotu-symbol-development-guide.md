@@ -1,8 +1,9 @@
-# maotu 图元开发规范与约束（v1.0）
+# maotu 图元开发规范与约束（v1.1）
 
 > 适用：hmi-studio（maotu 0.6.5 npm 闭源版）。本文是图元开发的**唯一权威规范**——新图元不合规不合并。
-> 依据：maotu bundle 机制实证 + 本仓 9 个在库图元实践 + 用户学习样例（custom-svg/vue 路线）复核。
+> 依据：maotu bundle 机制实证 + 本仓 21 个在库图元实践（T11-T13 九类 + 图元批量轮 12 类）+ 用户学习样例（custom-svg/vue 路线）复核。
 > 陷阱细节的实证编号（F11-F23）见 `docs/plans/2026-10-25-hmi-studio-implementation-plan.md` §0。
+> v1.1 修订（图元批量轮实证）：§2.1 tag 字段实证修正 / §3.2 lint 七规则 / §4.1 custom-svg SSR 串化机制 / §2.2 jT '#mt_slot' 陷阱。
 
 ## 1. 三条图元路线与选型
 
@@ -30,13 +31,20 @@
   type: 'svg' | 'custom-svg' | 'vue',
   thumbnail: '<svg 串或 URL>',   // 统一走 kit.svgThumbnail（注入 data-ah-id，E2E 按 title 文本/锚定位）
   svg: '<svg>…</svg>',           // 仅 svg 型
-  tag: 'AhGaugePressure',        // custom-svg/vue 型：全局注册组件名（PascalCase，见 §4.1）
   width: 64, height: 64,         // 拖入初始尺寸（px，= viewBox 比例）
   props: { /* 描述符表 */ },
   ports: [...],                  // 可选；工艺形体必须给（§2.4）
   events: [...],                 // 可选；默认事件模板（§2.5）
 }
 ```
+
+> **v1.1 实证修正（组件名解析链）**：`ILeftAsideConfigItemPublic` 接口**没有 tag 字段**（bundle
+> store/types.d.ts），拖拽建元实证 `Vn.tag = Le.id`（bundle 1094432）——画布元素的 tag 是**注册项
+> id（kebab）**，注册项即便手写 tag 也被忽略。vue/custom-svg 组件的全局注册名走 Vue
+> resolveAsset 的 kebab→camelize→capitalize 归一链命中 **PascalCase 注册名**（如 id
+> `ah-gauge-pressure` → 注册名 `AhGaugePressure`；镜像实现 `symbols/index.ts vueTagFor`，
+> 配对有单测锁定）。注册：`main.ts` createApp 后 `registerSymbolComponents(app)`——宿主持
+> app 实例处，且先于任何视图的 registerConfig（§4.1.4）。
 
 ### 2.2 props 描述符（绑定与属性面板的通用货币）
 
@@ -55,6 +63,8 @@ props: {
 - **bind_attr 一律写 `props.<name>.val`**（保存态是描述符表；svg 型经 TP 注入 use 属性，vue/custom-svg 型经 jT 平面化——两条管线都以 `.val` 为数据端点）。
 - 描述符三键 `title/type/val` 必备（lint PROP_SHAPE 拦截）。
 - 一个 prop 只承载一个语义；状态色统一叫 `fill`，动画开关统一叫 `animation`（组态员跨图元的肌肉记忆）。
+- **vue/custom-svg 型 input prop 的 val 禁止空串**（v1.1：jT 实证 `val === ''` 被替换为占位串
+  `'#mt_slot'` 直达组件，bundle 960697——lint VUE_EMPTY_STR 拦截；给真实默认值如 `'标签'`）。
 
 ### 2.3 绑定双通道（运行时语义，全路线一致）
 
@@ -106,14 +116,18 @@ events: [{
 
 ### 3.2 lint（合并硬门，`pnpm test` 内）
 
-五规则：`FILL_MISSING`（缺 fill 语义）/ `PORT_POSITION`（非法锚位）/ `SVG_VIEWBOX` / `PROP_SHAPE` / `SVG_COMMENT`。新图元全过 + 快照基线（`__snapshots__/`，改动即 diff 即审）。
+七规则（v1.1 五→七，且 SVG_VIEWBOX 按路线收口）：`FILL_MISSING`（缺 fill 语义）/ `PORT_POSITION`
+（非法锚位）/ `SVG_VIEWBOX`（**仅 svg 型查 svg 串+viewBox；宽高数字全类型必查**）/ `SVG_COMMENT`
+/ `PROP_SHAPE` / `ANIM_CLASS`（svg 型声明 animation prop 必配影子链两要素：`use[animation="true"]`
+选择器 + `animation-play-state: var(--ah-run` 消费——缺任一动画静默不转）/ `VUE_EMPTY_STR`
+（vue/custom-svg 型 input prop 空串默认值）。新图元全过 + 快照基线（`__snapshots__/`，改动即 diff 即审）。
 
 ## 4. custom-svg / vue 型规范（仪表与操作面）
 
 ### 4.1 组件契约
 
 ```vue
-<!-- src/symbols/AhGaugePressure.vue：全局注册名 = tag = 文件名（PascalCase） -->
+<!-- src/symbols/AhGaugePressure.vue：全局注册名 = vueTagFor(注册项 id)（PascalCase，见 §2.1 修正） -->
 <script setup lang="ts">
 defineProps<{
   // 属性面板每个 prop 平面化直达（jT 机制）——类型即约束
@@ -128,12 +142,22 @@ defineProps<{
 </template>
 ```
 
-1. **props 与注册项描述符一一对应**（名字完全一致；组件侧 `defineProps` 给类型默认值，描述符给面板初值）。
+1. **props 与注册项描述符一一对应**（名字完全一致；组件侧 `defineProps` 给类型默认值，描述符给面板初值；配对有单测锁定——控制批 control-batch-b.test）。
 2. `mt-item-json` 注入 prop 可读（id/binfo/全量 props），但**组件逻辑只依赖自己的具名 props**——保持可脱离 maotu 单测/预览。
-3. 回写：v-model 型组件用 `update:modelValue`（bundle 实证回写合并进 props）——操作类图元（按钮/选择开关）可用；纯显示组件不要发 update。
-4. 注册链：`main.ts`/`registerSymbols()` 里 `app.component(tag, Comp)` **先于** registerConfig（拖入时 `bs(tag)` 解析全局组件，未注册渲染空白且无告警）。
-5. 缩略图：静态 svg 资产（`src/symbols/assets/<id>.svg?raw` 或 kit 生成），与运行态视觉一致。
-6. **成本自觉**：每实例一个 Vue 组件。同屏大量使用时优先 svg 型变体。
+3. 回写：v-model 型组件用 `update:modelValue`（bundle 实证回写合并进 props）——操作类图元（按钮/选择开关）可用；纯显示组件不要发 update。**仅 vue 型有效**（v1.1：custom-svg 包裹 M_ 不透传 onUpdate:modelValue）。
+4. 注册链：`main.ts` createApp 后 `registerSymbolComponents(app)` 全局组件注册（**先于**任何视图的 registerConfig——拖入/渲染时 `bs(tag)` 解析全局组件，未注册渲染空白且无告警；§2.1 修正：解析名 = vueTagFor(id)）。
+5. 缩略图：静态 svg 资产（kit 生成），与运行态视觉一致。
+6. **成本自觉**：vue 型每实例一个活组件；custom-svg 每次props 变更一次 SSR 串化。同屏大量使用时优先 svg 型变体。
+
+### 4.1.1 custom-svg 渲染机制（v1.1 实证，决定其约束面）
+
+custom-svg 渲染 = 组件 vnode 经 **SSR renderToString**（bundle M_/$f，@vue/server-renderer 同构）
+串成 svg 文本 → dataURI `<img>`；props 变更经 slot 深度 watch 触发**整图重串化**。因此：
+- **样式必须全内联属性**（SFC `<style>` 块不进 SSR 输出——写了等于没写）；
+- **无组件内交互**（DOM 事件在 img 上死掉）：按下反馈/点击循环等一律走 **vue 型**；
+- **SSR 纯净**：组件不得碰 window/document/生命周期 mounted；
+- `<text>` 合法（随串化保留）；props 响应式有效（重串化链）。
+选型速记：显示+计算几何 → custom-svg；**交互/回写/自由 DOM → vue**。
 
 ### 4.2 何时必须用这条路线
 

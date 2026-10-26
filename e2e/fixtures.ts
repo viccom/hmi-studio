@@ -1,5 +1,5 @@
 import { rsiotPutScreen } from './helpers'
-import { buildDemoScreen } from '../src/lib/demo-screen'
+import { buildDemoScreen, buildCatalogScreen, DEMO_CATALOG } from '../src/lib/demo-screen'
 
 /**
  * M2 数据段种子画面（T6）——形状全部来自 2026-10-25 编辑器/BindProbe 实测：
@@ -122,6 +122,14 @@ export async function seedDemoScreens(): Promise<void> {
   const { a, b } = buildDemoScreen()
   await rsiotPutScreen('water-demo-m3', a)
   await rsiotPutScreen('water-demo-m3-b', b)
+}
+
+/**
+ * 图元陈列室（批 C 长期资产）：slug 恒定 catalog-demo，PUT upsert 幂等——
+ * 与 e2e-t* 清扫语义相反，**任何测试不得删除此画面**（同 water-demo-m3 约定）。
+ */
+export async function seedCatalogDemo(): Promise<void> {
+  await rsiotPutScreen(DEMO_CATALOG, buildCatalogScreen())
 }
 
 /**

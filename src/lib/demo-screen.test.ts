@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildDemoScreen, DEMO_A, DEMO_B } from './demo-screen'
+import { buildDemoScreen, buildCatalogScreen, DEMO_A, DEMO_B } from './demo-screen'
 import { unwrapDoc } from './screens'
 import { collectBinds } from './binds'
 import { allSymbols } from '../symbols/registry'
@@ -12,6 +12,8 @@ import { allSymbols } from '../symbols/registry'
  */
 
 const { a, b } = buildDemoScreen()
+const cat = buildCatalogScreen()
+const itemsCat = cat.json as unknown as Array<Record<string, unknown>>
 const itemsA = a.json as unknown as Array<Record<string, unknown>>
 const itemsB = b.json as unknown as Array<Record<string, unknown>>
 
@@ -154,3 +156,61 @@ describe('demo-screen 互跳闭环（B）', () => {
 it('全量快照（防漂移基线）', () => {
   expect(JSON.stringify({ a, b }, null, 2)).toMatchSnapshot()
 })
+
+describe('demo-screen 图元陈列室（catalog）', () => {
+  it('全量覆盖：21 类注册图元每类 ≥1 上画（registry 全量覆盖判据的承载画面）', () => {
+    // 陈列室含 svg/custom-svg/vue 三路线——按 tag ≠ text-vue 统计（svgItems 只数 svg 型）
+    const symItems = itemsCat.filter((i) => String(i.tag) !== 'text-vue')
+    const tags = new Set(symItems.map((i) => String(i.tag)))
+    expect([...tags].sort()).toEqual(allSymbols().map((s) => s.id).sort())
+    expect(symItems).toHaveLength(21)
+  })
+
+  it('绑定面 ≥4 图元接真实活点，触发链 ≥2（互斥收口成对）', () => {
+    const bound = itemsCat.filter((i) => Array.isArray(i.binds) && (i.binds as unknown[]).length > 0)
+    expect(bound.length).toBeGreaterThanOrEqual(4)
+    const chained = bound.filter((i) => (i.binds as Array<{ triggers: unknown[] }>).some((b) => b.triggers.length >= 2))
+    expect(chained.length).toBeGreaterThanOrEqual(2)
+    // 触发链成对互斥：每条 bind 的触发要么 0 条要么 2 条（§2.3 直写+触发并存必须成对收口）
+    for (const i of itemsCat) {
+      for (const b of (i.binds ?? []) as Array<{ triggers: unknown[] }>) {
+        expect([0, 2]).toContain(b.triggers.length)
+      }
+    }
+  })
+
+  it('Jr 导入契约：全图元 props 平面键 ⊆ 注册表默认键 + id 稳定唯一', () => {
+    const ids = itemsCat.map((i) => String(i.id))
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const item of itemsCat) {
+      if (item.tag === 'text-vue') continue
+      const sym = allSymbols().find((s) => s.id === item.tag)
+      expect(sym, `未注册图元 ${String(item.tag)}`).toBeDefined()
+      const defKeys = new Set(Object.keys(sym!.props))
+      for (const k of Object.keys(item.props as object)) {
+        expect(defKeys.has(k), `${String(item.id)} 多出未注册 prop ${k}`).toBe(true)
+      }
+    }
+  })
+
+  it('布局防重叠出界：陈列室全部 binfo 在 800x600 内且两两不相交', () => {
+    const boxes = itemsCat.map((i) => i.binfo as { left: number; top: number; width: number; height: number })
+    for (const bx of boxes) {
+      expect(bx.left).toBeGreaterThanOrEqual(0)
+      expect(bx.top).toBeGreaterThanOrEqual(0)
+      expect(bx.left + bx.width).toBeLessThanOrEqual(800)
+      expect(bx.top + bx.height).toBeLessThanOrEqual(600)
+    }
+    for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+      const p = boxes[i], q = boxes[j]
+      const overlap = p.left < q.left + q.width && q.left < p.left + p.width
+        && p.top < q.top + q.height && q.top < p.top + p.height
+      expect(overlap, `图元 ${i} 与 ${j} 重叠`).toBe(false)
+    }
+  })
+
+  it('全量快照（防漂移基线）', () => {
+    expect(JSON.stringify(cat, null, 2)).toMatchSnapshot()
+  })
+})
+

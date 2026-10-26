@@ -1,5 +1,1553 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基线） 1`] = `
+"{
+  "name": "图元陈列室",
+  "group": "水处理演示",
+  "canvasCfg": {
+    "width": 800,
+    "height": 600,
+    "scale": 1,
+    "color": "#141414",
+    "img": "",
+    "guide": true,
+    "adsorp": true,
+    "adsorp_diff": 3,
+    "transform_origin": {
+      "x": 0,
+      "y": 0
+    },
+    "drag_offset": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "gridCfg": {
+    "enabled": true,
+    "align": true,
+    "size": 10
+  },
+  "json": [
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-title",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 34,
+        "left": 16,
+        "top": 8,
+        "width": 430
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#e6f7ff",
+        "fontFamily": "黑体",
+        "fontSize": 24,
+        "text": "图元陈列室 · 21 类 HMI 图元",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-lbl-up",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 26,
+        "left": 452,
+        "top": 16,
+        "width": 108
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "运行时长(s)",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-val-up",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 32,
+        "left": 564,
+        "top": 12,
+        "width": 88
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#FFF700",
+        "fontFamily": "黑体",
+        "fontSize": 18,
+        "text": "—",
+        "vertical": false
+      },
+      "binds": [
+        {
+          "id": "bd-text-vue-cat-val-up",
+          "pel_id": "text-vue-cat-val-up",
+          "bind_id": "rsiot.uptime_s",
+          "bind_name": "uptime_s",
+          "bind_attr": "props.text.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-lbl-cpu",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 26,
+        "left": 660,
+        "top": 16,
+        "width": 66
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "CPU(%)",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-val-cpu",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 32,
+        "left": 730,
+        "top": 12,
+        "width": 56
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#FFF700",
+        "fontFamily": "黑体",
+        "fontSize": 18,
+        "text": "—",
+        "vertical": false
+      },
+      "binds": [
+        {
+          "id": "bd-text-vue-cat-val-cpu",
+          "pel_id": "text-vue-cat-val-cpu",
+          "bind_id": "rsiot.cpu_percent",
+          "bind_name": "cpu_percent",
+          "bind_attr": "props.text.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-sec1",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 22,
+        "left": 16,
+        "top": 44,
+        "width": 180
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "── 工艺设备 ──",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-pump-cat-1",
+      "title": "离心泵",
+      "type": "svg",
+      "tag": "ah-pump",
+      "binfo": {
+        "angle": 0,
+        "width": 83,
+        "height": 83,
+        "left": 24,
+        "top": 66
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a",
+        "animation": false
+      },
+      "binds": [
+        {
+          "id": "bd-ah-pump-cat-1",
+          "pel_id": "ah-pump-cat-1",
+          "bind_id": "rsiot.cpu_percent",
+          "bind_name": "cpu_percent",
+          "bind_attr": "props.fill.val",
+          "bind_mapping": [],
+          "triggers": [
+            {
+              "id": "ah-pump-cat-1-hot",
+              "rule": {
+                "operator": ">",
+                "value": 80
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-pump-cat-1-hot",
+                  "target_id": "ah-pump-cat-1",
+                  "target_attr": "props.fill.val",
+                  "target_value": "#f5222d"
+                }
+              ],
+              "custom_code": ""
+            },
+            {
+              "id": "ah-pump-cat-1-ok",
+              "rule": {
+                "operator": "<=",
+                "value": 80
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-pump-cat-1-ok",
+                  "target_id": "ah-pump-cat-1",
+                  "target_attr": "props.fill.val",
+                  "target_value": "#52c41a"
+                }
+              ],
+              "custom_code": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-gate-valve-cat-1",
+      "title": "闸阀",
+      "type": "svg",
+      "tag": "ah-gate-valve",
+      "binfo": {
+        "angle": 0,
+        "width": 83,
+        "height": 52,
+        "left": 134,
+        "top": 82
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-butterfly-valve-cat-1",
+      "title": "蝶阀",
+      "type": "svg",
+      "tag": "ah-butterfly-valve",
+      "binfo": {
+        "angle": 0,
+        "width": 83,
+        "height": 62,
+        "left": 244,
+        "top": 74
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-check-valve-cat-1",
+      "title": "止回阀",
+      "type": "svg",
+      "tag": "ah-check-valve",
+      "binfo": {
+        "angle": 0,
+        "width": 83,
+        "height": 52,
+        "left": 354,
+        "top": 82
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-ball-valve-cat-1",
+      "title": "球阀",
+      "type": "svg",
+      "tag": "ah-ball-valve",
+      "binfo": {
+        "angle": 0,
+        "width": 83,
+        "height": 73,
+        "left": 464,
+        "top": 70
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a",
+        "open": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-safety-valve-cat-1",
+      "title": "安全阀",
+      "type": "svg",
+      "tag": "ah-safety-valve",
+      "binfo": {
+        "angle": 0,
+        "width": 83,
+        "height": 62,
+        "left": 574,
+        "top": 74
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 50,
+              "unit": "%"
+            },
+            "y": {
+              "value": 100,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-solenoid-valve-cat-1",
+      "title": "电磁阀",
+      "type": "svg",
+      "tag": "ah-solenoid-valve",
+      "binfo": {
+        "angle": 0,
+        "width": 83,
+        "height": 62,
+        "left": 684,
+        "top": 74
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-tank-cat-1",
+      "title": "罐",
+      "type": "svg",
+      "tag": "ah-tank",
+      "binfo": {
+        "angle": 0,
+        "width": 60,
+        "height": 80,
+        "left": 24,
+        "top": 152
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftTop",
+          "offset": {
+            "x": {
+              "value": 50,
+              "unit": "%"
+            },
+            "y": {
+              "value": 0,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 100,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#1677ff",
+        "h": 50
+      },
+      "binds": [
+        {
+          "id": "bd-ah-tank-cat-1",
+          "pel_id": "ah-tank-cat-1",
+          "bind_id": "rsiot.cpu_percent",
+          "bind_name": "cpu_percent",
+          "bind_attr": "props.h.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-level-gauge-cat-1",
+      "title": "液位计",
+      "type": "svg",
+      "tag": "ah-level-gauge",
+      "binfo": {
+        "angle": 0,
+        "width": 35,
+        "height": 80,
+        "left": 100,
+        "top": 152
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#1677ff",
+        "h": 50
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-flow-meter-cat-1",
+      "title": "流量计",
+      "type": "svg",
+      "tag": "ah-flow-meter",
+      "binfo": {
+        "angle": 0,
+        "width": 77,
+        "height": 77,
+        "left": 150,
+        "top": 158
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#1677ff"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-fan-cat-1",
+      "title": "风机",
+      "type": "svg",
+      "tag": "ah-fan",
+      "binfo": {
+        "angle": 0,
+        "width": 74,
+        "height": 74,
+        "left": 240,
+        "top": 158
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 50,
+              "unit": "%"
+            },
+            "y": {
+              "value": 0,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a",
+        "animation": true
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-agitator-cat-1",
+      "title": "搅拌器",
+      "type": "svg",
+      "tag": "ah-agitator",
+      "binfo": {
+        "angle": 0,
+        "width": 55,
+        "height": 74,
+        "left": 326,
+        "top": 158
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 10,
+              "unit": "px"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 50,
+              "unit": "%"
+            },
+            "y": {
+              "value": 0,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a",
+        "animation": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-motor-cat-1",
+      "title": "电机",
+      "type": "svg",
+      "tag": "ah-motor",
+      "binfo": {
+        "angle": 0,
+        "width": 77,
+        "height": 58,
+        "left": 398,
+        "top": 168
+      },
+      "common_animations": {
+        "val": "rotate360",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-sec2",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 22,
+        "left": 16,
+        "top": 246,
+        "width": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "── 仪表 ──",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-digital-display-cat-1",
+      "title": "数显面板",
+      "type": "vue",
+      "tag": "ah-digital-display",
+      "binfo": {
+        "angle": 0,
+        "width": 156,
+        "height": 83,
+        "left": 24,
+        "top": 300
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#39d353",
+        "label": "标签",
+        "value": 0,
+        "unit": "℃"
+      },
+      "binds": [
+        {
+          "id": "bd-ah-digital-display-cat-1",
+          "pel_id": "ah-digital-display-cat-1",
+          "bind_id": "rsiot.cpu_percent",
+          "bind_name": "cpu_percent",
+          "bind_attr": "props.value.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-gauge-pressure-cat-1",
+      "title": "压力表盘",
+      "type": "custom-svg",
+      "tag": "ah-gauge-pressure",
+      "binfo": {
+        "angle": 0,
+        "width": 168,
+        "height": 134,
+        "left": 216,
+        "top": 272
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#e6b32a",
+        "value": 60,
+        "min": 0,
+        "max": 100,
+        "unit": "kPa",
+        "label": "压力",
+        "alarm": false
+      },
+      "binds": [
+        {
+          "id": "bd-ah-gauge-pressure-cat-1",
+          "pel_id": "ah-gauge-pressure-cat-1",
+          "bind_id": "rsiot.cpu_percent",
+          "bind_name": "cpu_percent",
+          "bind_attr": "props.value.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-thermometer-cat-1",
+      "title": "温度计",
+      "type": "custom-svg",
+      "tag": "ah-thermometer",
+      "binfo": {
+        "angle": 0,
+        "width": 70,
+        "height": 165,
+        "left": 432,
+        "top": 262
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5222d",
+        "value": 25,
+        "min": -40,
+        "max": 160,
+        "unit": "°C",
+        "label": "温度"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-stack-light-cat-1",
+      "title": "三色警示灯",
+      "type": "custom-svg",
+      "tag": "ah-stack-light",
+      "binfo": {
+        "angle": 0,
+        "width": 83,
+        "height": 156,
+        "left": 524,
+        "top": 262
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#57606a",
+        "red": false,
+        "yellow": false,
+        "green": true
+      },
+      "binds": [
+        {
+          "id": "bd-ah-stack-light-cat-1",
+          "pel_id": "ah-stack-light-cat-1",
+          "bind_id": "rsiot.alarm_active",
+          "bind_name": "alarm_active",
+          "bind_attr": "props.red.val",
+          "bind_mapping": [],
+          "triggers": [
+            {
+              "id": "ah-stack-light-cat-1-on",
+              "rule": {
+                "operator": "=",
+                "value": 1
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-stack-light-cat-1-on",
+                  "target_id": "ah-stack-light-cat-1",
+                  "target_attr": "props.red.val",
+                  "target_value": true
+                }
+              ],
+              "custom_code": ""
+            },
+            {
+              "id": "ah-stack-light-cat-1-off",
+              "rule": {
+                "operator": "=",
+                "value": 0
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-stack-light-cat-1-off",
+                  "target_id": "ah-stack-light-cat-1",
+                  "target_attr": "props.red.val",
+                  "target_value": false
+                }
+              ],
+              "custom_code": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-sec3",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 22,
+        "left": 16,
+        "top": 438,
+        "width": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "── 操作 ──",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-dis-switch-cat-1",
+      "title": "隔离开关",
+      "type": "svg",
+      "tag": "ah-dis-switch",
+      "binfo": {
+        "angle": 0,
+        "width": 96,
+        "height": 48,
+        "left": 24,
+        "top": 490
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftBottom",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#52c41a"
+      },
+      "binds": [
+        {
+          "id": "bd-ah-dis-switch-cat-1",
+          "pel_id": "ah-dis-switch-cat-1",
+          "bind_id": "rsiot.alarm_active",
+          "bind_name": "alarm_active",
+          "bind_attr": "props.fill.val",
+          "bind_mapping": [],
+          "triggers": [
+            {
+              "id": "ah-dis-switch-cat-1-on",
+              "rule": {
+                "operator": "=",
+                "value": 1
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-dis-switch-cat-1-on",
+                  "target_id": "ah-dis-switch-cat-1",
+                  "target_attr": "props.fill.val",
+                  "target_value": "#8c8c8c"
+                }
+              ],
+              "custom_code": ""
+            },
+            {
+              "id": "ah-dis-switch-cat-1-off",
+              "rule": {
+                "operator": "=",
+                "value": 0
+              },
+              "action": "changeAttr",
+              "change_attr": [
+                {
+                  "id": "ca-ah-dis-switch-cat-1-off",
+                  "target_id": "ah-dis-switch-cat-1",
+                  "target_attr": "props.fill.val",
+                  "target_value": "#52c41a"
+                }
+              ],
+              "custom_code": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-nav-button-cat-1",
+      "title": "跳转按钮",
+      "type": "svg",
+      "tag": "ah-nav-button",
+      "binfo": {
+        "angle": 0,
+        "width": 67,
+        "height": 45,
+        "left": 150,
+        "top": 498
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [
+        {
+          "id": "ev-nav",
+          "type": "click",
+          "action": "customCode",
+          "change_attr": [],
+          "custom_code": "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));",
+          "event_flow_ids": [],
+          "trigger_rule": {}
+        }
+      ],
+      "ports": [],
+      "props": {
+        "fill": "#1677ff",
+        "target": "water-demo-m3"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-push-button-cat-1",
+      "title": "操作按钮",
+      "type": "vue",
+      "tag": "ah-push-button",
+      "binfo": {
+        "angle": 0,
+        "width": 96,
+        "height": 96,
+        "left": 240,
+        "top": 464
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [
+        {
+          "id": "ev-cmd",
+          "type": "click",
+          "action": "customCode",
+          "change_attr": [],
+          "custom_code": "$rsiot.send($getItemAttrByID($item_info.id, 'props.devid.val'), $getItemAttrByID($item_info.id, 'props.tag.val'), $getItemAttrByID($item_info.id, 'props.value.val'));",
+          "event_flow_ids": [],
+          "trigger_rule": {}
+        }
+      ],
+      "ports": [],
+      "props": {
+        "fill": "#1677ff",
+        "label": "启动",
+        "devid": "rsiot",
+        "tag": "uptime_s",
+        "value": 1
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-selector-switch-cat-1",
+      "title": "选择开关",
+      "type": "vue",
+      "tag": "ah-selector-switch",
+      "binfo": {
+        "angle": 0,
+        "width": 104,
+        "height": 125,
+        "left": 360,
+        "top": 456
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#faad14",
+        "value": 1,
+        "label": "模式"
+      },
+      "binds": []
+    }
+  ],
+  "eventList": [],
+  "eventFlow": []
+}"
+`;
+
 exports[`全量快照（防漂移基线） 1`] = `
 "{
   "a": {

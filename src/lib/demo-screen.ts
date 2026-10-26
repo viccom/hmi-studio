@@ -24,6 +24,7 @@ import { allSymbols } from '../symbols/registry'
 
 export const DEMO_A = 'water-demo-m3'
 export const DEMO_B = 'water-demo-m3-b'
+export const DEMO_CATALOG = 'catalog-demo'
 
 const sym = (id: string): HmiSymbol => {
   const s = allSymbols().find((x) => x.id === id)
@@ -41,10 +42,10 @@ const canvas = (): Pick<IExportJson, 'canvasCfg' | 'gridCfg'> => ({
 })
 
 /** 触发器：rule 命中 → changeAttr 点路径写入（vP 评估序：直写 bind_attr 在前，触发在后收口） */
-function trig(id: string, operator: CompareOperator, value: unknown, targetId: string, targetValue: string): IDoneJsonBindList['triggers'][number] {
+function trig(id: string, operator: CompareOperator, value: unknown, targetId: string, targetValue: string | boolean, targetAttr = 'props.fill.val'): IDoneJsonBindList['triggers'][number] {
   return {
     id, rule: { operator, value }, action: 'changeAttr',
-    change_attr: [{ id: `ca-${id}`, target_id: targetId, target_attr: 'props.fill.val', target_value: targetValue }],
+    change_attr: [{ id: `ca-${id}`, target_id: targetId, target_attr: targetAttr, target_value: targetValue }],
     custom_code: '',
   }
 }
@@ -56,7 +57,8 @@ function bind(pelId: string, bindId: string, attr: string, triggers: IDoneJsonBi
   }
 }
 
-/** 自绘图元实例：几何 = 注册宽高 × scale；props 平面值（缺键回落注册默认，见文件头） */
+/** 自绘图元实例（全类型：svg / custom-svg / vue——拖入建元实证 tag=注册项 id，类型随注册表）：
+ * 几何 = 注册宽高 × scale；props 平面值（缺键回落注册默认，见文件头） */
 function svgItem(symbolId: string, id: string, o: {
   left: number; top: number; scale?: number
   props?: Record<string, unknown>
@@ -68,7 +70,7 @@ function svgItem(symbolId: string, id: string, o: {
   const flat = Object.fromEntries(Object.entries(s.props).map(([key, d]) => [key, d.val]))
   return {
     active: false, hide: false, lock: false, resize: true, rotate: true,
-    id, title: s.title, type: 'svg', tag: s.id,
+    id, title: s.title, type: s.type, tag: s.id,
     binfo: { angle: 0, width: Math.round((s.width ?? 64) * k), height: Math.round((s.height ?? 64) * k), left: o.left, top: o.top },
     common_animations: { val: o.rotate360 ? 'rotate360' : '', delay: 'delay-0s', speed: 'slow', repeat: 'infinite' },
     events: (s.events ?? []) as IDoneJsonEventList[],
@@ -161,4 +163,64 @@ export function buildDemoScreen(): { a: ScreenDoc; b: ScreenDoc } {
     eventList: [], eventFlow: [],
   }
   return { a, b }
+}
+
+// ---- 图元陈列室（批 C）：21 类注册图元一页陈列（工艺/仪表/操作三分区），长期资产 ----
+// 绑定表（≥4 活点 + ≥2 触发链）：
+//   cpu_percent → 泵 fill（>80 红/<=80 绿触发链①）、罐 h 直写、压力表盘 value 直写
+//   uptime_s    → 数显面板 value 直写
+//   alarm_active→ 三色灯 red（=1 亮/=0 灭触发链②）、隔离开关 fill（二值链③）
+const C = 'cat'
+const cid = (key: string): string => `ah-${key}-${C}-1`
+
+/** 陈列室触发链：布尔点位 → switch prop 两档互斥收口（三色灯 red 用） */
+const boolBinds = (pelId: string, attr: string): IDoneJsonBindList[] => [bind(pelId, 'rsiot.alarm_active', `props.${attr}.val`, [
+  trig(`${pelId}-on`, '=', 1, pelId, true, `props.${attr}.val`),
+  trig(`${pelId}-off`, '=', 0, pelId, false, `props.${attr}.val`),
+])]
+
+/** 纯函数组态：图元陈列室（21 类全覆盖——registry 全量覆盖判据的承载画面）。无随机、无副作用。 */
+export function buildCatalogScreen(): ScreenDoc {
+  const c: ScreenDoc = {
+    name: '图元陈列室', group: '水处理演示', ...canvas(),
+    json: [
+      // 标题行 + 顶部活点值牌
+      textItem(`text-vue-${C}-title`, { text: '图元陈列室 · 21 类 HMI 图元', left: 16, top: 8, width: 430, height: 34, fill: '#e6f7ff', fontSize: 24 }),
+      textItem(`text-vue-${C}-lbl-up`, { text: '运行时长(s)', left: 452, top: 16, width: 108, height: 26, fill: '#8fa3b8', fontSize: 14 }),
+      textItem(`text-vue-${C}-val-up`, { text: '—', left: 564, top: 12, width: 88, height: 32, fill: '#FFF700', fontSize: 18, bindId: 'rsiot.uptime_s' }),
+      textItem(`text-vue-${C}-lbl-cpu`, { text: 'CPU(%)', left: 660, top: 16, width: 66, height: 26, fill: '#8fa3b8', fontSize: 14 }),
+      textItem(`text-vue-${C}-val-cpu`, { text: '—', left: 730, top: 12, width: 56, height: 32, fill: '#FFF700', fontSize: 18, bindId: 'rsiot.cpu_percent' }),
+      // 分区一：工艺设备（13 svg）
+      textItem(`text-vue-${C}-sec1`, { text: '── 工艺设备 ──', left: 16, top: 44, width: 180, height: 22, fill: '#8fa3b8', fontSize: 14 }),
+      // 第一行（y 66..150）：泵/闸阀/蝶阀/止回阀/球阀/安全阀/电磁阀
+      svgItem('ah-pump', cid('pump'), { left: 24, top: 66, scale: 1.3, binds: pumpBinds(cid('pump')) }),
+      svgItem('ah-gate-valve', cid('gate-valve'), { left: 134, top: 82, scale: 1.3 }),
+      svgItem('ah-butterfly-valve', cid('butterfly-valve'), { left: 244, top: 74, scale: 1.3 }),
+      svgItem('ah-check-valve', cid('check-valve'), { left: 354, top: 82, scale: 1.3 }),
+      svgItem('ah-ball-valve', cid('ball-valve'), { left: 464, top: 70, scale: 1.3, props: { open: false } }),
+      svgItem('ah-safety-valve', cid('safety-valve'), { left: 574, top: 74, scale: 1.3 }),
+      svgItem('ah-solenoid-valve', cid('solenoid-valve'), { left: 684, top: 74, scale: 1.3 }),
+      // 第二行（y 152..232）：罐/液位计/流量计/风机/搅拌器/电机
+      svgItem('ah-tank', cid('tank'), { left: 24, top: 152, scale: 1.25, binds: [bind(cid('tank'), 'rsiot.cpu_percent', 'props.h.val')] }),
+      svgItem('ah-level-gauge', cid('level-gauge'), { left: 100, top: 152, scale: 1.25 }),
+      svgItem('ah-flow-meter', cid('flow-meter'), { left: 150, top: 158, scale: 1.2 }),
+      svgItem('ah-fan', cid('fan'), { left: 240, top: 158, scale: 1.15, props: { animation: true } }),
+      svgItem('ah-agitator', cid('agitator'), { left: 326, top: 158, scale: 1.15 }),
+      svgItem('ah-motor', cid('motor'), { left: 398, top: 168, scale: 1.2, rotate360: true }),
+      // 分区二：仪表（4：数显/压力表盘/温度计/三色灯）
+      textItem(`text-vue-${C}-sec2`, { text: '── 仪表 ──', left: 16, top: 246, width: 140, height: 22, fill: '#8fa3b8', fontSize: 14 }),
+      svgItem('ah-digital-display', cid('digital-display'), { left: 24, top: 300, scale: 1.3, binds: [bind(cid('digital-display'), 'rsiot.cpu_percent', 'props.value.val')] }),
+      svgItem('ah-gauge-pressure', cid('gauge-pressure'), { left: 216, top: 272, scale: 1.4, binds: [bind(cid('gauge-pressure'), 'rsiot.cpu_percent', 'props.value.val')] }),
+      svgItem('ah-thermometer', cid('thermometer'), { left: 432, top: 262, scale: 1.1 }),
+      svgItem('ah-stack-light', cid('stack-light'), { left: 524, top: 262, scale: 1.3, binds: boolBinds(cid('stack-light'), 'red') }),
+      // 分区三：操作（4：隔离开关/跳转按钮/操作按钮/选择开关）
+      textItem(`text-vue-${C}-sec3`, { text: '── 操作 ──', left: 16, top: 438, width: 140, height: 22, fill: '#8fa3b8', fontSize: 14 }),
+      svgItem('ah-dis-switch', cid('dis-switch'), { left: 24, top: 490, scale: 1.5, binds: binaryBinds(cid('dis-switch'), '#8c8c8c', '#52c41a') }),
+      svgItem('ah-nav-button', cid('nav-button'), { left: 150, top: 498, scale: 1.4, props: { target: DEMO_A } }),
+      svgItem('ah-push-button', cid('push-button'), { left: 240, top: 464, scale: 1.2 }),
+      svgItem('ah-selector-switch', cid('selector-switch'), { left: 360, top: 456, scale: 1.3 }),
+    ],
+    eventList: [], eventFlow: [],
+  }
+  return c
 }
