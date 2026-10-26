@@ -212,6 +212,9 @@ async function save(payload: IExportJson) {
 .topbar-right { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
 .topbar-user { color: var(--el-text-color-secondary); font-size: 12px; }
 .edit-body { flex: 1; min-height: 0; }
+/* maotu 底部版本横幅（npm 外链）整行隐藏，高度还给画布——组件无专用类名，
+   按唯一特征定位：包页链接的直接包裹行（工具类组合 div + :has 收敛） */
+.edit-body :deep(div.flex.justify-center.items-center.pt-2:has(> a[href*='npmjs.com/package/maotu'])) { display: none; }
 /* W7 反馈3：右面板 tab 头常驻。滚动容器实测=el-aside 本体（.mt-edit-aside 基线
    overflow:auto，内层 #mt-right-aside overflow:visible）。**maotu 内置 element-plus
    把 el-tabs 渲染成 [content, header]（bundle 实证 return [p, m]，header 在 DOM 底部

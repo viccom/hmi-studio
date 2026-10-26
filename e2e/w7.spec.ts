@@ -75,4 +75,14 @@ test.describe('W7 编辑器可用性', () => {
     await aside.locator('.el-tabs__item', { hasText: '绑定' }).click()
     await expect(aside.locator('.el-tabs__item.is-active')).toHaveText('绑定')
   })
+
+  test('版本横幅隐藏：npm 外链行 display:none 且高度归还画布', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto('/edit/water-demo-m3')
+    await expect(page.locator('#mtCanvasArea')).toBeVisible()
+
+    const banner = page.locator('.edit-body div.flex.justify-center.items-center.pt-2:has(> a[href*="npmjs.com/package/maotu"])')
+    await expect(banner).toHaveCount(1) // DOM 仍在（maotu 渲染），仅视觉隐藏
+    expect(await banner.evaluate((el) => getComputedStyle(el).display)).toBe('none')
+  })
 })
