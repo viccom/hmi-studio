@@ -76,13 +76,15 @@ test.describe('W7 编辑器可用性', () => {
     await expect(aside.locator('.el-tabs__item.is-active')).toHaveText('绑定')
   })
 
-  test('版本横幅隐藏：npm 外链行 display:none 且高度归还画布', async ({ page }) => {
+  test('版本横幅：footer 行整行移除——display:none 且零高（画布区 reclaim）', async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto('/edit/water-demo-m3')
     await expect(page.locator('#mtCanvasArea')).toBeVisible()
 
-    const banner = page.locator('.edit-body div.flex.justify-center.items-center.pt-2:has(> a[href*="npmjs.com/package/maotu"])')
-    await expect(banner).toHaveCount(1) // DOM 仍在（maotu 渲染），仅视觉隐藏
-    expect(await banner.evaluate((el) => getComputedStyle(el).display)).toBe('none')
+    const footer = page.locator('.edit-body footer.el-footer:has(> div > a[href*="npmjs.com/package/maotu"])')
+    await expect(footer).toHaveCount(1) // DOM 仍在（maotu 渲染），仅视觉移除
+    expect(await footer.evaluate((el) => getComputedStyle(el).display)).toBe('none')
+    // 意图判据：行高归零——上次只藏内容层时 footer 仍占 40px（用户复测打回的正是这个）
+    expect(await footer.evaluate((el) => el.getBoundingClientRect().height)).toBe(0)
   })
 })
