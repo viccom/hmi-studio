@@ -212,4 +212,21 @@ async function save(payload: IExportJson) {
 .topbar-right { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
 .topbar-user { color: var(--el-text-color-secondary); font-size: 12px; }
 .edit-body { flex: 1; min-height: 0; }
+/* W7 反馈3：右面板 tab 头常驻。滚动容器实测=el-aside 本体（.mt-edit-aside 基线
+   overflow:auto，内层 #mt-right-aside overflow:visible）。**maotu 内置 element-plus
+   把 el-tabs 渲染成 [content, header]（bundle 实证 return [p, m]，header 在 DOM 底部
+   ——这正是"要滚到底才能看到 tab 头"的根因），故先 flex+order:-1 视觉重排到顶部，
+   再 sticky top 钉住**——单纯 sticky top 对底部自然位的 header 永不生效（实测）。
+   背景取 --el-bg-color：深色 rgb(20,20,20) 与 maotu dark:bg-myDarkBgColor 同值。 */
+.edit-body :deep(.mt-edit-aside .el-tabs) {
+  display: flex;
+  flex-direction: column;
+}
+.edit-body :deep(.mt-edit-aside .el-tabs__header) {
+  order: -1;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--el-bg-color);
+}
 </style>
