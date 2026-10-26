@@ -31,8 +31,10 @@
 | F15 | 事件回调监听拼写（T9 Vue 3.5 实测）：maotu `emit('onEventCallBack')` 按属性名 `onOnEventCallBack` **精确大小写**查找处理器——模板必须写 `@onEventCallBack`（编译为该键）；kebab 写法 `@on-event-callback` 编译为 `onOnEventCallback`（Back 的 b 小写），大小写失配**静默收不到事件**（src/dev/Probe.vue 旧监听即此失效写法，未改——研究资产）。另：custom_code 经 `new Function('$item_info','$args',code)` 编译并以图元信息实参调用（bundle L30329/L30333），`$item_info.id` 运行时可用，E2E 实证透传链路全通 | T9 编译产物对照 + jsdom 双键实证 + m2 段4 E2E |
 | F16 | SVG 复合图元**文本注入不可行**（T11 实证，设计 §6 ❓ 关闭）：svg 图元渲染管线（bundle kf→hP→TP→Gf）为纯字符串拼接——kf 取 viewBox 把 config svg 子元素包成 `<symbol id>`，hP 拼 `<svg><symbol/><use xlink:href="#id" props…></svg>`，TP 把 props 序列化为 **use 元素属性**（` k="val"`），Gf 转 dataURI 后由 `<img>` 渲染——`{{text}}` 无任何展开时机，prop 值对 svg 内 `<text>` 像素零影响（Playwright 双值对照实证）→ **数值显示一律用内置文本图元**（props.text.val，F12）。附带：fill 写在 use 上靠 SVG 继承驱动子形状（像素实证）；自注册 svg 图元**保存态 props 同为平面值**、导入经 Jr 归一化回描述符（F12 语义推广到自绘图元）——bind_attr 一律指 `props.<name>.val` | T11 bundle kf/hP/TP/Gf 实读 + dataURI 双值像素对照 + 编辑器拖入实证 |
 | F17 | 动画双路径（T11 实证）：① **子件旋转**（泵采用）= svg 内嵌 `<style>` 随 use 克隆进影子树生效（浏览器行为，Playwright 像素实证）+ 控制链 `use[animation="true"]{--ah-run:running}`（文档级样式可匹配 use 本身）→ 自定义属性**跨影子树继承** → 子件 `animation-play-state:var(--ah-run,paused)`；由 `animation`(switch) prop 驱动，绑 `props.animation.val` 直写启停（与 fill 同款通路，编辑器开关实测启停）；② **整件旋转** = maotu `common_animations {val:'rotate360', delay:'delay-0s', speed:'slow', repeat:'infinite'}`——`rotate360` 为 maotu 在 dist/style.css **自增的关键帧**（stock animate.css 无此类，style.css 已随 main.ts 引入），类拼在图元**包裹 div** 上（管口随整体转，泵弃用）；右面板「动画配置」抽屉（基础动画 tab→强调组）配置或 triggers changeAttr `common_animations.val` 运行时控（Nl 通用点路径 setter + 该 attr 在绑定可选列表内）；③ ports 仅 **leftTop/leftBottom/rightTop** 三锚位（bundle Cd 函数只处理三者）——设计原稿的 rightBottom **不存在**，静默落画布原点 {0,0}（lint PORT_POSITION 拦截，出口统一 rightTop） | T11 Playwright 编辑器/抽屉/done_json 保存实证 + bundle Cd/Nl/FP/Td 实读 |
+| F18 | 液位连续值驱动路径（T12 实证）：use 元素属性**无法参与 CSS 计算**（attr() 跨浏览器不可用；maotu bind_mapping 是离散值映射非表达式，vP 无映射行匹配还会跳过写入）→ 可行链 = svg 内嵌 style「属性选择器枚举」`use[h="N"]{--ah-lvl:N/100}`（0..100 整数档）+ `use[h^="N."]` 前缀规则兜浮点（37.5→0.37 向下取整）→ 自定义属性**继承**进影子树 → `.ah-liquid{transform:scaleY(var(--ah-lvl,0));transform-box:fill-box;transform-origin:bottom}` 自底生长（height 是几何属性非样式，继承不可达——scaleY 而非 height 的原因）；越界/负数无规则命中回落 0（空罐）。/view 像素实证：罐 h=0/25/50/100 → 液色占比 0/11.7/22.5/44.9% 线性。**三个静默失败陷阱**（均已机械化拦/修）：① svg 内 XML 注释含 `--` → dataURI 按 XML 解析整图 parsererror 空白（lint 第五规则 SVG_COMMENT）；② 消费端必须是**类选择器** `.ah-liquid{}`（裸 `ah-liquid{` 是元素名选择器永不命中）；③ /view（MtPreview）渲染自绘图元同样查注册表——ViewView 漏调 registerSymbols() 则自绘图元静默空白（已修，与 EditView 同款幂等注册） | T12 Playwright /view 像素采样 + dataURI 解码对照 + 隔离文档二分定位 |
+| F19 | 注册项默认值边界（T13 实证，**F6 落锤**）：① `events` **可以**随注册项带默认模板——registerConfig 展开保留 events 字段，拖拽建元 `events: Le.events ?? []` 且 `Le = vt(注册项)` 为 JSON 深拷贝（每实例独立、不污染注册默认），保存(ud)/导入(Jr) 原样保留——nav-button 默认跳转事件即此（拖入→保存→读 done_json 一字不差实证；/view 点击容器内跳转 __navCount=1、编辑画布点击仅选中）；② `common_animations` **不能**预设——registerConfig 对注册项无条件覆写为空默认 `{val:'',delay:'delay-0s',speed:'slow',repeat:'infinite'}`，电机整件旋转启用路径 = 右面板动画抽屉或 triggers changeAttr `common_animations.val`；③ 事件模板可用的 window 级全局：`$mtEventCallBack`/`$getItemAttrByID`/`$setItemAttrByID` 为 maotu 挂的**空后缀实例名**（`window["$getItemAttrByID"+suffix]`，suffix 默认 ""——多实例同页才加后缀）；`$getItemAttrByID(id,'props.x.val')` 经 yi 点路径解析器取实例属性 | T13 Playwright 拖入→保存→done_json 直读 + /view 跳转实证 + bundle registerConfig/vt/yi/3854321 window 赋值实读 |
 
-**风险与对策**：① ~~maotu SVG 复合图元内文本注入未验~~ **已关闭（F16：不可行，文本一律走内置文本图元）**；② SSE token 过期 → T5 重连时重登录换 token；③ 默认事件模板拖拽实例化未验 → T13 nav-button 首验，退路为使用文档提示手写一行 custom_code；④ 画面规模 N+1 列表 → T17 并发上限 + 后续 rs-iot 轻端点。
+**风险与对策**：① ~~maotu SVG 复合图元内文本注入未验~~ **已关闭（F16：不可行，文本一律走内置文本图元）**；② SSE token 过期 → T5 重连时重登录换 token；③ ~~默认事件模板拖拽实例化未验~~ **已关闭（F19①：events 随注册项实例化，nav-button 实证）**；④ 画面规模 N+1 列表 → T17 并发上限 + 后续 rs-iot 轻端点。
 
 ## 1. 可验证目标（Definition of Done）
 
@@ -66,8 +68,8 @@
 | T9 | 事件分发器（词表/历史栈/容器内跳转） | M2 | 单测 + G-M2 全绿 | ☑ | 596dc2d |
 | T10 | M2 E2E 汇总门 | M2 | G-M2 | ☑ | d781928 |
 | T11 | 图元基建：注册管道 + 约定 lint + 首个图元（泵）验证文本注入边界 | M3 | lint 单测 | ☑ | 3272be8..f11b125 |
-| T12 | 图元批 1：阀×2/罐/液位计/流量计（fill 约定） | M3 | lint + 快照 | ☐ | |
-| T13 | 图元批 2：电机/隔离开关/nav-button（默认事件）/值牌 | M3 | 默认事件实证 | ☐ | |
+| T12 | 图元批 1：阀×2/罐/液位计/流量计（fill 约定） | M3 | lint + 快照 | ☑ | 6d9e748 |
+| T13 | 图元批 2：电机/隔离开关/nav-button（默认事件）/值牌 | M3 | 默认事件实证 | ☑ | fca500c |
 | T14 | 水处理演示画面组态入库 | M3 | G-M3 | ☐ | |
 | T15 | M3 E2E 汇总门 | M3 | G-M3 | ☐ | |
 | T16 | 主题(dark 默认)/状态栏/命令历史/断线 UX | M4 | E2E 断线段 | ☐ | |
@@ -280,6 +282,10 @@ it('状态图元必含 fill 色属性；动画图元必含 animation；ports 仅
 ### T12-T13 图元批 1/2
 
 T12（fill 约定族）：闸阀/蝶阀/罐/液位计/流量计——罐与液位计的"液位高度"用 `props.h.val` 绑连续值（probe 同款 bind_attr 直写路径，T11 固化的写法）。T13：电机（animation）/隔离开关（fill 二值）/**nav-button**（`target` prop + 默认 click 事件模板 `$mtEventCallBack('nav', $item_info.id, target)`——**F6 退路**：若拖拽不带事件，则注册后用 maotu setItemAttrByID 补挂，或文档指引手写一行）/值牌（内置文本图元包装预设）。每图元：lint + 快照 + 编辑器手查一次拖入。commit 各一批。
+
+**T12 执行回填**：fill 族五图元入库（闸阀/蝶阀/罐/液位计/流量计）+ kit.ts 公共件（svgThumbnail data-ah-id 注入=E2E 定位锚 / levelCssRules / LIQUID_CSS）；lint 增第五规则 **SVG_COMMENT**（F18①）；ViewView 补 registerSymbols（F18③）；e2e m1 段3 改按 `img[src*="ah-xxx"]` + allSymbols 数断言（注册顺序不再耦合）；液位链路 /view 像素实证固化 **F18**。
+
+**T13 执行回填**：电机（整件旋转 common_animations，F17② 首用）/隔离开关（fill 二值）/跳转按钮（target + 默认事件，**F6 落锤=F19①**，退路 (a) 生效无需文档兜底）入库，registry 9 图元；值牌按设计 §6 约定**不注册图元**——e2e/fixtures.ts 增 `valueTagItem`/`seedValueTag` 预设模板（内置文本 + props.text.val 直写 bind，T14 直接拼装）；nav-button **无 text prop**（F16：prop 对 svg `<text>` 像素零影响，按钮文案旁置内置文本图元——任务书 text prop 项按此偏离执行）；common_animations 注册默认值结论 **F19②**。
 
 ### T14-T15 演示画面 + M3 门
 
