@@ -47,3 +47,26 @@ export async function loadScreenCards(
   })
   return cards.filter((c): c is ScreenCard => c !== null)
 }
+
+// ---- W8 画面分组：列表分区与编辑器切换器两层下拉共用同一分区器（单一排序语义）----
+
+export interface ScreenSection { name: string; cards: ScreenCard[] }
+
+/** 分组分区：组名 zh 拼音序排序；未分组归 '' 区（UI 显示「未分组」）排最后；组内按名称（name ?? id）拼音序 */
+export function groupSections(cards: ScreenCard[]): ScreenSection[] {
+  const byGroup = new Map<string, ScreenCard[]>()
+  for (const c of cards) {
+    const g = c.group ?? ''
+    const arr = byGroup.get(g)
+    if (arr) arr.push(c)
+    else byGroup.set(g, [c])
+  }
+  const zh = (a: string, b: string) => a.localeCompare(b, 'zh')
+  const named = [...byGroup.entries()].filter(([g]) => g !== '').sort(([a], [b]) => zh(a, b))
+  const ungrouped = byGroup.get('')
+  const sortCards = (cs: ScreenCard[]) => [...cs].sort((a, b) => zh(a.name ?? a.id, b.name ?? b.id))
+  return [
+    ...named.map(([name, cs]) => ({ name, cards: sortCards(cs) })),
+    ...(ungrouped ? [{ name: '', cards: sortCards(ungrouped) }] : []),
+  ]
+}

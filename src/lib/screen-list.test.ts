@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { ApiError } from './api'
 import { blankScreen, wrapDoc, screensApi } from './screens'
-import { batched, loadScreenCards } from './screen-list'
+import { batched, loadScreenCards, groupSections } from './screen-list'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -92,5 +92,40 @@ describe('loadScreenCards', () => {
     }
     await expect(loadScreenCards(fake as ReturnType<typeof screensApi>, 6))
       .rejects.toBeInstanceOf(ApiError)
+  })
+})
+
+// W8 画面分组：列表分区/切换器两层共用同一分区器——单一权威排序语义
+describe('groupSections', () => {
+  const card = (id: string, name?: string, group?: string) => ({ id, name, group })
+
+  it('分组分区；组内按名称排序；未组归「未分组」区排最后', () => {
+    const sections = groupSections([
+      card('c', '丙', '生产'),
+      card('b', '乙', '生产'),
+      card('u2', '乙二', undefined),
+      card('a', '甲', '测试'),
+      card('u1', '甲一', undefined),
+    ])
+    expect(sections).toEqual([
+      { name: '测试', cards: [card('a', '甲', '测试')] },
+      { name: '生产', cards: [card('c', '丙', '生产'), card('b', '乙', '生产')] },
+      { name: '', cards: [card('u1', '甲一'), card('u2', '乙二')] },
+    ])
+  })
+
+  it('缺名卡以 id 参与组内排序（name ?? id；zh 拼音序，汉字与拉丁同表混排）', () => {
+    const sections = groupSections([card('z', undefined, 'g'), card('a', '甲', 'g')])
+    expect(sections[0].cards.map((c) => c.id)).toEqual(['a', 'z']) // 甲(jia) < z
+  })
+
+  it('组名按 localeCompare 排序（中文按拼音序稳定）；空输入 → 空数组', () => {
+    const sections = groupSections([
+      card('1', 'n', '运维'),
+      card('2', 'n', '安全'),
+      card('3', 'n', '生产'),
+    ])
+    expect(sections.map((s) => s.name)).toEqual(['安全', '生产', '运维'])
+    expect(groupSections([])).toEqual([])
   })
 })

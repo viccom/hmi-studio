@@ -4,14 +4,15 @@
 // 装配契约（d.ts 实证）：MtEdit expose setImportJson(done)；onSaveClick payload=IExportJson；
 // onReturnClick / onPreviewClick 无消费参数。doc 真相在 rs-iot（wrapDoc/unwrapDoc 同体契约，
 // 见 lib/screens.ts）。
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { MtEdit } from 'maotu'
 import type { IExportJson } from 'maotu'
-import { blankScreen, screensApi, unwrapDoc, wrapDoc } from '../lib/screens'
-import { loadScreenCards } from '../lib/screen-list'
+import { screensApi, unwrapDoc, wrapDoc } from '../lib/screens'
+import { loadScreenCards, groupSections, type ScreenCard } from '../lib/screen-list'
+import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
 import { fetchDeviceTree, type IDeviceInfo } from '../lib/device-tree'
 import { getAuthedUser, logout } from '../lib/auth'
 import { installBridge } from '../lib/bridge'
@@ -63,12 +64,14 @@ watch(() => route.params.id, async (id) => {
   await loadScreen()
 })
 
-// —— W7 画面切换器：复用列表页抽好的 loadScreenCards（ids → 并发取 doc 得 name）——
-const screens = ref<{ id: string; name?: string }[]>([])
+// —— W7 画面切换器 / W8 分组两层：loadScreenCards 卡片（含 group）→ groupSections 分区
+// （与列表页同一分区器，排序语义单源）——
+const screens = ref<ScreenCard[]>([])
+const switchSections = computed(() => groupSections(screens.value))
 
 async function loadSwitcherScreens() {
   try {
-    screens.value = (await loadScreenCards(sApi)).map(({ id, name }) => ({ id, name }))
+    screens.value = await loadScreenCards(sApi)
   } catch {
     // 切换器非关键路径：加载失败静默为空（主加载 loadScreen 已报错）
   }
@@ -85,41 +88,40 @@ async function onSwitch(id: string) {
   if (id !== slug.value) await router.replace(`/edit/${id}`)
 }
 
-// —— W7 新建画面：列表页 create 逻辑内联于 ScreenListView 未抽库——本页最小同款
-//（同校验/同 probe-then-PUT），报告注明；后续画面多时可上抽 lib ——
+// —— W7 新建画面：探测+创建核上抽 lib/screen-create.ts（W8 起 EditView/ScreenListView
+// 两处对话框共用，分组字段一致）——
 const dlgVisible = ref(false)
 const formRef = ref<FormInstance>()
-const form = ref({ slug: '', name: '' })
+const form = ref({ slug: '', name: '', group: '' })
 const rules: FormRules = {
   slug: [
     { required: true, message: '必填', trigger: 'blur' },
-    { pattern: /^[a-z0-9][a-z0-9-]*$/, message: '小写字母/数字开头，仅含小写字母、数字、中划线', trigger: 'blur' },
+    { pattern: SLUG_PATTERN, message: '小写字母/数字开头，仅含小写字母、数字、中划线', trigger: 'blur' },
   ],
   name: [{ required: true, message: '必填', trigger: 'blur' }],
 }
 
 function openCreate() {
-  form.value = { slug: '', name: '' }
+  form.value = { slug: '', name: '', group: '' }
   dlgVisible.value = true
 }
 
 async function create() {
   const valid = await formRef.value?.validate().then(() => true).catch(() => false)
   if (!valid) return
-  const { slug: id, name } = form.value
-  try {
-    await sApi.get(id)
+  const { slug: id, name, group } = form.value
+  const r = await createScreen(sApi, id, { name, group: group || undefined })
+  if (r === 'exists') {
     ElMessage.error(`画面 ID "${id}" 已存在（PUT 为全量覆盖，已阻止）`)
     return
-  } catch { /* 404 = 可用 */ }
-  try {
-    await sApi.put(id, wrapDoc(blankScreen(id), { name }))
-    dlgVisible.value = false
-    await router.replace(`/edit/${id}`) // 经 route watch 重载画布
-    void loadSwitcherScreens()
-  } catch {
-    ElMessage.error('创建失败')
   }
+  if (r === 'failed') {
+    ElMessage.error('创建失败')
+    return
+  }
+  dlgVisible.value = false
+  await router.replace(`/edit/${id}`) // 经 route watch 重载画布
+  void loadSwitcherScreens()
 }
 
 // W7 预览：router.resolve 产含 base 的 href（部署形态 /hmi/ 前缀正确，dev 为 /）
@@ -151,9 +153,15 @@ async function save(payload: IExportJson) {
         size="small"
         :model-value="slug"
         title="切换画面"
+        popper-class="switcher-popper"
         @change="onSwitch"
       >
-        <el-option v-for="s in screens" :key="s.id" :label="s.name ?? s.id" :value="s.id" />
+        <el-option-group
+          v-for="g in switchSections" :key="g.name || '__ungrouped__'"
+          :label="g.name || '未分组'"
+        >
+          <el-option v-for="s in g.cards" :key="s.id" :label="s.name ?? s.id" :value="s.id" />
+        </el-option-group>
         <el-option label="+ 新建画面" :value="CREATE_OPT" />
       </el-select>
       <span class="screen-name">{{ meta.name ?? slug }}</span>
@@ -192,6 +200,9 @@ async function save(payload: IExportJson) {
         <el-form-item label="名称" prop="name">
           <el-input v-model="form.name" placeholder="画面名称" />
         </el-form-item>
+        <el-form-item label="分组">
+          <el-input v-model="form.group" placeholder="分组（可选）" />
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dlgVisible = false">取消</el-button>
@@ -213,12 +224,13 @@ async function save(payload: IExportJson) {
   white-space: nowrap;
 }
 .back-list:hover { color: var(--el-color-primary); }
-.screen-switcher { width: 170px; }
 .screen-name { font-weight: 600; }
 .screen-slug { color: var(--el-text-color-secondary); font-size: 12px; font-family: monospace; }
 .topbar-right { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; }
 .topbar-user { color: var(--el-text-color-secondary); font-size: 12px; }
 .edit-body { flex: 1; min-height: 0; }
+/* W8 切换器两层：下拉加宽容纳「组 → 画面」两级 */
+.screen-switcher { width: 190px; }
 /* maotu 底部版本横幅：外层是固定 40px 的 <footer class="el-footer">（实测 DOM，
    只藏内层 div 时 footer 空行仍占位）——整行隐藏，高度归还画布。
    :has 锚定 npm 外链特征，防止误伤未来可能的其它 el-footer */
@@ -240,4 +252,14 @@ async function save(payload: IExportJson) {
   z-index: 5;
   background: var(--el-bg-color);
 }
+</style>
+<style>
+/* W8 切换器下拉美化：组名小字灰色、画面名主体。popper 挂 body（teleport），
+   scoped 够不着——popper-class 命名空间 + 非 scoped 块 */
+.switcher-popper .el-select-group__title {
+  color: var(--el-text-color-secondary);
+  font-size: 11px;
+  padding: 4px 0 2px 12px;
+}
+.switcher-popper .el-select-dropdown__item { padding-left: 24px; }
 </style>

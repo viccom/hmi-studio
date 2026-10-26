@@ -1,11 +1,13 @@
 <script setup lang="ts">
-// 画面列表：卡片墙（缩略图/名称/slug/group tag）+ 新建（PUT blankScreen）+ 删除（popconfirm）
-import { onMounted, ref } from 'vue'
+// 画面列表（W8 分组）：分区卡片墙（组头=组名+数量徽章，未分组归「未分组」区排最后）
+// + 新建（探测+创建核 screen-create 共用，PUT blankScreen）+ 删除（popconfirm）
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { blankScreen, screensApi, wrapDoc } from '../lib/screens'
-import { loadScreenCards, type ScreenCard } from '../lib/screen-list'
+import { screensApi } from '../lib/screens'
+import { loadScreenCards, groupSections, type ScreenCard } from '../lib/screen-list'
+import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
 import { registerSymbols } from '../symbols'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import ScreenThumb from '../components/ScreenThumb.vue'
@@ -14,6 +16,8 @@ const router = useRouter()
 const sApi = screensApi()
 const cards = ref<ScreenCard[]>([])
 const loading = ref(false)
+
+const sections = computed(() => groupSections(cards.value))
 
 async function refresh() {
   loading.value = true
@@ -47,7 +51,7 @@ const form = ref({ slug: '', name: '', group: '' })
 const rules: FormRules = {
   slug: [
     { required: true, message: '必填', trigger: 'blur' },
-    { pattern: /^[a-z0-9][a-z0-9-]*$/, message: '小写字母/数字开头，仅含小写字母、数字、中划线', trigger: 'blur' },
+    { pattern: SLUG_PATTERN, message: '小写字母/数字开头，仅含小写字母、数字、中划线', trigger: 'blur' },
   ],
   name: [{ required: true, message: '必填', trigger: 'blur' }],
 }
@@ -61,18 +65,17 @@ async function create() {
   const valid = await formRef.value?.validate().then(() => true).catch(() => false)
   if (!valid) return
   const { slug, name, group } = form.value
-  try {
-    await sApi.get(slug)
+  const r = await createScreen(sApi, slug, { name, group: group || undefined })
+  if (r === 'exists') {
     ElMessage.error(`画面 ID "${slug}" 已存在（PUT 为全量覆盖，已阻止）`)
     return
-  } catch { /* 404 = 可用 */ }
-  try {
-    await sApi.put(slug, wrapDoc(blankScreen(slug), { name, group: group || undefined }))
-    dlgVisible.value = false
-    await refresh()
-  } catch {
-    ElMessage.error('创建失败')
   }
+  if (r === 'failed') {
+    ElMessage.error('创建失败')
+    return
+  }
+  dlgVisible.value = false
+  await refresh()
 }
 </script>
 
@@ -88,34 +91,42 @@ async function create() {
 
     <el-empty v-if="!loading && cards.length === 0" description="暂无画面，点击右上角新建" />
 
-    <el-row v-else v-loading="loading" :gutter="16">
-      <el-col v-for="c in cards" :key="c.id" :xs="24" :sm="12" :md="8" :lg="6" class="card-col">
-        <el-card class="screen-card" shadow="hover" @click="router.push(`/edit/${c.id}`)">
-          <ScreenThumb :done="c.done" />
-          <div class="card-head">
-            <span class="card-name" :title="c.name ?? c.id">{{ c.name ?? c.id }}</span>
-            <span class="card-ops" @click.stop>
-              <button class="icon-btn" title="在浏览器打开" @click="router.push(`/view/${c.id}`)">
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 3h7v7M21 3l-9 9M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" />
-                </svg>
-              </button>
-              <el-popconfirm :title="`删除画面 ${c.id}？`" confirm-button-text="删除" cancel-button-text="取消" @confirm="remove(c.id)">
-                <template #reference>
-                  <button class="icon-btn" title="删除画面">
+    <div v-else v-loading="loading">
+      <section v-for="g in sections" :key="g.name || '__ungrouped__'" class="group-block">
+        <div class="group-head">
+          <span class="group-name">{{ g.name || '未分组' }}</span>
+          <el-tag size="small" type="info" round>{{ g.cards.length }}</el-tag>
+        </div>
+        <el-row :gutter="16">
+          <el-col v-for="c in g.cards" :key="c.id" :xs="24" :sm="12" :md="8" :lg="6" class="card-col">
+            <el-card class="screen-card" shadow="hover" @click="router.push(`/edit/${c.id}`)">
+              <ScreenThumb :done="c.done" />
+              <div class="card-head">
+                <span class="card-name" :title="c.name ?? c.id">{{ c.name ?? c.id }}</span>
+                <span class="card-ops" @click.stop>
+                  <button class="icon-btn" title="在浏览器打开" @click="router.push(`/view/${c.id}`)">
                     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6" />
+                      <path d="M14 3h7v7M21 3l-9 9M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" />
                     </svg>
                   </button>
-                </template>
-              </el-popconfirm>
-            </span>
-          </div>
-          <div class="card-slug">{{ c.id }}</div>
-          <el-tag v-if="c.group" size="small" type="info">{{ c.group }}</el-tag>
-        </el-card>
-      </el-col>
-    </el-row>
+                  <el-popconfirm :title="`删除画面 ${c.id}？`" confirm-button-text="删除" cancel-button-text="取消" @confirm="remove(c.id)">
+                    <template #reference>
+                      <button class="icon-btn" title="删除画面">
+                        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6" />
+                        </svg>
+                      </button>
+                    </template>
+                  </el-popconfirm>
+                </span>
+              </div>
+              <div class="card-slug">{{ c.id }}</div>
+              <el-tag v-if="c.group" size="small" type="info">{{ c.group }}</el-tag>
+            </el-card>
+          </el-col>
+        </el-row>
+      </section>
+    </div>
 
     <el-dialog v-model="dlgVisible" title="新建画面" width="420px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="72px">
@@ -142,6 +153,14 @@ async function create() {
 .list-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .head-right { display: inline-flex; align-items: center; gap: 12px; }
 .list-head h2 { margin: 0; }
+/* W8 分组分区：组头 = 组名 + 数量徽章 */
+.group-block { margin-bottom: 20px; }
+.group-head {
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 8px; margin-bottom: 12px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+.group-name { font-weight: 600; font-size: 14px; }
 .card-col { margin-bottom: 16px; }
 .screen-card { cursor: pointer; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
