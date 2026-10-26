@@ -34,3 +34,43 @@ export async function fetchDeviceTree(): Promise<IDeviceInfo[]> {
     return []
   }
 }
+
+// ---- W8 富设备树（BindPanel 专用）：devreg 单点齐活设备描述+点位描述/单位 ----
+// 实测（2026-10-26 curl /api/v1/devreg）：
+// {rsiot:{desc:null|str, devid:'rsiot', effective:{uptime_s:{desc:'运行时长秒',unit:null,...}}}}
+// 系统设备 desc 可能为 null，此处归一为空串（UI 侧不再判空）。
+
+/** 点位节点：id=完整 field（bind_id 寻址唯一格式），unit 缺省空串 */
+export interface RichTagNode { id: string; label: string; desc: string; unit: string }
+/** 设备节点：desc 缺省空串 */
+export interface RichDeviceNode { id: string; label: string; desc: string; children: RichTagNode[] }
+
+/** devreg 原始形状（宽松：desc/effective 可能缺失或 null；其余字段不关心） */
+type RawDevreg = Record<string, {
+  desc?: string | null
+  devid?: string
+  effective?: Record<string, { desc?: string | null; unit?: string | null } | undefined> | null
+} | undefined>
+
+export function buildDeviceTreeRich(devreg: RawDevreg): RichDeviceNode[] {
+  return Object.entries(devreg).map(([key, node]) => {
+    const devid = node?.devid ?? key
+    const children = Object.entries(node?.effective ?? {}).map(([tag, t]) => ({
+      id: `${devid}.${tag}`,
+      label: tag,
+      desc: t?.desc ?? '',
+      unit: t?.unit ?? '',
+    }))
+    return { id: devid, label: devid, desc: node?.desc ?? '', children }
+  })
+}
+
+/** 在线拉富设备树（失败返回 []，与 fetchDeviceTree 同降级策略） */
+export async function fetchDeviceTreeRich(): Promise<RichDeviceNode[]> {
+  try {
+    const devreg = (await api().get('/api/v1/devreg')) as RawDevreg
+    return buildDeviceTreeRich(devreg)
+  } catch {
+    return []
+  }
+}

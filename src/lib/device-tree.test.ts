@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildDeviceTree } from './device-tree'
+import { buildDeviceTree, buildDeviceTreeRich } from './device-tree'
 
 // F2 实测形状：GET /api/v1/devices → {rsiot:{children:[{label,type,value}]}}
 describe('buildDeviceTree', () => {
@@ -44,5 +44,43 @@ describe('buildDeviceTree', () => {
   it('点位缺 value 时以 label 兜底成 field', () => {
     expect(buildDeviceTree({ d: { children: [{ label: 'only_label' }] } } as any))
       .toEqual([{ label: 'd', value: 'd', children: [{ label: 'only_label', value: 'd.only_label' }] }])
+  })
+})
+
+// W8 devreg 实测形状（2026-10-26 curl /api/v1/devreg）：
+// {rsiot:{desc:null|str, devid:'rsiot', effective:{uptime_s:{desc:'运行时长秒',unit:null,...}}}}
+// ——富设备树（BindPanel 用）：设备带描述、点位带描述+单位，叶子 id = 完整 field（bind_id）。
+describe('buildDeviceTreeRich', () => {
+  it('设备 desc + 点位 desc/unit → 富节点，叶子 id=<devid>.<tag>', () => {
+    expect(buildDeviceTreeRich({
+      rsiot: {
+        desc: '系统自监测', devid: 'rsiot',
+        effective: {
+          uptime_s: { desc: '运行时长秒', unit: null },
+          cpu_percent: { desc: '进程 CPU %', unit: '%' },
+        },
+      },
+    } as any)).toEqual([
+      {
+        id: 'rsiot', label: 'rsiot', desc: '系统自监测',
+        children: [
+          { id: 'rsiot.uptime_s', label: 'uptime_s', desc: '运行时长秒', unit: '' },
+          { id: 'rsiot.cpu_percent', label: 'cpu_percent', desc: '进程 CPU %', unit: '%' },
+        ],
+      },
+    ])
+  })
+
+  it('系统设备 desc=null 与点位 unit 缺失 → 空串容错（UI 侧不再判空）', () => {
+    expect(buildDeviceTreeRich({ rsiot: { desc: null, devid: 'rsiot', effective: { healthy: { desc: '自身健康' } } } } as any))
+      .toEqual([{ id: 'rsiot', label: 'rsiot', desc: '', children: [{ id: 'rsiot.healthy', label: 'healthy', desc: '自身健康', unit: '' }] }])
+  })
+
+  it('effective 缺失/空 → 设备节点保留无叶子；空对象 → 空数组', () => {
+    expect(buildDeviceTreeRich({ lone: { desc: 'x' }, empty: { desc: '', effective: {} } } as any)).toEqual([
+      { id: 'lone', label: 'lone', desc: 'x', children: [] },
+      { id: 'empty', label: 'empty', desc: '', children: [] },
+    ])
+    expect(buildDeviceTreeRich({} as any)).toEqual([])
   })
 })

@@ -17,6 +17,7 @@ import { getAuthedUser, logout } from '../lib/auth'
 import { installBridge } from '../lib/bridge'
 import { registerSymbols } from '../symbols'
 import ThemeToggle from '../components/ThemeToggle.vue'
+import BindPanel from '../components/BindPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -166,7 +167,9 @@ async function save(payload: IExportJson) {
     </header>
     <!-- use-theme-toggle=false：隐藏 maotu 自带夜间按钮（其 useDark 只切 #mt-edit、
          与全局 html.dark 双源分叉）——编辑器配色经 .dark 祖先选择器随全局主题。
-         :key=slug：切换画面时强制重挂（undo 栈/选中态随之重置，见 watch 注释） -->
+         :key=slug：切换画面时强制重挂（undo 栈/选中态随之重置，见 watch 注释）。
+         #deviceBind（插槽名以 d.ts 为准，F15 教训）：绑定 tab 整面板替换为 BindPanel，
+         item 为 store 响应式对象，直改驱动保存链路（见 BindPanel 头注释） -->
     <MtEdit
       ref="editRef"
       :key="slug"
@@ -176,7 +179,11 @@ async function save(payload: IExportJson) {
       @on-save-click="(payload: IExportJson) => save(payload)"
       @on-return-click="router.replace('/')"
       @on-preview-click="openPreview"
-    />
+    >
+      <template #deviceBind="{ item }">
+        <BindPanel :item="item" />
+      </template>
+    </MtEdit>
     <el-dialog v-model="dlgVisible" title="新建画面" width="420px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="72px">
         <el-form-item label="画面 ID" prop="slug">
