@@ -76,12 +76,12 @@ rs-iot screens API（`routes_meta.rs` 实测形状）：`GET /screens`（id 升�
 
 `src/symbols/` 每图元一个 ts 文件，export `ILeftAsideConfigItemPublic`，启动时 `registerConfig` 分组注入。deviceInfo 每次编辑器 mount 在线构建：`/api/v1/devices` 设备 → `/api/v1/tags` 点位（glob `<devid>.<tag>`），树节点 value 即 field 全格式，选中即 bind_id。
 
-约定优于配置：
+约定优于配置（T11 实证固化，F16/F17；lint 机械化见 `src/lib/symbol-lint.ts`）：
 
-- 状态图元统一暴露 `fill`（状态色）——绑 `props.fill.val` + triggers 变色
-- 旋转/动画类统一 `animation` 属性，triggers 控制启停
-- 数值显示不进复合图元：内置文本图元单独绑 `props.text.val`（❓SVG 复合体内文本注入机制需实现期验证一次）
-- ports 规范 leftBottom/rightBottom，工艺连线用 maotu 系统线
+- 状态图元统一暴露 `fill`（状态色）——绑 `props.fill.val` + triggers 变色；props 经 maotu TP 变为 **use 元素属性**，子形状不写死 fill 靠 SVG 继承
+- 旋转/动画类统一 `animation`(switch) 属性——svg 内嵌 `<style>` 随 use 克隆进影子树生效，`use[animation="true"]` 属性选择器置自定义属性、子件 `animation-play-state` 经 var 继承启停；绑 `props.animation.val` 与 fill 同款通路（泵叶轮即此）。整件动画（强调/进出类）走 maotu `common_animations`（rotate360 等由右面板或 triggers changeAttr `common_animations.val` 控制——注意管口随整体转，泵不用）
+- 数值显示不进复合图元：内置文本图元单独绑 `props.text.val`（✅F16 已验：dataURI `<img>` 纯字符串拼接管线，`{{text}}` 无展开时机——复合图元内文本注入不可行）
+- ports 规范 leftBottom（入口）/rightTop（出口）——maotu 仅实现 leftTop/leftBottom/rightTop 三锚位（F17③，rightBottom 会静默落画布原点），工艺连线用 maotu 系统线
 
 首批按水处理演示画面需要 ~12 个：离心泵/潜水泵、闸阀/蝶阀、罐、液位计、流量计、电机、隔离开关、值牌、管线。
 
