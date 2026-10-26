@@ -214,7 +214,10 @@ function trigDesc(t: IDoneJsonBindList['triggers'][number]): string {
             <el-input v-model="draft.value" size="small" class="bp-th" placeholder="阈值" />
             <span class="bp-arrow">→</span>
             <el-select v-model="draft.target_attr" size="small" class="bp-prop" placeholder="目标属性">
-              <el-option v-for="o in propOptions" :key="o.path" :label="o.title" :value="o.path" />
+              <el-option v-for="o in propOptions" :key="o.path" :label="o.title" :value="o.path">
+                <span class="bp-opt-title">{{ o.title }}</span>
+                <span class="bp-opt-path">{{ o.path }}</span>
+              </el-option>
             </el-select>
             <el-input v-model="draft.target_value" size="small" class="bp-tv" placeholder="目标值" />
             <el-button size="small" :disabled="!draft.value || !draft.target_attr" @click="addTrigger(b)">
