@@ -5,7 +5,10 @@
 import type { IExportJson } from 'maotu'
 import { api } from './api'
 
-export interface ScreenMeta { name?: string; group?: string }
+/** 设备参数化画面的设备清单（W11）：faceplate 的选择器/按钮清单同源；
+ * 首项 = 运行页默认激活设备（传统 HMI：进入即有上下文，无需先选） */
+export interface DevOpt { id: string; label?: string }
+export interface ScreenMeta { name?: string; group?: string; devs?: DevOpt[] }
 export type ScreenDoc = IExportJson & ScreenMeta
 
 export type ApiClient = ReturnType<typeof api>
@@ -15,10 +18,10 @@ export function wrapDoc(done: IExportJson, meta: ScreenMeta): ScreenDoc {
   return { ...done, ...meta }
 }
 
-/** doc → {done, meta}：剔除 name/group 后 done 完整；裸 done_json（无 meta）不炸 */
+/** doc → {done, meta}：剔除 name/group/devs 后 done 完整；裸 done_json（无 meta）不炸 */
 export function unwrapDoc(doc: ScreenDoc): { done: IExportJson; meta: ScreenMeta } {
-  const { name, group, ...done } = doc
-  return { done, meta: { name, group } }
+  const { name, group, devs, ...done } = doc
+  return { done, meta: { name, group, devs } }
 }
 
 /** 空白画面（800x600 深色画布，空 json/eventList/eventFlow），name 先取 slug 供 T3 新建对话框覆盖 */

@@ -114,5 +114,6 @@ export function buildHomeFaceplateScreen(devs: Array<{ id: string; label: string
     // 导航回页签屏（概览/页签/参数化三族互通）
     svgItem('ah-nav-button', 'ah-nav-button-hfp-1', { left: 700, top: 420, scale: 1.2, props: { target: HOME_E_TABS } }),
   ]
-  return { name: '家庭用电·参数化', group: HOME_GROUP, ...canvas(), json, eventList: [], eventFlow: [] }
+  // meta.devs = 清单权威源（ViewView 默认激活首台；选择器/按钮同源由 devs 参数生成）
+  return { name: '家庭用电·参数化', group: HOME_GROUP, devs, ...canvas(), json, eventList: [], eventFlow: [] }
 }

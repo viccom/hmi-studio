@@ -117,16 +117,38 @@ const onPoint = (p: RtPoint): void => {
 // 模板画面 bind_id 前缀 `@dev.` 由本页在加载/切换时重写为 `<devid>.<tag>`（dev-context.ts），
 // maotu 与 SSE 协议无感知。`@meta.dev` = 当前设备显示通道（挂载/切换后直推，标题/选择器
 // 绑它即回显）。切换 = 重映射 + setImportJson 重挂（趋势缓冲随重挂重置，换源不混线）。
+// 默认激活（W11.1 用户反馈修正）：首次进入即激活清单首台（meta.devs → 首个选择器 JSON），
+// 不存在"待选态"——界面上显示了选择就该有数据；?dev= 深链可覆盖默认。
 const templateDone = ref<IExportJson>()
 const activeDev = ref('')
+
+/** 设备清单：meta.devs 权威；缺省回退画布首个 ah-dev-selector 的 devices JSON（手工授权路径） */
+function faceplateDevs(done: IExportJson): Array<{ id: string; label?: string }> {
+  const fromMeta = meta.value.devs
+  if (fromMeta?.length) return fromMeta
+  for (const item of Array.isArray(done.json) ? done.json : []) {
+    const it = item as { tag?: unknown; props?: { devices?: unknown } }
+    if (it?.tag !== 'ah-dev-selector') continue
+    try {
+      const arr = JSON.parse(String(it.props?.devices ?? '[]')) as Array<{ id: string }>
+      if (Array.isArray(arr) && arr.length) return arr
+    } catch { /* 清单 JSON 坏 → 视为无清单 */ }
+  }
+  return []
+}
 
 async function mountScreen(done: IExportJson): Promise<void> {
   templateDone.value = done
   const param = isDevParamScreen(done)
-  activeDev.value = param && typeof route.query.dev === 'string' ? route.query.dev : ''
+  const qdev = typeof route.query.dev === 'string' ? route.query.dev : ''
+  activeDev.value = param ? (qdev || faceplateDevs(done)[0]?.id || '') : ''
   const inst = param && activeDev.value ? applyDevContext(done, activeDev.value) : done
   previewRef.value?.setImportJson(inst)
-  if (param && activeDev.value) previewRef.value?.setDevicePointByID(META_DEV_FIELD, activeDev.value)
+  if (param && activeDev.value) {
+    // 深链缺省时把默认设备写回 URL（刷新/分享保持同一上下文）
+    if (!qdev) void router.replace({ path: `/view/${currentSlug.value}`, query: { ...route.query, dev: activeDev.value } })
+    previewRef.value?.setDevicePointByID(META_DEV_FIELD, activeDev.value)
+  }
   await adoptDesign(done)
   resubscribe(inst)
 }

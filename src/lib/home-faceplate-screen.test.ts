@@ -17,7 +17,7 @@ describe('home-faceplate-screen 参数化屏', () => {
   it('slug/名称：faceplate slug 恒定，group = 家庭三表演示', () => {
     expect(HOME_E_FACEPLATE).toBe('home-meter-power-faceplate')
     const { meta, done } = unwrapDoc(doc)
-    expect(meta).toEqual({ name: '家庭用电·参数化', group: '家庭三表演示' })
+    expect(meta).toEqual({ name: '家庭用电·参数化', group: '家庭三表演示', devs: [{ id: 'home-meter-e1', label: '1# 电表' }, { id: 'home-meter-e2', label: '2# 电表' }] })
     expect(done).not.toHaveProperty('name')
     expect(isDevParamScreen(done)).toBe(true)
   })
