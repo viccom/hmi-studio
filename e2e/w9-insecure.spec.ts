@@ -36,7 +36,9 @@ async function runBindFlow(page: Page, auth: Record<string, string>, pageErrors:
     .then((r) => r.json())
   const textNode = doc.doc.json.find((n: { id?: string }) => String(n.id).startsWith('text-'))
   expect(textNode.binds?.length).toBeGreaterThanOrEqual(1)
-  expect(textNode.binds[0].bind_id).toMatch(/^rsiot\./)
+  // 绑定的是选点器首叶——rs-iot 接入 home-meter-* 设备后首叶不再是 rsiot.*（数据面漂移），
+  // 判据回归意图：落库的是合法 field 格式 <devid>.<tag>（P2 表计轮实测回填）
+  expect(textNode.binds[0].bind_id).toMatch(/^[a-z0-9_-]+\.[a-z0-9_]+$/i)
 }
 
 test.describe('W9 不安全上下文（LAN IP）绑定流', () => {

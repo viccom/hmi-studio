@@ -13,21 +13,25 @@ import { DEMO_CATALOG } from '../src/lib/demo-screen'
 // SSE mock 沿用 F20 page.route fulfill 法：整帧 snapshot 后断流 → 客户端 ~1s 退避重连，
 // 服务变量切换后二次断言（变色-恢复全链经真实 maotu 管线）。
 
-// 21 类注册图元（registry 全量）：13 svg + 4 custom-svg/vue 仪表 + 4 操作（dis-switch/nav 为 svg 型）
+// 26 类注册图元（registry 全量）：13 svg + 7 custom-svg/vue 仪表 + 4 操作（dis-switch/nav 为 svg 型）
+// P2 表计轮（+5）：ah-trend-chart/ah-meter-panel（vue）、ah-power-gauge/ah-water-meter/ah-gas-meter（custom-svg）
 const SVG_TYPES = [
   'ah-pump', 'ah-gate-valve', 'ah-butterfly-valve', 'ah-check-valve', 'ah-ball-valve',
   'ah-safety-valve', 'ah-solenoid-valve', 'ah-tank', 'ah-level-gauge', 'ah-flow-meter',
   'ah-fan', 'ah-agitator', 'ah-motor',
 ]
-const CUSTOM_TYPES = ['ah-gauge-pressure', 'ah-thermometer', 'ah-stack-light']
-const VUE_TYPES = ['ah-digital-display', 'ah-push-button', 'ah-selector-switch']
+const CUSTOM_TYPES = [
+  'ah-gauge-pressure', 'ah-thermometer', 'ah-stack-light',
+  'ah-power-gauge', 'ah-water-meter', 'ah-gas-meter',
+]
+const VUE_TYPES = ['ah-digital-display', 'ah-push-button', 'ah-selector-switch', 'ah-trend-chart', 'ah-meter-panel']
 const OP_SVG_TYPES = ['ah-dis-switch', 'ah-nav-button']
 const ALL = [...SVG_TYPES, ...OP_SVG_TYPES, ...CUSTOM_TYPES, ...VUE_TYPES]
 
 test.describe('G-SYMBOLS 图元陈列室（批 C）', () => {
   test.beforeAll(async () => { await seedCatalogDemo() })
 
-  test('段1: 21 类图元全渲染——svg/custom-svg img + vue DOM 两类断言', async ({ page }) => {
+  test('段1: 注册图元全渲染——svg/custom-svg img + vue DOM 两类断言', async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto(`/view/${DEMO_CATALOG}`)
     await expect(page.locator('.state.online')).toBeVisible({ timeout: 10_000 })
@@ -45,9 +49,15 @@ test.describe('G-SYMBOLS 图元陈列室（批 C）', () => {
     // vue 型：真实组件 DOM
     await expect(page.locator('#ah-digital-display-cat-1 .ah-dsp-value')).toBeVisible()
     await expect(page.locator('#ah-selector-switch-cat-1 svg')).toBeVisible()
-    // 总节点 = 21 自绘 + 陈列室文本（标题/分区/值牌）
+    // P2：趋势图 echarts canvas 真渲染 + 电表面板五行数显 DOM
+    await expect(page.locator('#ah-trend-chart-cat-1 canvas')).toHaveCount(1)
+    await expect(page.locator('#ah-meter-panel-cat-1 .ah-mp-row')).toHaveCount(5)
+    // P2 custom-svg 三表：SSR 串化 img（水/气表字轮数字可 decode）
+    const waterSrc = await page.locator('#ah-water-meter-cat-1 img').getAttribute('src')
+    expect(waterSrc).toContain('data:image/svg')
+    // 总节点 = 26 自绘 + 陈列室文本（标题/分区/值牌）
     const total = await page.locator('[id^="ah-"], [id^="text-vue-"]').count()
-    expect(total).toBe(21 + 8)
+    expect(total).toBe(26 + 9)
   })
 
   test('段2: 数显读数随 SSE 变化 + 泵阈值触发变色 + 压力表盘同步（cpu 95→20 往返）', async ({ page }) => {
@@ -82,9 +92,15 @@ test.describe('G-SYMBOLS 图元陈列室（批 C）', () => {
     cpu = 20
     await expect.poll(() => imgAttr(pumpImg, 'fill="#52c41a"'), { timeout: 20_000 }).toBe(true)
     await expect.poll(() => dsp.textContent(), { timeout: 10_000 }).toBe('20')
+
+    // P2 趋势数据通道落锤（bind 直写 → tick0 watch → 环形缓冲 → 曲线/读数）：
+    // 95（首连）+ 20（切值后重连）两次直写 = 缓冲 2 点；图例最新值 = 20
+    const trend = page.locator('#ah-trend-chart-cat-1')
+    await expect.poll(() => trend.locator('.ah-trc-n').textContent(), { timeout: 20_000 }).toBe('2 点')
+    await expect.poll(() => trend.locator('.ah-trc-last').textContent(), { timeout: 10_000 }).toBe('20')
   })
 
-  test('段3: alarm_active 触发链——三色灯红灯亮（custom-svg 串化含红色段）', async ({ page }) => {
+  test('段3: alarm_active 触发链——三色灯红灯亮 + 燃气表泄漏红闪（SMIL 串化锁定）', async ({ page }) => {
     await loginAsAdmin(page)
     let alarm = 1
     const cell = (v: string): [number, string, string] => [1792980000, '2026-10-26 10:00:00', v]
@@ -102,13 +118,19 @@ test.describe('G-SYMBOLS 图元陈列室（批 C）', () => {
 
     await page.goto(`/view/${DEMO_CATALOG}`)
     const stackImg = page.locator('#ah-stack-light-cat-1 img')
+    const gasImg = page.locator('#ah-gas-meter-cat-1 img')
     await expect(stackImg).toBeVisible({ timeout: 10_000 })
     // alarm=1 → red=true 触发（=1 亮/=0 灭互斥收口）→ 红段体色 #f5222d 进 SSR 串
     await expect.poll(() => imgAttr(stackImg, 'fill="#f5222d"'), { timeout: 15_000 }).toBe(true)
+    // alarm=1 → gas leak=true（二值触发链）→ 泄漏灯 SMIL <animate attributeName=...> 进 SSR 串
+    // （P2 实测：模板内 <style> 被 SFC 编译器剥除，SMIL 是 custom-svg 声明式动画唯一通路；
+    //   needle 用 attributeName 精确匹配——模板注释若含 "<animate>" 会被 SSR 一并串进 dataURI）
+    await expect.poll(() => imgAttr(gasImg, '<animate attributeName'), { timeout: 15_000 }).toBe(true)
 
-    // 恢复：alarm=0 → red=false → 红段回暗壳（#262d36）
+    // 恢复：alarm=0 → red=false 红段回暗壳（#262d36）+ leak=false → animate 移除
     alarm = 0
     await expect.poll(() => imgAttr(stackImg, 'fill="#262d36"'), { timeout: 20_000 }).toBe(true)
+    await expect.poll(() => imgAttr(gasImg, '<animate attributeName'), { timeout: 20_000 }).toBe(false)
   })
 })
 

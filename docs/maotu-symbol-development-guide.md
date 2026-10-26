@@ -1,9 +1,12 @@
-# maotu 图元开发规范与约束（v1.1）
+# maotu 图元开发规范与约束（v1.2）
 
 > 适用：hmi-studio（maotu 0.6.5 npm 闭源版）。本文是图元开发的**唯一权威规范**——新图元不合规不合并。
-> 依据：maotu bundle 机制实证 + 本仓 21 个在库图元实践（T11-T13 九类 + 图元批量轮 12 类）+ 用户学习样例（custom-svg/vue 路线）复核。
+> 依据：maotu bundle 机制实证 + 本仓在库图元实践（T11-T13 九类 + 图元批量轮 12 类 + P2 表计轮 5 类）
+> + 用户学习样例（custom-svg/vue 路线）复核。
 > 陷阱细节的实证编号（F11-F23）见 `docs/plans/2026-10-25-hmi-studio-implementation-plan.md` §0。
 > v1.1 修订（图元批量轮实证）：§2.1 tag 字段实证修正 / §3.2 lint 七规则 / §4.1 custom-svg SSR 串化机制 / §2.2 jT '#mt_slot' 陷阱。
+> v1.2 修订（P2 表计轮实证）：§2.2 数据通道 prop 与 JSON 序列配置承载 / §2.3 趋势数据通道模式 /
+> §4.1.1 模板内 <style> 被 SFC 编译器剥除（SMIL 通路）。
 
 ## 1. 三条图元路线与选型
 
@@ -66,9 +69,24 @@ props: {
 - **vue/custom-svg 型 input prop 的 val 禁止空串**（v1.1：jT 实证 `val === ''` 被替换为占位串
   `'#mt_slot'` 直达组件，bundle 960697——lint VUE_EMPTY_STR 拦截；给真实默认值如 `'标签'`）。
 
+v1.2 补充（P2 表计轮实证）：
+- **数据通道 prop 用 number 型**：图表类图元的「绑定入口」prop（如趋势图的 tick0-2）语义本就是
+  数值点位——number 描述符天然合规，规避 input 空串禁令；bind 直写 number/数字串均可达（组件归一）。
+- **JSON 序列配置用 textArea + JSON 串 + 组件侧容错解析**，不要用 `jsonEdit`——maotu jsonEdit 的
+  val 是**结构对象**且面板走专用编辑器（bundle 内 point_position/bind_anchors 等内部用法全 disabled，
+  编辑器组件 content-obj 是坐标/锚点专用 UI），不适配通用 JSON 序列（如趋势曲线配置）。解析器须
+  接受 string|object 双形态（坏 JSON/非法项静默降级为空，组态中途态不炸）。
+
 ### 2.3 绑定双通道（运行时语义，全路线一致）
 
 `setDevicePointByID(bind_id, value)`：先把 value **直写** bind_attr（连续量：液位/温度/文本值），再顺序评估 `triggers`（离散规则，`change_attr` 覆盖直写结果）。**直写+触发并存时，最终态由最后一个命中的 trigger 决定**——泵的 fill 直写 cpu 原值是无效色，靠 `>80`/`<=80` 两条互斥触发收口，设计时就要成对给全。
+
+**趋势数据通道模式（v1.2，P2 实测）**：vue 型图表图元拿不到宿主 SSE 桥回调，也**不应自开
+EventSource**——借直写通道进数：图表暴露 N 个 number 通道 prop（tick0-2），组态把每个 SSE field
+绑到一个通道（bind_attr = `props.tickK.val`，一曲线一 bind），组件 watch 通道 prop → `{到达时刻,
+值}` 入环形缓冲（时间戳 = 到达时刻，数据节奏 = 宿主写入节奏）→ 节流重绘。曲线元数据（label/unit/
+color）另放一个 JSON 配置 prop（§2.2 textArea 承载），field 仅作组态对照。全链路见
+`src/symbols/AhTrendChart.vue` 头注释 + e2e symbols.spec 段2（直写→watch→缓冲→重绘落锤）。
 
 ### 2.4 ports
 
@@ -159,6 +177,14 @@ custom-svg 渲染 = 组件 vnode 经 **SSR renderToString**（bundle M_/$f，@vu
 - `<text>` 合法（随串化保留）；props 响应式有效（重串化链）。
 选型速记：显示+计算几何 → custom-svg；**交互/回写/自由 DOM → vue**。
 
+**custom-svg 内声明式动画 = SMIL `<animate>`（v1.2 P2 实测，两步裁定）**：
+① 模板内 `<svg><style>` 被 **vue SFC 编译器剥除**（「Tags with side effect (<script> and
+<style>) are ignored in client component templates」——编译期移除，SSR 输出永不含它；运行时
+template 编译不剥，勿被探针误导）；② SVG SMIL `<animate>` 是普通元素，照常串化进 dataURI，
+img 内声明式动画浏览器照跑（燃气表泄漏红闪：leak 条件渲染 `<animate attributeName="opacity|
+fill" .../>`，组件单测 + e2e decode img src 双锁定）。脚本化 SVG 动画在 img 内本就禁止，SMIL
+是唯一声明式通路。
+
 ### 4.2 何时必须用这条路线
 
 - 有**文字读数**（数显/表盘刻度值/单位标签）——svg 型禁 text 的唯一合法绕行。
@@ -204,3 +230,5 @@ custom-svg 渲染 = 组件 vnode 经 **SSR renderToString**（bundle M_/$f，@vu
 | 8 | fill 直写+单条触发并存 | 直写值成无效中间态 | 触发成对互斥收口 |
 | 9 | vue 型组件未全局注册就拖入 | 静默空白 | 注册先于 registerConfig |
 | 10 | 保存态 props 是平面值、导入态是描述符 | 混淆数据形状 | 始终以描述符表为编程面（F12） |
+| 11 | 模板内 `<svg><style>`（custom-svg 闪烁） | SFC 编译期剥除，静默无效 | 声明式动画用 SMIL `<animate>`（§4.1.1 v1.2） |
+| 12 | bool 点位直写（parseCell 归一真布尔 true/false） | 组件侧 truthy 判断须兼容 boolean | 视觉态直接消费直写值；触发链 `= 1/0` 命中与否不影响正确性（不命中即直写值收口） |

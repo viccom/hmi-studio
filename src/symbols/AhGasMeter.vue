@@ -64,7 +64,7 @@ const lampFill = computed(() => (props.leak ? '#f5222d' : '#262d36'))
     <!-- 阀门状态标：开绿 / 关红（余额 &lt;10 关阀的业务语义由数据面决定） -->
     <rect x="12" y="92" width="64" height="26" rx="4" :fill="props.valve ? 'rgba(82,196,26,0.12)' : 'rgba(245,34,45,0.12)'" :stroke="valveColor" />
     <text x="44" y="109" text-anchor="middle" font-size="11" :fill="valveColor">阀 · {{ props.valve ? '开' : '关' }}</text>
-    <!-- 泄漏报警灯：leak_alarm → 红闪（SMIL <animate> 声明式动画，见头注释两次实测裁定） -->
+    <!-- 泄漏报警灯：红闪 animate 见头注释（注释不写进模板——SSR 保留注释会串进每帧 dataURI） -->
     <circle v-if="props.leak" cx="140" cy="105" r="13" fill="#f5222d" opacity="0.35">
       <animate attributeName="opacity" values="0.35;0.05;0.35" dur="1s" repeatCount="indefinite" />
     </circle>

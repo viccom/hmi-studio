@@ -2038,8 +2038,8 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
         {
           "id": "bd-ah-gas-meter-cat-1",
           "pel_id": "ah-gas-meter-cat-1",
-          "bind_id": "home-meter-g1.leak_alarm",
-          "bind_name": "leak_alarm",
+          "bind_id": "rsiot.alarm_active",
+          "bind_name": "alarm_active",
           "bind_attr": "props.leak.val",
           "bind_mapping": [],
           "triggers": [

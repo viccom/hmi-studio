@@ -272,7 +272,9 @@ export function buildCatalogScreen(): ScreenDoc {
           bind(cid('gas-meter'), 'home-meter-g1.gas_total', 'props.total.val'),
           bind(cid('gas-meter'), 'home-meter-g1.balance', 'props.balance.val', [], 'b'),
           ...boolBinds(cid('gas-meter'), 'valve', 'home-meter-g1.valve'),
-          ...boolBinds(cid('gas-meter'), 'leak', 'home-meter-g1.leak_alarm'),
+          // leak 挂 rsiot.alarm_active（G-SYMBOLS e2e 可驱动，锁 SMIL 红闪全链；
+          // 真实组态绑 home-meter-g1.leak_alarm，组件 prop 语义一致）
+          ...boolBinds(cid('gas-meter'), 'leak', 'rsiot.alarm_active'),
         ],
       }),
     ],
