@@ -32,3 +32,17 @@ describe('collectBinds：递归收集 + 去重', () => {
     expect(collectBinds({ json: [pel('p1', ['裸tag'])] })).toEqual({ fields: [], devs: [] })
   })
 })
+
+// W11：@ 前缀 bind_id 不进订阅面（@dev.* = 参数模板运行时重写后才收集；@meta.* = 宿主注入通道）
+describe('collectBinds @ 前缀过滤（W11）', () => {
+  it('@dev.*/@meta.* 均不入 fields/devs，普通绑定不受影响', () => {
+    const r = collectBinds({
+      json: [
+        { binds: [{ bind_id: '@dev.power' }, { bind_id: '@meta.dev' }, { bind_id: 'd1.tag' }] },
+        { children: [{ binds: [{ bind_id: '@dev.current' }] }] },
+      ],
+    })
+    expect(r.fields).toEqual(['d1.tag'])
+    expect(r.devs).toEqual(['d1'])
+  })
+})

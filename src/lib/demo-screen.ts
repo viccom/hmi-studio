@@ -277,6 +277,16 @@ export function buildCatalogScreen(): ScreenDoc {
           ...boolBinds(cid('gas-meter'), 'leak', 'rsiot.alarm_active'),
         ],
       }),
+      // 设备选择器（W11 vue 型）：参数化画面设备上下文切换入口
+      {
+        active: false, hide: false, lock: false, resize: true, rotate: true,
+        id: cid('dev-selector'), title: '设备选择器', type: 'vue', tag: 'ah-dev-selector',
+        binfo: { angle: 0, height: 40, left: 440, top: 800, width: 220 },
+        common_animations: { val: '', delay: 'delay-0s', speed: 'slow', repeat: 'infinite' },
+        events: [], ports: [],
+        props: { devices: '[{"id":"home-meter-e1","label":"1# 电表"},{"id":"home-meter-e2","label":"2# 电表"}]', value: '' },
+        binds: [],
+      },
     ],
     eventList: [], eventFlow: [],
   }

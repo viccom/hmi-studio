@@ -185,7 +185,8 @@ test.describe('W8 绑定面板与画面分组', () => {
       // 下拉 = 树形视觉：组头（▼ 组名，哨兵值）+ 缩进子项（W9b）——选「取水泵房」
       await targetRow.locator('.el-select').click()
       await expect(page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '▼ 水处理演示' })).toBeVisible()
-      await expect(page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '▼ 未分组' })).toBeVisible()
+      // W11 起 legacy 未分组画面（booster-pump-1 等 agent-hmi 旧格式）已不在库——组头断言改现存组
+      await expect(page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '▼ 家庭三表演示' })).toBeVisible()
       await page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '　　取水泵房' }).click()
       // 保存 → doc 落库断言 target 变更
       const putReq = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes(`/screens/${slugB}`))

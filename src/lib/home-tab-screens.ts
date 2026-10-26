@@ -29,7 +29,7 @@ export const HOME_G_TABS = 'home-meter-gas-tabs'
 
 /** 内置按钮图元（sys-button-vue）：原生 button，type 映射背景色（primary 蓝/info 灯灰）。
  *  events 挂 click——与 text-vue 同一 Md 编译路径（T9 seedNavScreens 实证 vue 型事件可用） */
-function buttonItem(id: string, o: {
+export function buttonItem(id: string, o: {
   text: string; left: number; top: number; width: number; height?: number
   type?: string; events?: IDoneJsonEventList[]
 }): IExportDoneJson {

@@ -67,17 +67,22 @@ watch(() => props.item.id, () => { // 切换选中图元 → 重置选择
 
 const binds = computed<IDoneJsonBindList[]>(() => props.item.binds ?? [])
 
+// W11 模板绑定：勾选后 bind_id 写 @dev.<tag>（所选设备仅用于浏览标签清单），
+// 运行页 ViewView 按激活设备重写（dev-context.ts，传统 HMI 画面模板 + 标签前缀模式）
+const templateMode = ref(false)
+
 function addBind() {
   const pt = selectedPoint.value
   if (!pt || !attrPath.value) return
-  if (binds.value.some((b) => b.bind_id === pt.id && b.bind_attr === attrPath.value)) {
+  const bindId = templateMode.value ? `@dev.${pt.id.split('.')[1] ?? pt.id}` : pt.id
+  if (binds.value.some((b) => b.bind_id === bindId && b.bind_attr === attrPath.value)) {
     ElMessage.warning('该点位已绑定此属性')
     return
   }
   const nb: IDoneJsonBindList = {
     id: uid(),
     pel_id: props.item.id,
-    bind_id: pt.id, // <devid>.<tag> = bind_id 唯一寻址格式
+    bind_id: bindId, // <devid>.<tag>；模板模式 = @dev.<tag>（W11）
     bind_name: pt.label, // tag 名
     bind_attr: attrPath.value, // 铁律：一律 props.<name>.val
     bind_mapping: [],
@@ -197,6 +202,10 @@ function trigDesc(t: IDoneJsonBindList['triggers'][number]): string {
           添加绑定
         </el-button>
       </div>
+      <label class="bp-tpl" title="bind_id 写为 @dev.<tag>；运行页按激活设备重写（传统 HMI 画面模板+标签前缀）。所选设备仅用于浏览标签清单">
+        <input v-model="templateMode" type="checkbox" />
+        模板绑定 @dev（参数化画面）
+      </label>
     </section>
 
     <section class="bp-section">
@@ -338,4 +347,10 @@ function trigDesc(t: IDoneJsonBindList['triggers'][number]): string {
 .bp-code { margin-top: 4px; }
 .bp-code :deep(textarea) { font-family: monospace; font-size: 11px; }
 .bp-note { color: var(--el-text-color-secondary); font-size: 10px; opacity: 0.8; }
+</style>
+<style scoped>
+.bp-tpl {
+  display: flex; align-items: center; gap: 6px; margin-top: 6px;
+  font-size: 12px; color: var(--el-text-color-secondary); cursor: pointer;
+}
 </style>

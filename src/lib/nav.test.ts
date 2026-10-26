@@ -75,3 +75,15 @@ describe('createNavStack 历史栈', () => {
     expect(s.back()).toBe('a')
   })
 })
+
+describe('dev 词表（W11 设备参数化）', () => {
+  it('dispatch([dev, itemId, devid]) → onDev(devid, itemId)；未注册 handler 静默', () => {
+    const seen: Array<[string, string]> = []
+    const d = createDispatcher({ onNav: () => {}, onBack: () => {}, onHome: () => {}, onDev: (devid, itemId) => seen.push([devid, itemId]) })
+    d.dispatch(['dev', 'sel-1', 'home-meter-e2'])
+    d.dispatch(['dev']) // 缺参也触发（分发器保持笨，参数校验在 ViewView 侧）
+    expect(seen).toEqual([['home-meter-e2', 'sel-1'], ['', '']])
+    const quiet = createDispatcher({ onNav: () => {}, onBack: () => {}, onHome: () => {} })
+    expect(() => quiet.dispatch(['dev', '', 'x'])).not.toThrow()
+  })
+})

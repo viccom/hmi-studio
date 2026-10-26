@@ -26,6 +26,7 @@ import AhPowerGauge from './AhPowerGauge.vue'
 import AhMeterPanel from './AhMeterPanel.vue'
 import AhWaterMeter from './AhWaterMeter.vue'
 import AhGasMeter from './AhGasMeter.vue'
+import AhDevSelector from './AhDevSelector.vue'
 
 export const SYMBOL_GROUP = 'HMI 图元'
 
@@ -48,6 +49,7 @@ export const VUE_SYMBOL_COMPONENTS: Record<string, Component> = {
   [vueTagFor('ah-meter-panel')]: AhMeterPanel,
   [vueTagFor('ah-water-meter')]: AhWaterMeter,
   [vueTagFor('ah-gas-meter')]: AhGasMeter,
+  [vueTagFor('ah-dev-selector')]: AhDevSelector,
 }
 
 /** 全局组件注册（main.ts createApp 后调用一次；app.component 幂等覆盖） */

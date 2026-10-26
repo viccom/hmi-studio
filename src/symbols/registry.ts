@@ -1,7 +1,8 @@
 // 正式图元注册表（T11 起）：allSymbols() 是左面板注册与 lint 全量检查的唯一事实源。
 // 新图元 = 一个 ts 文件 export HmiSymbol + 在此追加，lint 全绿（symbol-lint.test 全量循环）即可注册。
 //
-// 图元目录（26 类，2026-10-25 图元批量轮 + P2 表计轮；id——能力）：
+// 图元目录（27 类，2026-10-25 图元批量轮 + P2 表计轮 + W11 设备选择器；id——能力）：
+//   ah-dev-selector    设备选择器（vue，W11）——参数化画面设备上下文切换（@dev 前缀）
 //   ah-pump            离心泵——叶轮旋转动画 + fill 状态色
 //   ah-gate-valve      闸阀——领结阀体 + 手轮，fill 状态色
 //   ah-butterfly-valve 蝶阀——蝶板 + 阀杆，fill 状态色
@@ -55,6 +56,7 @@ import { powerGauge } from './power-gauge'
 import { meterPanel } from './meter-panel'
 import { waterMeter } from './water-meter'
 import { gasMeter } from './gas-meter'
+import { devSelector } from './dev-selector'
 
 const SYMBOLS: HmiSymbol[] = [
   pumpCentrifugal,
@@ -83,6 +85,7 @@ const SYMBOLS: HmiSymbol[] = [
   meterPanel,
   waterMeter,
   gasMeter,
+  devSelector,
 ]
 
 export function allSymbols(): HmiSymbol[] {

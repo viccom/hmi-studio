@@ -8,7 +8,8 @@
  * 编译为 `onOnEventCallback`（Back 的 b 小写）——大小写不匹配，静默收不到事件
  * （src/dev/Probe.vue 旧监听即属此失效写法）。
  *
- * 词表约定：nav/back/home/alarm。cmd 不进词表——真命令走 `$rsiot.send` 直连
+ * 词表约定：nav/back/home/alarm/dev（W11：dev = 设备参数化画面切设备，arg2 = devid）。
+ * cmd 不进词表——真命令走 `$rsiot.send` 直连
  * （确认框/inst 解析/Tracker 语义不可从词表触发），dispatch(['cmd',...]) 落 onUnknown 计数。
  */
 export interface DispatcherHandlers {
@@ -18,6 +19,8 @@ export interface DispatcherHandlers {
   onHome: () => void
   /** 词表 alarm：打开告警抽屉 */
   onAlarm?: () => void
+  /** 词表 dev（W11）：设备参数化画面切激活设备（devid 第三参） */
+  onDev?: (devid: string, itemId: string) => void
   /** 非词表 type（含 cmd）；缺省静默忽略 */
   onUnknown?: (type: string) => void
 }
@@ -37,6 +40,7 @@ export function createDispatcher(h: DispatcherHandlers): Dispatcher {
       else if (type === 'back') h.onBack()
       else if (type === 'home') h.onHome()
       else if (type === 'alarm') h.onAlarm?.()
+      else if (type === 'dev') h.onDev?.(str(args[2]), str(args[1]))
       else h.onUnknown?.(type)
     },
   }

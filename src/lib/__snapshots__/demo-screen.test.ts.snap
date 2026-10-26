@@ -2080,6 +2080,37 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
           ]
         }
       ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-dev-selector-cat-1",
+      "title": "设备选择器",
+      "type": "vue",
+      "tag": "ah-dev-selector",
+      "binfo": {
+        "angle": 0,
+        "height": 40,
+        "left": 440,
+        "top": 800,
+        "width": 220
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "devices": "[{\\"id\\":\\"home-meter-e1\\",\\"label\\":\\"1# 电表\\"},{\\"id\\":\\"home-meter-e2\\",\\"label\\":\\"2# 电表\\"}]",
+        "value": ""
+      },
+      "binds": []
     }
   ],
   "eventList": [],

@@ -2,6 +2,7 @@ import { rsiotPutScreen } from './helpers'
 import { buildDemoScreen, buildCatalogScreen, DEMO_CATALOG } from '../src/lib/demo-screen'
 import { buildHomeScreens, HOME_E, HOME_W, HOME_G } from '../src/lib/home-screens'
 import { buildHomeTabScreens, HOME_E_TABS, HOME_W_TABS, HOME_G_TABS } from '../src/lib/home-tab-screens'
+import { buildHomeFaceplateScreen, HOME_E_FACEPLATE } from '../src/lib/home-faceplate-screen'
 
 /**
  * M2 数据段种子画面（T6）——形状全部来自 2026-10-25 编辑器/BindProbe 实测：
@@ -157,6 +158,14 @@ export async function seedHomeTabScreens(): Promise<void> {
   await rsiotPutScreen(HOME_E_TABS, power)
   await rsiotPutScreen(HOME_W_TABS, water)
   await rsiotPutScreen(HOME_G_TABS, gas)
+}
+
+/**
+ * W11 参数化样板屏（长期资产）：slug 恒定 home-meter-power-faceplate，PUT upsert 幂等——
+ * **任何测试不得删除**。绑定面 = @dev 点缀 + @meta.dev（运行页按 ?dev=/按钮/选择器激活）。
+ */
+export async function seedFaceplateScreen(): Promise<void> {
+  await rsiotPutScreen(HOME_E_FACEPLATE, buildHomeFaceplateScreen())
 }
 
 /**

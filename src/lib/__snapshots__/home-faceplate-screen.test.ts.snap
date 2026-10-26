@@ -1,0 +1,937 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`home-faceplate-screen 参数化屏 > 全量快照（防漂移基线） 1`] = `
+"{
+  "name": "家庭用电·参数化",
+  "group": "家庭三表演示",
+  "canvasCfg": {
+    "width": 800,
+    "height": 600,
+    "scale": 1,
+    "color": "#141414",
+    "img": "",
+    "guide": true,
+    "adsorp": true,
+    "adsorp_diff": 3,
+    "transform_origin": {
+      "x": 0,
+      "y": 0
+    },
+    "drag_offset": {
+      "x": 0,
+      "y": 0
+    }
+  },
+  "gridCfg": {
+    "enabled": true,
+    "align": true,
+    "size": 20
+  },
+  "json": [
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-title",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 36,
+        "left": 20,
+        "top": 20,
+        "width": 220
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#e6f7ff",
+        "fontFamily": "黑体",
+        "fontSize": 24,
+        "text": "家庭用电·参数化",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-dev",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 28,
+        "left": 260,
+        "top": 20,
+        "width": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#58a6ff",
+        "fontFamily": "黑体",
+        "fontSize": 15,
+        "text": "未选设备",
+        "vertical": false
+      },
+      "binds": [
+        {
+          "id": "bd-text-vue-hfp-dev-text",
+          "pel_id": "text-vue-hfp-dev",
+          "bind_id": "@meta.dev",
+          "bind_name": "dev",
+          "bind_attr": "props.text.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-dev-selector-hfp",
+      "title": "设备选择器",
+      "type": "vue",
+      "tag": "ah-dev-selector",
+      "binfo": {
+        "angle": 0,
+        "height": 40,
+        "left": 380,
+        "top": 20,
+        "width": 200
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "devices": "[{\\"id\\":\\"home-meter-e1\\",\\"label\\":\\"1# 电表\\"},{\\"id\\":\\"home-meter-e2\\",\\"label\\":\\"2# 电表\\"}]",
+        "value": "home-meter-e1"
+      },
+      "binds": [
+        {
+          "id": "bd-ah-dev-selector-hfp-metadev",
+          "pel_id": "ah-dev-selector-hfp",
+          "bind_id": "@meta.dev",
+          "bind_name": "当前设备",
+          "bind_attr": "props.value.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "tab-dev-1",
+      "title": "按钮",
+      "type": "vue",
+      "tag": "sys-button-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 40,
+        "left": 600,
+        "top": 20,
+        "width": 100
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [
+        {
+          "id": "ev-tab-dev-1",
+          "type": "click",
+          "action": "customCode",
+          "change_attr": [],
+          "custom_code": "$mtEventCallBack('dev', $item_info.id, 'home-meter-e1');",
+          "event_flow_ids": [],
+          "trigger_rule": {}
+        }
+      ],
+      "ports": [],
+      "props": {
+        "text": "1# 电表",
+        "type": "primary",
+        "round": true
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "tab-dev-2",
+      "title": "按钮",
+      "type": "vue",
+      "tag": "sys-button-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 40,
+        "left": 700,
+        "top": 20,
+        "width": 100
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [
+        {
+          "id": "ev-tab-dev-2",
+          "type": "click",
+          "action": "customCode",
+          "change_attr": [],
+          "custom_code": "$mtEventCallBack('dev', $item_info.id, 'home-meter-e2');",
+          "event_flow_ids": [],
+          "trigger_rule": {}
+        }
+      ],
+      "ports": [],
+      "props": {
+        "text": "2# 电表",
+        "type": "info",
+        "round": true
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-devlbl",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 24,
+        "left": 20,
+        "top": 100,
+        "width": 360
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 13,
+        "text": "设备面板",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-meter-panel-hfp",
+      "title": "电表面板",
+      "type": "vue",
+      "tag": "ah-meter-panel",
+      "binfo": {
+        "angle": 0,
+        "width": 320,
+        "height": 240,
+        "left": 20,
+        "top": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#39d353",
+        "v": 0,
+        "i": 0,
+        "p": 0,
+        "pf": 0,
+        "freq": 0,
+        "pulse": false,
+        "status": 0
+      },
+      "binds": [
+        {
+          "id": "bd-ah-meter-panel-hfp-v",
+          "pel_id": "ah-meter-panel-hfp",
+          "bind_id": "@dev.voltage",
+          "bind_name": "voltage",
+          "bind_attr": "props.v.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-hfp-i",
+          "pel_id": "ah-meter-panel-hfp",
+          "bind_id": "@dev.current",
+          "bind_name": "current",
+          "bind_attr": "props.i.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-hfp-p",
+          "pel_id": "ah-meter-panel-hfp",
+          "bind_id": "@dev.power",
+          "bind_name": "power",
+          "bind_attr": "props.p.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-hfp-pf",
+          "pel_id": "ah-meter-panel-hfp",
+          "bind_id": "@dev.pf",
+          "bind_name": "pf",
+          "bind_attr": "props.pf.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-hfp-freq",
+          "pel_id": "ah-meter-panel-hfp",
+          "bind_id": "@dev.frequency",
+          "bind_name": "frequency",
+          "bind_attr": "props.freq.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-hfp-status",
+          "pel_id": "ah-meter-panel-hfp",
+          "bind_id": "@dev.status",
+          "bind_name": "status",
+          "bind_attr": "props.status.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-meter-panel-hfp-pulse",
+          "pel_id": "ah-meter-panel-hfp",
+          "bind_id": "@dev.pulse",
+          "bind_name": "pulse",
+          "bind_attr": "props.pulse.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-trend-chart-hfp",
+      "title": "趋势图表",
+      "type": "vue",
+      "tag": "ah-trend-chart",
+      "binfo": {
+        "angle": 0,
+        "width": 264,
+        "height": 180,
+        "left": 20,
+        "top": 400
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "points": "[{\\"field\\":\\"@dev.power\\",\\"label\\":\\"有功\\",\\"unit\\":\\"kW\\",\\"color\\":\\"#f5a623\\"},{\\"field\\":\\"@dev.current\\",\\"label\\":\\"电流\\",\\"unit\\":\\"A\\",\\"color\\":\\"#58a6ff\\"}]",
+        "tick0": 0,
+        "tick1": 0,
+        "tick2": 0,
+        "windowSecs": 600,
+        "yUnit": "kW/A"
+      },
+      "binds": [
+        {
+          "id": "bd-ah-trend-chart-hfp-tick0",
+          "pel_id": "ah-trend-chart-hfp",
+          "bind_id": "@dev.power",
+          "bind_name": "power",
+          "bind_attr": "props.tick0.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-trend-chart-hfp-tick1",
+          "pel_id": "ah-trend-chart-hfp",
+          "bind_id": "@dev.current",
+          "bind_name": "current",
+          "bind_attr": "props.tick1.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-l-power",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 28,
+        "left": 380,
+        "top": 140,
+        "width": 150
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "有功(kW)",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-v-power",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 32,
+        "left": 540,
+        "top": 140,
+        "width": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#FFF700",
+        "fontFamily": "黑体",
+        "fontSize": 18,
+        "text": "—",
+        "vertical": false
+      },
+      "binds": [
+        {
+          "id": "bd-text-vue-hfp-v-power-text",
+          "pel_id": "text-vue-hfp-v-power",
+          "bind_id": "@dev.power",
+          "bind_name": "power",
+          "bind_attr": "props.text.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-l-pf",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 28,
+        "left": 380,
+        "top": 180,
+        "width": 150
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "功率因数",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-v-pf",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 32,
+        "left": 540,
+        "top": 180,
+        "width": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#FFF700",
+        "fontFamily": "黑体",
+        "fontSize": 18,
+        "text": "—",
+        "vertical": false
+      },
+      "binds": [
+        {
+          "id": "bd-text-vue-hfp-v-pf-text",
+          "pel_id": "text-vue-hfp-v-pf",
+          "bind_id": "@dev.pf",
+          "bind_name": "pf",
+          "bind_attr": "props.text.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-l-frequency",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 28,
+        "left": 380,
+        "top": 220,
+        "width": 150
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "频率(Hz)",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-v-frequency",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 32,
+        "left": 540,
+        "top": 220,
+        "width": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#FFF700",
+        "fontFamily": "黑体",
+        "fontSize": 18,
+        "text": "—",
+        "vertical": false
+      },
+      "binds": [
+        {
+          "id": "bd-text-vue-hfp-v-frequency-text",
+          "pel_id": "text-vue-hfp-v-frequency",
+          "bind_id": "@dev.frequency",
+          "bind_name": "frequency",
+          "bind_attr": "props.text.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-l-energy",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 28,
+        "left": 380,
+        "top": 260,
+        "width": 150
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "总电能(kWh)",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-v-energy",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 32,
+        "left": 540,
+        "top": 260,
+        "width": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#FFF700",
+        "fontFamily": "黑体",
+        "fontSize": 18,
+        "text": "—",
+        "vertical": false
+      },
+      "binds": [
+        {
+          "id": "bd-text-vue-hfp-v-energy-text",
+          "pel_id": "text-vue-hfp-v-energy",
+          "bind_id": "@dev.energy",
+          "bind_name": "energy",
+          "bind_attr": "props.text.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-l-today",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 28,
+        "left": 380,
+        "top": 300,
+        "width": 150
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "今日(kWh)",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-v-today",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 32,
+        "left": 540,
+        "top": 300,
+        "width": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#FFF700",
+        "fontFamily": "黑体",
+        "fontSize": 18,
+        "text": "—",
+        "vertical": false
+      },
+      "binds": [
+        {
+          "id": "bd-text-vue-hfp-v-today-text",
+          "pel_id": "text-vue-hfp-v-today",
+          "bind_id": "@dev.energy_today",
+          "bind_name": "energy_today",
+          "bind_attr": "props.text.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-l-status",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 28,
+        "left": 380,
+        "top": 340,
+        "width": 150
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "状态码",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-hfp-v-status",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 32,
+        "left": 540,
+        "top": 340,
+        "width": 140
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#FFF700",
+        "fontFamily": "黑体",
+        "fontSize": 18,
+        "text": "—",
+        "vertical": false
+      },
+      "binds": [
+        {
+          "id": "bd-text-vue-hfp-v-status-text",
+          "pel_id": "text-vue-hfp-v-status",
+          "bind_id": "@dev.status",
+          "bind_name": "status",
+          "bind_attr": "props.text.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-nav-button-hfp-1",
+      "title": "跳转按钮",
+      "type": "svg",
+      "tag": "ah-nav-button",
+      "binfo": {
+        "angle": 0,
+        "width": 58,
+        "height": 38,
+        "left": 700,
+        "top": 420
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [
+        {
+          "id": "ev-nav",
+          "type": "click",
+          "action": "customCode",
+          "change_attr": [],
+          "custom_code": "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));",
+          "event_flow_ids": [],
+          "trigger_rule": {}
+        }
+      ],
+      "ports": [],
+      "props": {
+        "fill": "#1677ff",
+        "target": "home-meter-power-tabs"
+      },
+      "binds": []
+    }
+  ],
+  "eventList": [],
+  "eventFlow": []
+}"
+`;

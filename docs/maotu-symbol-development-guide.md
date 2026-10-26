@@ -240,6 +240,22 @@ fill" .../>`，组件单测 + e2e decode img src 双锁定）。脚本化 SVG �
 **程序化参照**：src/lib/home-tab-screens.ts（三张页签屏：click→changeAttr hide 平铺
 + 按钮激活色互换 + 触发器极性 alarm/normal）；e2e/w10-tabs.spec.ts。
 
+### 7.1 设备参数化画面（100 仪表 = 1 张画面，W11 实证）
+
+页签配方（§7）适合 2~6 台同型设备对比；设备多时用**传统 HMI 画面模板 + 标签前缀**模式：
+绑定写 `@dev.<tag>`，运行页按激活设备重写为 `<devid>.<tag>`（ViewView 数据层重映射 +
+setImportJson 重挂 + SSE 重订，maotu 无感知）。
+
+- **绑定约定**：`@dev.<tag>` = 设备上下文相对标签；`@meta.dev` = 宿主直推的当前设备 id
+  显示通道（标题/选择器绑它回显）。`@` 开头 bind_id 不进订阅面（binds.ts 过滤）。
+- **编辑器授权**：BindPanel 勾选「模板绑定 @dev」→ 所选设备仅用于浏览标签清单，bind_id
+  落 `@dev.<tag>`。
+- **切换入口（三选一）**：深链 `?dev=<devid>`；canvas 按钮 customCode
+  `$mtEventCallBack('dev', $item_info.id, '<devid>')`；ah-dev-selector 下拉图元
+  （devices JSON 清单，增设备 = 加一行 JSON）。
+- **样板**：src/lib/home-faceplate-screen.ts（home-meter-power-faceplate）；
+  机制 src/lib/dev-context.ts；行为门 e2e/w11-faceplate.spec.ts。
+
 ## 8. 已知陷阱速查（全部实证过，勿踩）
 
 | # | 陷阱 | 后果 | 对策 |

@@ -15,6 +15,7 @@ import { DEMO_CATALOG } from '../src/lib/demo-screen'
 
 // 26 类注册图元（registry 全量）：13 svg + 7 custom-svg/vue 仪表 + 4 操作（dis-switch/nav 为 svg 型）
 // P2 表计轮（+5）：ah-trend-chart/ah-meter-panel（vue）、ah-power-gauge/ah-water-meter/ah-gas-meter（custom-svg）
+// W11（+1）：ah-dev-selector（vue，参数化画面设备上下文切换）
 const SVG_TYPES = [
   'ah-pump', 'ah-gate-valve', 'ah-butterfly-valve', 'ah-check-valve', 'ah-ball-valve',
   'ah-safety-valve', 'ah-solenoid-valve', 'ah-tank', 'ah-level-gauge', 'ah-flow-meter',
@@ -24,7 +25,7 @@ const CUSTOM_TYPES = [
   'ah-gauge-pressure', 'ah-thermometer', 'ah-stack-light',
   'ah-power-gauge', 'ah-water-meter', 'ah-gas-meter',
 ]
-const VUE_TYPES = ['ah-digital-display', 'ah-push-button', 'ah-selector-switch', 'ah-trend-chart', 'ah-meter-panel']
+const VUE_TYPES = ['ah-digital-display', 'ah-push-button', 'ah-selector-switch', 'ah-trend-chart', 'ah-meter-panel', 'ah-dev-selector']
 const OP_SVG_TYPES = ['ah-dis-switch', 'ah-nav-button']
 const ALL = [...SVG_TYPES, ...OP_SVG_TYPES, ...CUSTOM_TYPES, ...VUE_TYPES]
 
@@ -55,9 +56,9 @@ test.describe('G-SYMBOLS 图元陈列室（批 C）', () => {
     // P2 custom-svg 三表：SSR 串化 img（水/气表字轮数字可 decode）
     const waterSrc = await page.locator('#ah-water-meter-cat-1 img').getAttribute('src')
     expect(waterSrc).toContain('data:image/svg')
-    // 总节点 = 26 自绘 + 陈列室文本（标题/分区/值牌）
+    // 总节点 = 27 自绘（W11 +ah-dev-selector）+ 陈列室文本（标题/分区/值牌）
     const total = await page.locator('[id^="ah-"], [id^="text-vue-"]').count()
-    expect(total).toBe(26 + 9)
+    expect(total).toBe(27 + 9)
   })
 
   test('段2: 数显读数随 SSE 变化 + 泵阈值触发变色 + 压力表盘同步（cpu 95→20 往返）', async ({ page }) => {

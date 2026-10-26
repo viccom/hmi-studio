@@ -21,6 +21,7 @@ import { createDispatcher, createNavStack } from '../lib/nav'
 import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
 import { registerSymbols } from '../symbols'
 import { computeFitScale } from '../lib/fit-scale'
+import { applyDevContext, isDevParamScreen, META_DEV_FIELD } from '../lib/dev-context'
 import AlarmBanner from '../components/AlarmBanner.vue'
 import AlarmDrawer from '../components/AlarmDrawer.vue'
 import ThemeToggle from '../components/ThemeToggle.vue'
@@ -112,6 +113,34 @@ const onPoint = (p: RtPoint): void => {
   previewRef.value?.setDevicePointByID(p.field, p.value)
 }
 
+// ---- W11 设备参数化（传统 HMI 画面模板 + 标签前缀模式）----
+// 模板画面 bind_id 前缀 `@dev.` 由本页在加载/切换时重写为 `<devid>.<tag>`（dev-context.ts），
+// maotu 与 SSE 协议无感知。`@meta.dev` = 当前设备显示通道（挂载/切换后直推，标题/选择器
+// 绑它即回显）。切换 = 重映射 + setImportJson 重挂（趋势缓冲随重挂重置，换源不混线）。
+const templateDone = ref<IExportJson>()
+const activeDev = ref('')
+
+async function mountScreen(done: IExportJson): Promise<void> {
+  templateDone.value = done
+  const param = isDevParamScreen(done)
+  activeDev.value = param && typeof route.query.dev === 'string' ? route.query.dev : ''
+  const inst = param && activeDev.value ? applyDevContext(done, activeDev.value) : done
+  previewRef.value?.setImportJson(inst)
+  if (param && activeDev.value) previewRef.value?.setDevicePointByID(META_DEV_FIELD, activeDev.value)
+  await adoptDesign(done)
+  resubscribe(inst)
+}
+
+function setDev(dev: string): void {
+  if (!templateDone.value || !dev || dev === activeDev.value) return
+  activeDev.value = dev
+  void router.replace({ path: `/view/${currentSlug.value}`, query: { ...route.query, dev } })
+  const inst = applyDevContext(templateDone.value, dev)
+  previewRef.value?.setImportJson(inst)
+  previewRef.value?.setDevicePointByID(META_DEV_FIELD, dev)
+  resubscribe(inst)
+}
+
 /** SSE 按新画面 bind 集重订（挂载/跳转共用）：关旧流（或改订）+ 清收数；无绑定 → 关流离线 */
 const resubscribe = (done: IExportJson): void => {
   const { fields, devs } = collectBinds(done)
@@ -139,18 +168,17 @@ function onStreamState(s: StreamState): void {
   if (s === 'auth-failed') doLogout()
 }
 
-/** 容器内跳转：GET 目标 doc → setImportJson → URL 同步（replace）→ SSE 重订；404 报错停留当前画面 */
+/** 容器内跳转：GET 目标 doc → mountScreen（W11 参数化重映射同管线）→ URL 同步（replace，
+ * path 形式丢弃旧 query.dev）→ SSE 重订；404 报错停留当前画面 */
 const jump = async (target: string): Promise<boolean> => {
   if (target === currentSlug.value) return false
   try {
     const { doc } = await sApi.get(target)
     const { done, meta: m } = unwrapDoc(doc)
-    previewRef.value?.setImportJson(done)
     meta.value = m
     currentSlug.value = target
-    void adoptDesign(done)
     void router.replace(`/view/${target}`)
-    resubscribe(done)
+    await mountScreen(done)
     return true
   } catch {
     ElMessage.error(`画面 ${target} 加载失败`)
@@ -172,6 +200,10 @@ const dispatcher = createDispatcher({
       const w = window as Window & { __navCount?: number }
       w.__navCount = (w.__navCount ?? 0) + 1
     })
+  },
+  onDev(devid) {
+    // W11：设备参数化画面切设备（canvas 按钮/选择器 → 词表 dev）；非参数屏忽略
+    if (templateDone.value && isDevParamScreen(templateDone.value)) setDev(devid)
   },
   onBack() {
     const dest = navStack.back()
@@ -226,14 +258,12 @@ onMounted(async () => {
     const unwrapped = unwrapDoc(doc)
     done = unwrapped.done
     meta.value = unwrapped.meta
-    previewRef.value?.setImportJson(done)
-    await adoptDesign(done)
   } catch {
     ElMessage.error('画面加载失败')
     return
   }
+  await mountScreen(done)
   navStack.nav(slug) // 历史栈起点（back 弹空 → '/' 画面列表）
-  resubscribe(done)
 })
 
 onUnmounted(() => {
@@ -259,6 +289,7 @@ onUnmounted(() => {
     <footer class="view-statusbar" :class="{ offline: state !== 'online' }" data-testid="status-bar">
       <span class="sb-name">{{ meta.name ?? currentSlug }}</span>
       <span class="sb-slug">{{ currentSlug }}</span>
+      <span v-if="activeDev" class="sb-dev" data-testid="active-dev">设备 {{ activeDev }}</span>
       <span class="state" :class="state" :data-state="state">{{ stateLabel() }}</span>
       <span class="sb-points" title="订阅点位数（去重 field）">订阅 {{ bindFields.length }} 点</span>
       <el-popover v-if="deadFields.length" trigger="click" :width="280">
@@ -321,6 +352,7 @@ onUnmounted(() => {
 }
 .sb-name { font-weight: 600; }
 .sb-slug { color: var(--el-text-color-secondary); font-family: monospace; }
+.sb-dev { color: var(--el-color-primary); font-family: monospace; }
 .state { display: inline-flex; align-items: center; }
 .state::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
 .state.online { color: var(--el-color-success); }
