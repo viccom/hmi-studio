@@ -70,6 +70,49 @@ export async function seedScreen(slug: string): Promise<void> {
 }
 
 /**
+ * 值牌预设（T13，设计 §6/F16 约定的落地件）：**不注册新图元**——内置文本图元 + 绑定即值牌。
+ * valueTagItem() 产 text-vue 图元 json（平面 props + props.text.val 直写 bind，vP 语义），
+ * T14 演示画面直接拼装；seedValueTag() 一步种出单值牌画面（断言路径 .break-words 文本）。
+ */
+export function valueTagItem(id: string, opts: {
+  text?: string
+  bindId?: string
+  bindName?: string
+  left?: number
+  top?: number
+  width?: number
+  fill?: string
+} = {}) {
+  const {
+    text = '0', bindId = 'rsiot.uptime_s', bindName = bindId.split('.')[1] ?? bindId,
+    left = 0, top = 0, width = 160, fill = '#FFF700',
+  } = opts
+  return {
+    active: false, hide: false, lock: false, resize: true, rotate: true,
+    id, title: '文字', type: 'vue', tag: 'text-vue',
+    binfo: { angle: 0, height: 40, left, top, width },
+    common_animations: { val: '', delay: 'delay-0s', speed: 'slow', repeat: 'infinite' },
+    events: [], ports: [],
+    props: { fill, fontFamily: '黑体', fontSize: 20, text, vertical: false },
+    binds: [{
+      id: `bd-${id}`, pel_id: id, bind_id: bindId, bind_name: bindName,
+      bind_attr: 'props.text.val', bind_mapping: [], triggers: [],
+    }],
+  }
+}
+
+export async function seedValueTag(slug: string, name = 'E2E 值牌'): Promise<void> {
+  await rsiotPutScreen(slug, {
+    name, canvasCfg: {
+      width: 800, height: 600, scale: 1, color: '#141414', img: '',
+      guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
+    }, gridCfg: { enabled: true, align: true, size: 10 },
+    json: [valueTagItem('text-vue-e2eval01', { left: 320, top: 280 })],
+    eventList: [], eventFlow: [],
+  })
+}
+
+/**
  * M2 互跳段种子画面组（T9）：
  * - A（源）：click custom_code `$mtEventCallBack('nav', $item_info.id, '<B>')`——bundle 实证
  *   custom_code 经 new Function('$item_info','$args',code) 编译且以图元信息实参调用，$item_info 运行时可用；

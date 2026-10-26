@@ -7,6 +7,9 @@ import { butterflyValve } from './butterfly-valve'
 import { tank } from './tank'
 import { levelGauge } from './level-gauge'
 import { flowMeter } from './flow-meter'
+import { motor } from './motor'
+import { disSwitch } from './dis-switch'
+import { navButton } from './nav-button'
 
 const SYMBOLS: HmiSymbol[] = [
   pumpCentrifugal,
@@ -15,6 +18,9 @@ const SYMBOLS: HmiSymbol[] = [
   tank,
   levelGauge,
   flowMeter,
+  motor,
+  disSwitch,
+  navButton,
 ]
 
 export function allSymbols(): HmiSymbol[] {

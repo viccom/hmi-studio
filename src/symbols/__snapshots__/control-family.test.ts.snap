@@ -1,0 +1,171 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`电机（批 2） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 48,
+  "id": "ah-motor",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "壳体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- 顶部接线盒 -->
+  <rect x="12" y="2" width="14" height="7" rx="1"/>
+  <!-- 电机壳（含散热筋定色缝）+ 轴伸 + 底脚：不写 fill 靠 use 属性继承状态色 -->
+  <rect x="6" y="9" width="36" height="26" rx="5"/>
+  <g stroke="rgba(0,0,0,0.55)" stroke-width="1">
+    <line x1="15" y1="12" x2="15" y2="32"/>
+    <line x1="21" y1="12" x2="21" y2="32"/>
+    <line x1="27" y1="12" x2="27" y2="32"/>
+    <line x1="33" y1="12" x2="33" y2="32"/>
+  </g>
+  <rect x="42" y="20" width="20" height="8" rx="1"/>
+  <rect x="10" y="35" width="10" height="5" rx="1"/>
+  <rect x="30" y="35" width="10" height="5" rx="1"/>
+  <!-- 壳体/轴伸定色轮廓 -->
+  <rect x="6" y="9" width="36" height="26" rx="5" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+  <rect x="42" y="20" width="20" height="8" rx="1" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-motor%22%20viewBox%3D%220%200%2064%2048%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3C!--%20%E9%A1%B6%E9%83%A8%E6%8E%A5%E7%BA%BF%E7%9B%92%20--%3E%0A%20%20%3Crect%20x%3D%2212%22%20y%3D%222%22%20width%3D%2214%22%20height%3D%227%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E7%94%B5%E6%9C%BA%E5%A3%B3%EF%BC%88%E5%90%AB%E6%95%A3%E7%83%AD%E7%AD%8B%E5%AE%9A%E8%89%B2%E7%BC%9D%EF%BC%89%2B%20%E8%BD%B4%E4%BC%B8%20%2B%20%E5%BA%95%E8%84%9A%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Crect%20x%3D%226%22%20y%3D%229%22%20width%3D%2236%22%20height%3D%2226%22%20rx%3D%225%22%2F%3E%0A%20%20%3Cg%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%3E%0A%20%20%20%20%3Cline%20x1%3D%2215%22%20y1%3D%2212%22%20x2%3D%2215%22%20y2%3D%2232%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2221%22%20y1%3D%2212%22%20x2%3D%2221%22%20y2%3D%2232%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2227%22%20y1%3D%2212%22%20x2%3D%2227%22%20y2%3D%2232%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%2233%22%20y1%3D%2212%22%20x2%3D%2233%22%20y2%3D%2232%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Crect%20x%3D%2242%22%20y%3D%2220%22%20width%3D%2220%22%20height%3D%228%22%20rx%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2210%22%20y%3D%2235%22%20width%3D%2210%22%20height%3D%225%22%20rx%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2230%22%20y%3D%2235%22%20width%3D%2210%22%20height%3D%225%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E5%A3%B3%E4%BD%93%2F%E8%BD%B4%E4%BC%B8%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%20--%3E%0A%20%20%3Crect%20x%3D%226%22%20y%3D%229%22%20width%3D%2236%22%20height%3D%2226%22%20rx%3D%225%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2242%22%20y%3D%2220%22%20width%3D%2220%22%20height%3D%228%22%20rx%3D%221%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "电机",
+  "type": "svg",
+  "width": 64,
+}
+`;
+
+exports[`跳转按钮（批 2） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "events": [
+    {
+      "action": "customCode",
+      "change_attr": [],
+      "custom_code": "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));",
+      "event_flow_ids": [],
+      "id": "ev-nav",
+      "trigger_rule": {},
+      "type": "click",
+    },
+  ],
+  "height": 32,
+  "id": "ah-nav-button",
+  "ports": [],
+  "props": {
+    "fill": {
+      "title": "面板色",
+      "type": "color",
+      "val": "#1677ff",
+    },
+    "target": {
+      "title": "目标画面 slug",
+      "type": "input",
+      "val": "",
+    },
+  },
+  "svg": "<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- 外 bezel（定色）+ 按钮面板（不写 fill 靠 use 属性继承状态色） -->
+  <rect x="1.5" y="1.5" width="45" height="29" rx="5" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="3"/>
+  <rect x="6" y="6" width="36" height="20" rx="3"/>
+  <!-- 右向箭头（跳转语义，定色） -->
+  <path d="M14 16 H31 M25 9.5 L33 16 L25 22.5" fill="none" stroke="rgba(0,0,0,0.65)" stroke-width="2.5"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-nav-button%22%20viewBox%3D%220%200%2048%2032%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3C!--%20%E5%A4%96%20bezel%EF%BC%88%E5%AE%9A%E8%89%B2%EF%BC%89%2B%20%E6%8C%89%E9%92%AE%E9%9D%A2%E6%9D%BF%EF%BC%88%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%EF%BC%89%20--%3E%0A%20%20%3Crect%20x%3D%221.5%22%20y%3D%221.5%22%20width%3D%2245%22%20height%3D%2229%22%20rx%3D%225%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.7)%22%20stroke-width%3D%223%22%2F%3E%0A%20%20%3Crect%20x%3D%226%22%20y%3D%226%22%20width%3D%2236%22%20height%3D%2220%22%20rx%3D%223%22%2F%3E%0A%20%20%3C!--%20%E5%8F%B3%E5%90%91%E7%AE%AD%E5%A4%B4%EF%BC%88%E8%B7%B3%E8%BD%AC%E8%AF%AD%E4%B9%89%EF%BC%8C%E5%AE%9A%E8%89%B2%EF%BC%89%20--%3E%0A%20%20%3Cpath%20d%3D%22M14%2016%20H31%20M25%209.5%20L33%2016%20L25%2022.5%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.65)%22%20stroke-width%3D%222.5%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "跳转按钮",
+  "type": "svg",
+  "width": 48,
+}
+`;
+
+exports[`隔离开关（批 2） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 32,
+  "id": "ah-dis-switch",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "状态色（合闸绿/分闸灰）",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- 左右静触头 + 枢轴 + 闸刀：不写 fill 靠 use 属性继承状态色 -->
+  <rect x="2" y="13" width="10" height="6" rx="1"/>
+  <circle cx="16" cy="16" r="3.5"/>
+  <rect x="18" y="14.5" width="28" height="3" rx="1.5"/>
+  <rect x="52" y="13" width="10" height="6" rx="1"/>
+  <!-- 绝缘子（定色件）+ 触头定色轮廓 -->
+  <g fill="rgba(0,0,0,0.55)">
+    <rect x="14" y="22" width="4" height="8" rx="1"/>
+    <rect x="46" y="22" width="4" height="8" rx="1"/>
+  </g>
+  <rect x="2" y="13" width="10" height="6" rx="1" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+  <rect x="52" y="13" width="10" height="6" rx="1" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-dis-switch%22%20viewBox%3D%220%200%2064%2032%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3C!--%20%E5%B7%A6%E5%8F%B3%E9%9D%99%E8%A7%A6%E5%A4%B4%20%2B%20%E6%9E%A2%E8%BD%B4%20%2B%20%E9%97%B8%E5%88%80%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%2213%22%20width%3D%2210%22%20height%3D%226%22%20rx%3D%221%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2216%22%20cy%3D%2216%22%20r%3D%223.5%22%2F%3E%0A%20%20%3Crect%20x%3D%2218%22%20y%3D%2214.5%22%20width%3D%2228%22%20height%3D%223%22%20rx%3D%221.5%22%2F%3E%0A%20%20%3Crect%20x%3D%2252%22%20y%3D%2213%22%20width%3D%2210%22%20height%3D%226%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E7%BB%9D%E7%BC%98%E5%AD%90%EF%BC%88%E5%AE%9A%E8%89%B2%E4%BB%B6%EF%BC%89%2B%20%E8%A7%A6%E5%A4%B4%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%20--%3E%0A%20%20%3Cg%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%3E%0A%20%20%20%20%3Crect%20x%3D%2214%22%20y%3D%2222%22%20width%3D%224%22%20height%3D%228%22%20rx%3D%221%22%2F%3E%0A%20%20%20%20%3Crect%20x%3D%2246%22%20y%3D%2222%22%20width%3D%224%22%20height%3D%228%22%20rx%3D%221%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%2213%22%20width%3D%2210%22%20height%3D%226%22%20rx%3D%221%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2252%22%20y%3D%2213%22%20width%3D%2210%22%20height%3D%226%22%20rx%3D%221%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "隔离开关",
+  "type": "svg",
+  "width": 64,
+}
+`;
