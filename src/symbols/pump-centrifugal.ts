@@ -10,6 +10,7 @@
  *   为 maotu 未实现锚位（types.ts ④）
  */
 import type { HmiSymbol } from './types'
+import { svgThumbnail } from './kit'
 
 const SVG = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
   <style>
@@ -29,7 +30,7 @@ const SVG = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
 </svg>`
 
 export const pumpCentrifugal: HmiSymbol = {
-  id: 'ah-pump', title: '离心泵', type: 'svg', thumbnail: '',
+  id: 'ah-pump', title: '离心泵', type: 'svg', thumbnail: svgThumbnail(SVG, 'ah-pump'),
   svg: SVG, width: 64, height: 64,
   props: {
     fill: { title: '主体色', type: 'color', val: '#52c41a' },

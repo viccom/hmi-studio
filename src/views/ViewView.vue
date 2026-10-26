@@ -18,6 +18,7 @@ import { api, tokenStore } from '../lib/api'
 import { installBridge } from '../lib/bridge'
 import { createDispatcher, createNavStack } from '../lib/nav'
 import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
+import { registerSymbols } from '../symbols'
 import AlarmBanner from '../components/AlarmBanner.vue'
 import AlarmDrawer from '../components/AlarmDrawer.vue'
 
@@ -151,6 +152,8 @@ const bridge = installBridge({
 })
 
 onMounted(async () => {
+  // 自绘图元注册（幂等）：MtPreview 渲染 svg 图元同样查注册表——不注册则自绘图元静默空白
+  registerSymbols()
   // 告警双源（与画面加载独立——画面失败告警仍可见）：REST 快照 + events SSE 命名事件
   void api().get('/api/v1/alarms')
     .then((items) => { alarmStore.applySnapshot((items as AlarmItem[]) ?? []); refreshAlarms() })

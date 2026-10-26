@@ -20,7 +20,7 @@ const OK: ILeftAsideConfigItemPublic = {
 const broken = (overrides: Record<string, unknown>): ILeftAsideConfigItemPublic =>
   ({ ...OK, ...overrides }) as unknown as ILeftAsideConfigItemPublic
 
-describe('lintSymbol 四规则', () => {
+describe('lintSymbol 五规则', () => {
   it('基准合法图元与注册表全量图元通过（约定不破即绿灯）', () => {
     expect(lintSymbol(OK)).toEqual([])
     for (const s of allSymbols()) expect(lintSymbol(s), s.id).toEqual([])
@@ -59,5 +59,17 @@ describe('lintSymbol 四规则', () => {
     expect(lintSymbol(noVal)).toContain('PROP_SHAPE')
     const badType = broken({ props: { fill: { title: '主体色', type: 'colour', val: '#fff' } } })
     expect(lintSymbol(badType)).toContain('PROP_SHAPE')
+  })
+
+  it('svg 注释体内含 "--"（如 var(--ah-lvl) 释例）→ SVG_COMMENT（XML 注释法，整图元 parsererror 空白）', () => {
+    const badComment = broken({
+      svg: '<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><!-- scaleY(var(--ah-lvl,0)) --><rect/></svg>',
+    })
+    expect(lintSymbol(badComment)).toContain('SVG_COMMENT')
+    // style 文本内的 "--x" 合法（泵/罐的 CSS 自定义属性写法），不误报
+    const cssVar = broken({
+      svg: '<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><style>.x{transform:scaleY(var(--ah-lvl,0))}</style><rect/></svg>',
+    })
+    expect(lintSymbol(cssVar)).toEqual([])
   })
 })

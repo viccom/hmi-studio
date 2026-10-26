@@ -1,0 +1,287 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`流量计（fill 约定族） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 64,
+  "id": "ah-flow-meter",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "表体色",
+      "type": "color",
+      "val": "#1677ff",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 表盘：面盘继承 use fill；刻度弧/指针为定色件 -->
+  <circle cx="32" cy="13" r="9"/>
+  <path d="M25.8 9.8 A9 9 0 0 1 38.2 9.8" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1.2"/>
+  <line x1="32" y1="13" x2="36.8" y2="9.2" stroke="rgba(0,0,0,0.55)" stroke-width="1.2"/>
+  <!-- 表颈 + 在线表体：不写 fill 靠 use 属性继承状态色 -->
+  <rect x="29.5" y="21" width="5" height="6"/>
+  <rect x="14" y="26" width="36" height="12" rx="2"/>
+  <!-- 左右接管 -->
+  <rect x="2" y="29" width="12" height="6" rx="1"/>
+  <rect x="50" y="29" width="12" height="6" rx="1"/>
+  <!-- 流向箭头（定色）+ 定色轮廓 -->
+  <path d="M29 32 H39 M34.5 27.5 L40 32 L34.5 36.5" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1.5"/>
+  <rect x="14" y="26" width="36" height="12" rx="2" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+  <rect x="2" y="29" width="12" height="6" rx="1" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+  <rect x="50" y="29" width="12" height="6" rx="1" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-flow-meter%22%20viewBox%3D%220%200%2064%2064%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3C!--%20%E8%A1%A8%E7%9B%98%EF%BC%9A%E9%9D%A2%E7%9B%98%E7%BB%A7%E6%89%BF%20use%20fill%EF%BC%9B%E5%88%BB%E5%BA%A6%E5%BC%A7%2F%E6%8C%87%E9%92%88%E4%B8%BA%E5%AE%9A%E8%89%B2%E4%BB%B6%20--%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2213%22%20r%3D%229%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M25.8%209.8%20A9%209%200%200%201%2038.2%209.8%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221.2%22%2F%3E%0A%20%20%3Cline%20x1%3D%2232%22%20y1%3D%2213%22%20x2%3D%2236.8%22%20y2%3D%229.2%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221.2%22%2F%3E%0A%20%20%3C!--%20%E8%A1%A8%E9%A2%88%20%2B%20%E5%9C%A8%E7%BA%BF%E8%A1%A8%E4%BD%93%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Crect%20x%3D%2229.5%22%20y%3D%2221%22%20width%3D%225%22%20height%3D%226%22%2F%3E%0A%20%20%3Crect%20x%3D%2214%22%20y%3D%2226%22%20width%3D%2236%22%20height%3D%2212%22%20rx%3D%222%22%2F%3E%0A%20%20%3C!--%20%E5%B7%A6%E5%8F%B3%E6%8E%A5%E7%AE%A1%20--%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%2229%22%20width%3D%2212%22%20height%3D%226%22%20rx%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2250%22%20y%3D%2229%22%20width%3D%2212%22%20height%3D%226%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E6%B5%81%E5%90%91%E7%AE%AD%E5%A4%B4%EF%BC%88%E5%AE%9A%E8%89%B2%EF%BC%89%2B%20%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%20--%3E%0A%20%20%3Cpath%20d%3D%22M29%2032%20H39%20M34.5%2027.5%20L40%2032%20L34.5%2036.5%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%3Crect%20x%3D%2214%22%20y%3D%2226%22%20width%3D%2236%22%20height%3D%2212%22%20rx%3D%222%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%2229%22%20width%3D%2212%22%20height%3D%226%22%20rx%3D%221%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2250%22%20y%3D%2229%22%20width%3D%2212%22%20height%3D%226%22%20rx%3D%221%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "流量计",
+  "type": "svg",
+  "width": 64,
+}
+`;
+
+exports[`液位计（fill 约定族） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 64,
+  "id": "ah-level-gauge",
+  "ports": [],
+  "props": {
+    "fill": {
+      "title": "读数条色",
+      "type": "color",
+      "val": "#1677ff",
+    },
+    "h": {
+      "title": "液位高度 %",
+      "type": "number",
+      "val": 50,
+    },
+  },
+  "svg": "<svg viewBox="0 0 28 64" xmlns="http://www.w3.org/2000/svg">
+  <style>use[h="0"]{--ah-lvl:0.00}use[h="1"]{--ah-lvl:0.01}use[h="2"]{--ah-lvl:0.02}use[h="3"]{--ah-lvl:0.03}use[h="4"]{--ah-lvl:0.04}use[h="5"]{--ah-lvl:0.05}use[h="6"]{--ah-lvl:0.06}use[h="7"]{--ah-lvl:0.07}use[h="8"]{--ah-lvl:0.08}use[h="9"]{--ah-lvl:0.09}use[h="10"]{--ah-lvl:0.10}use[h="11"]{--ah-lvl:0.11}use[h="12"]{--ah-lvl:0.12}use[h="13"]{--ah-lvl:0.13}use[h="14"]{--ah-lvl:0.14}use[h="15"]{--ah-lvl:0.15}use[h="16"]{--ah-lvl:0.16}use[h="17"]{--ah-lvl:0.17}use[h="18"]{--ah-lvl:0.18}use[h="19"]{--ah-lvl:0.19}use[h="20"]{--ah-lvl:0.20}use[h="21"]{--ah-lvl:0.21}use[h="22"]{--ah-lvl:0.22}use[h="23"]{--ah-lvl:0.23}use[h="24"]{--ah-lvl:0.24}use[h="25"]{--ah-lvl:0.25}use[h="26"]{--ah-lvl:0.26}use[h="27"]{--ah-lvl:0.27}use[h="28"]{--ah-lvl:0.28}use[h="29"]{--ah-lvl:0.29}use[h="30"]{--ah-lvl:0.30}use[h="31"]{--ah-lvl:0.31}use[h="32"]{--ah-lvl:0.32}use[h="33"]{--ah-lvl:0.33}use[h="34"]{--ah-lvl:0.34}use[h="35"]{--ah-lvl:0.35}use[h="36"]{--ah-lvl:0.36}use[h="37"]{--ah-lvl:0.37}use[h="38"]{--ah-lvl:0.38}use[h="39"]{--ah-lvl:0.39}use[h="40"]{--ah-lvl:0.40}use[h="41"]{--ah-lvl:0.41}use[h="42"]{--ah-lvl:0.42}use[h="43"]{--ah-lvl:0.43}use[h="44"]{--ah-lvl:0.44}use[h="45"]{--ah-lvl:0.45}use[h="46"]{--ah-lvl:0.46}use[h="47"]{--ah-lvl:0.47}use[h="48"]{--ah-lvl:0.48}use[h="49"]{--ah-lvl:0.49}use[h="50"]{--ah-lvl:0.50}use[h="51"]{--ah-lvl:0.51}use[h="52"]{--ah-lvl:0.52}use[h="53"]{--ah-lvl:0.53}use[h="54"]{--ah-lvl:0.54}use[h="55"]{--ah-lvl:0.55}use[h="56"]{--ah-lvl:0.56}use[h="57"]{--ah-lvl:0.57}use[h="58"]{--ah-lvl:0.58}use[h="59"]{--ah-lvl:0.59}use[h="60"]{--ah-lvl:0.60}use[h="61"]{--ah-lvl:0.61}use[h="62"]{--ah-lvl:0.62}use[h="63"]{--ah-lvl:0.63}use[h="64"]{--ah-lvl:0.64}use[h="65"]{--ah-lvl:0.65}use[h="66"]{--ah-lvl:0.66}use[h="67"]{--ah-lvl:0.67}use[h="68"]{--ah-lvl:0.68}use[h="69"]{--ah-lvl:0.69}use[h="70"]{--ah-lvl:0.70}use[h="71"]{--ah-lvl:0.71}use[h="72"]{--ah-lvl:0.72}use[h="73"]{--ah-lvl:0.73}use[h="74"]{--ah-lvl:0.74}use[h="75"]{--ah-lvl:0.75}use[h="76"]{--ah-lvl:0.76}use[h="77"]{--ah-lvl:0.77}use[h="78"]{--ah-lvl:0.78}use[h="79"]{--ah-lvl:0.79}use[h="80"]{--ah-lvl:0.80}use[h="81"]{--ah-lvl:0.81}use[h="82"]{--ah-lvl:0.82}use[h="83"]{--ah-lvl:0.83}use[h="84"]{--ah-lvl:0.84}use[h="85"]{--ah-lvl:0.85}use[h="86"]{--ah-lvl:0.86}use[h="87"]{--ah-lvl:0.87}use[h="88"]{--ah-lvl:0.88}use[h="89"]{--ah-lvl:0.89}use[h="90"]{--ah-lvl:0.90}use[h="91"]{--ah-lvl:0.91}use[h="92"]{--ah-lvl:0.92}use[h="93"]{--ah-lvl:0.93}use[h="94"]{--ah-lvl:0.94}use[h="95"]{--ah-lvl:0.95}use[h="96"]{--ah-lvl:0.96}use[h="97"]{--ah-lvl:0.97}use[h="98"]{--ah-lvl:0.98}use[h="99"]{--ah-lvl:0.99}use[h="100"]{--ah-lvl:1.00}use[h^="0."]{--ah-lvl:0.00}use[h^="1."]{--ah-lvl:0.01}use[h^="2."]{--ah-lvl:0.02}use[h^="3."]{--ah-lvl:0.03}use[h^="4."]{--ah-lvl:0.04}use[h^="5."]{--ah-lvl:0.05}use[h^="6."]{--ah-lvl:0.06}use[h^="7."]{--ah-lvl:0.07}use[h^="8."]{--ah-lvl:0.08}use[h^="9."]{--ah-lvl:0.09}use[h^="10."]{--ah-lvl:0.10}use[h^="11."]{--ah-lvl:0.11}use[h^="12."]{--ah-lvl:0.12}use[h^="13."]{--ah-lvl:0.13}use[h^="14."]{--ah-lvl:0.14}use[h^="15."]{--ah-lvl:0.15}use[h^="16."]{--ah-lvl:0.16}use[h^="17."]{--ah-lvl:0.17}use[h^="18."]{--ah-lvl:0.18}use[h^="19."]{--ah-lvl:0.19}use[h^="20."]{--ah-lvl:0.20}use[h^="21."]{--ah-lvl:0.21}use[h^="22."]{--ah-lvl:0.22}use[h^="23."]{--ah-lvl:0.23}use[h^="24."]{--ah-lvl:0.24}use[h^="25."]{--ah-lvl:0.25}use[h^="26."]{--ah-lvl:0.26}use[h^="27."]{--ah-lvl:0.27}use[h^="28."]{--ah-lvl:0.28}use[h^="29."]{--ah-lvl:0.29}use[h^="30."]{--ah-lvl:0.30}use[h^="31."]{--ah-lvl:0.31}use[h^="32."]{--ah-lvl:0.32}use[h^="33."]{--ah-lvl:0.33}use[h^="34."]{--ah-lvl:0.34}use[h^="35."]{--ah-lvl:0.35}use[h^="36."]{--ah-lvl:0.36}use[h^="37."]{--ah-lvl:0.37}use[h^="38."]{--ah-lvl:0.38}use[h^="39."]{--ah-lvl:0.39}use[h^="40."]{--ah-lvl:0.40}use[h^="41."]{--ah-lvl:0.41}use[h^="42."]{--ah-lvl:0.42}use[h^="43."]{--ah-lvl:0.43}use[h^="44."]{--ah-lvl:0.44}use[h^="45."]{--ah-lvl:0.45}use[h^="46."]{--ah-lvl:0.46}use[h^="47."]{--ah-lvl:0.47}use[h^="48."]{--ah-lvl:0.48}use[h^="49."]{--ah-lvl:0.49}use[h^="50."]{--ah-lvl:0.50}use[h^="51."]{--ah-lvl:0.51}use[h^="52."]{--ah-lvl:0.52}use[h^="53."]{--ah-lvl:0.53}use[h^="54."]{--ah-lvl:0.54}use[h^="55."]{--ah-lvl:0.55}use[h^="56."]{--ah-lvl:0.56}use[h^="57."]{--ah-lvl:0.57}use[h^="58."]{--ah-lvl:0.58}use[h^="59."]{--ah-lvl:0.59}use[h^="60."]{--ah-lvl:0.60}use[h^="61."]{--ah-lvl:0.61}use[h^="62."]{--ah-lvl:0.62}use[h^="63."]{--ah-lvl:0.63}use[h^="64."]{--ah-lvl:0.64}use[h^="65."]{--ah-lvl:0.65}use[h^="66."]{--ah-lvl:0.66}use[h^="67."]{--ah-lvl:0.67}use[h^="68."]{--ah-lvl:0.68}use[h^="69."]{--ah-lvl:0.69}use[h^="70."]{--ah-lvl:0.70}use[h^="71."]{--ah-lvl:0.71}use[h^="72."]{--ah-lvl:0.72}use[h^="73."]{--ah-lvl:0.73}use[h^="74."]{--ah-lvl:0.74}use[h^="75."]{--ah-lvl:0.75}use[h^="76."]{--ah-lvl:0.76}use[h^="77."]{--ah-lvl:0.77}use[h^="78."]{--ah-lvl:0.78}use[h^="79."]{--ah-lvl:0.79}use[h^="80."]{--ah-lvl:0.80}use[h^="81."]{--ah-lvl:0.81}use[h^="82."]{--ah-lvl:0.82}use[h^="83."]{--ah-lvl:0.83}use[h^="84."]{--ah-lvl:0.84}use[h^="85."]{--ah-lvl:0.85}use[h^="86."]{--ah-lvl:0.86}use[h^="87."]{--ah-lvl:0.87}use[h^="88."]{--ah-lvl:0.88}use[h^="89."]{--ah-lvl:0.89}use[h^="90."]{--ah-lvl:0.90}use[h^="91."]{--ah-lvl:0.91}use[h^="92."]{--ah-lvl:0.92}use[h^="93."]{--ah-lvl:0.93}use[h^="94."]{--ah-lvl:0.94}use[h^="95."]{--ah-lvl:0.95}use[h^="96."]{--ah-lvl:0.96}use[h^="97."]{--ah-lvl:0.97}use[h^="98."]{--ah-lvl:0.98}use[h^="99."]{--ah-lvl:0.99}use[h^="100."]{--ah-lvl:1.00}.ah-liquid{transform:scaleY(var(--ah-lvl,0));transform-box:fill-box;transform-origin:bottom;}</style>
+  <!-- 液位读数条：占满管内全高，scaleY 自底生长，颜色继承 use fill -->
+  <rect class="ah-liquid" x="6" y="6" width="12" height="52" rx="6"/>
+  <!-- 测量管壳：定色描边 -->
+  <rect x="4" y="4" width="16" height="56" rx="8" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1.5"/>
+  <!-- 刻度（右侧，主刻度 0/50/100%） -->
+  <g stroke="rgba(0,0,0,0.55)" stroke-width="1"><line x1="20" y1="58.0" x2="26" y2="58.0"/><line x1="20" y1="52.8" x2="23" y2="52.8"/><line x1="20" y1="47.6" x2="23" y2="47.6"/><line x1="20" y1="42.4" x2="23" y2="42.4"/><line x1="20" y1="37.2" x2="23" y2="37.2"/><line x1="20" y1="32.0" x2="26" y2="32.0"/><line x1="20" y1="26.8" x2="23" y2="26.8"/><line x1="20" y1="21.6" x2="23" y2="21.6"/><line x1="20" y1="16.4" x2="23" y2="16.4"/><line x1="20" y1="11.2" x2="23" y2="11.2"/><line x1="20" y1="6.0" x2="26" y2="6.0"/></g>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-level-gauge%22%20viewBox%3D%220%200%2028%2064%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Cstyle%3Euse%5Bh%3D%220%22%5D%7B--ah-lvl%3A0.00%7Duse%5Bh%3D%221%22%5D%7B--ah-lvl%3A0.01%7Duse%5Bh%3D%222%22%5D%7B--ah-lvl%3A0.02%7Duse%5Bh%3D%223%22%5D%7B--ah-lvl%3A0.03%7Duse%5Bh%3D%224%22%5D%7B--ah-lvl%3A0.04%7Duse%5Bh%3D%225%22%5D%7B--ah-lvl%3A0.05%7Duse%5Bh%3D%226%22%5D%7B--ah-lvl%3A0.06%7Duse%5Bh%3D%227%22%5D%7B--ah-lvl%3A0.07%7Duse%5Bh%3D%228%22%5D%7B--ah-lvl%3A0.08%7Duse%5Bh%3D%229%22%5D%7B--ah-lvl%3A0.09%7Duse%5Bh%3D%2210%22%5D%7B--ah-lvl%3A0.10%7Duse%5Bh%3D%2211%22%5D%7B--ah-lvl%3A0.11%7Duse%5Bh%3D%2212%22%5D%7B--ah-lvl%3A0.12%7Duse%5Bh%3D%2213%22%5D%7B--ah-lvl%3A0.13%7Duse%5Bh%3D%2214%22%5D%7B--ah-lvl%3A0.14%7Duse%5Bh%3D%2215%22%5D%7B--ah-lvl%3A0.15%7Duse%5Bh%3D%2216%22%5D%7B--ah-lvl%3A0.16%7Duse%5Bh%3D%2217%22%5D%7B--ah-lvl%3A0.17%7Duse%5Bh%3D%2218%22%5D%7B--ah-lvl%3A0.18%7Duse%5Bh%3D%2219%22%5D%7B--ah-lvl%3A0.19%7Duse%5Bh%3D%2220%22%5D%7B--ah-lvl%3A0.20%7Duse%5Bh%3D%2221%22%5D%7B--ah-lvl%3A0.21%7Duse%5Bh%3D%2222%22%5D%7B--ah-lvl%3A0.22%7Duse%5Bh%3D%2223%22%5D%7B--ah-lvl%3A0.23%7Duse%5Bh%3D%2224%22%5D%7B--ah-lvl%3A0.24%7Duse%5Bh%3D%2225%22%5D%7B--ah-lvl%3A0.25%7Duse%5Bh%3D%2226%22%5D%7B--ah-lvl%3A0.26%7Duse%5Bh%3D%2227%22%5D%7B--ah-lvl%3A0.27%7Duse%5Bh%3D%2228%22%5D%7B--ah-lvl%3A0.28%7Duse%5Bh%3D%2229%22%5D%7B--ah-lvl%3A0.29%7Duse%5Bh%3D%2230%22%5D%7B--ah-lvl%3A0.30%7Duse%5Bh%3D%2231%22%5D%7B--ah-lvl%3A0.31%7Duse%5Bh%3D%2232%22%5D%7B--ah-lvl%3A0.32%7Duse%5Bh%3D%2233%22%5D%7B--ah-lvl%3A0.33%7Duse%5Bh%3D%2234%22%5D%7B--ah-lvl%3A0.34%7Duse%5Bh%3D%2235%22%5D%7B--ah-lvl%3A0.35%7Duse%5Bh%3D%2236%22%5D%7B--ah-lvl%3A0.36%7Duse%5Bh%3D%2237%22%5D%7B--ah-lvl%3A0.37%7Duse%5Bh%3D%2238%22%5D%7B--ah-lvl%3A0.38%7Duse%5Bh%3D%2239%22%5D%7B--ah-lvl%3A0.39%7Duse%5Bh%3D%2240%22%5D%7B--ah-lvl%3A0.40%7Duse%5Bh%3D%2241%22%5D%7B--ah-lvl%3A0.41%7Duse%5Bh%3D%2242%22%5D%7B--ah-lvl%3A0.42%7Duse%5Bh%3D%2243%22%5D%7B--ah-lvl%3A0.43%7Duse%5Bh%3D%2244%22%5D%7B--ah-lvl%3A0.44%7Duse%5Bh%3D%2245%22%5D%7B--ah-lvl%3A0.45%7Duse%5Bh%3D%2246%22%5D%7B--ah-lvl%3A0.46%7Duse%5Bh%3D%2247%22%5D%7B--ah-lvl%3A0.47%7Duse%5Bh%3D%2248%22%5D%7B--ah-lvl%3A0.48%7Duse%5Bh%3D%2249%22%5D%7B--ah-lvl%3A0.49%7Duse%5Bh%3D%2250%22%5D%7B--ah-lvl%3A0.50%7Duse%5Bh%3D%2251%22%5D%7B--ah-lvl%3A0.51%7Duse%5Bh%3D%2252%22%5D%7B--ah-lvl%3A0.52%7Duse%5Bh%3D%2253%22%5D%7B--ah-lvl%3A0.53%7Duse%5Bh%3D%2254%22%5D%7B--ah-lvl%3A0.54%7Duse%5Bh%3D%2255%22%5D%7B--ah-lvl%3A0.55%7Duse%5Bh%3D%2256%22%5D%7B--ah-lvl%3A0.56%7Duse%5Bh%3D%2257%22%5D%7B--ah-lvl%3A0.57%7Duse%5Bh%3D%2258%22%5D%7B--ah-lvl%3A0.58%7Duse%5Bh%3D%2259%22%5D%7B--ah-lvl%3A0.59%7Duse%5Bh%3D%2260%22%5D%7B--ah-lvl%3A0.60%7Duse%5Bh%3D%2261%22%5D%7B--ah-lvl%3A0.61%7Duse%5Bh%3D%2262%22%5D%7B--ah-lvl%3A0.62%7Duse%5Bh%3D%2263%22%5D%7B--ah-lvl%3A0.63%7Duse%5Bh%3D%2264%22%5D%7B--ah-lvl%3A0.64%7Duse%5Bh%3D%2265%22%5D%7B--ah-lvl%3A0.65%7Duse%5Bh%3D%2266%22%5D%7B--ah-lvl%3A0.66%7Duse%5Bh%3D%2267%22%5D%7B--ah-lvl%3A0.67%7Duse%5Bh%3D%2268%22%5D%7B--ah-lvl%3A0.68%7Duse%5Bh%3D%2269%22%5D%7B--ah-lvl%3A0.69%7Duse%5Bh%3D%2270%22%5D%7B--ah-lvl%3A0.70%7Duse%5Bh%3D%2271%22%5D%7B--ah-lvl%3A0.71%7Duse%5Bh%3D%2272%22%5D%7B--ah-lvl%3A0.72%7Duse%5Bh%3D%2273%22%5D%7B--ah-lvl%3A0.73%7Duse%5Bh%3D%2274%22%5D%7B--ah-lvl%3A0.74%7Duse%5Bh%3D%2275%22%5D%7B--ah-lvl%3A0.75%7Duse%5Bh%3D%2276%22%5D%7B--ah-lvl%3A0.76%7Duse%5Bh%3D%2277%22%5D%7B--ah-lvl%3A0.77%7Duse%5Bh%3D%2278%22%5D%7B--ah-lvl%3A0.78%7Duse%5Bh%3D%2279%22%5D%7B--ah-lvl%3A0.79%7Duse%5Bh%3D%2280%22%5D%7B--ah-lvl%3A0.80%7Duse%5Bh%3D%2281%22%5D%7B--ah-lvl%3A0.81%7Duse%5Bh%3D%2282%22%5D%7B--ah-lvl%3A0.82%7Duse%5Bh%3D%2283%22%5D%7B--ah-lvl%3A0.83%7Duse%5Bh%3D%2284%22%5D%7B--ah-lvl%3A0.84%7Duse%5Bh%3D%2285%22%5D%7B--ah-lvl%3A0.85%7Duse%5Bh%3D%2286%22%5D%7B--ah-lvl%3A0.86%7Duse%5Bh%3D%2287%22%5D%7B--ah-lvl%3A0.87%7Duse%5Bh%3D%2288%22%5D%7B--ah-lvl%3A0.88%7Duse%5Bh%3D%2289%22%5D%7B--ah-lvl%3A0.89%7Duse%5Bh%3D%2290%22%5D%7B--ah-lvl%3A0.90%7Duse%5Bh%3D%2291%22%5D%7B--ah-lvl%3A0.91%7Duse%5Bh%3D%2292%22%5D%7B--ah-lvl%3A0.92%7Duse%5Bh%3D%2293%22%5D%7B--ah-lvl%3A0.93%7Duse%5Bh%3D%2294%22%5D%7B--ah-lvl%3A0.94%7Duse%5Bh%3D%2295%22%5D%7B--ah-lvl%3A0.95%7Duse%5Bh%3D%2296%22%5D%7B--ah-lvl%3A0.96%7Duse%5Bh%3D%2297%22%5D%7B--ah-lvl%3A0.97%7Duse%5Bh%3D%2298%22%5D%7B--ah-lvl%3A0.98%7Duse%5Bh%3D%2299%22%5D%7B--ah-lvl%3A0.99%7Duse%5Bh%3D%22100%22%5D%7B--ah-lvl%3A1.00%7Duse%5Bh%5E%3D%220.%22%5D%7B--ah-lvl%3A0.00%7Duse%5Bh%5E%3D%221.%22%5D%7B--ah-lvl%3A0.01%7Duse%5Bh%5E%3D%222.%22%5D%7B--ah-lvl%3A0.02%7Duse%5Bh%5E%3D%223.%22%5D%7B--ah-lvl%3A0.03%7Duse%5Bh%5E%3D%224.%22%5D%7B--ah-lvl%3A0.04%7Duse%5Bh%5E%3D%225.%22%5D%7B--ah-lvl%3A0.05%7Duse%5Bh%5E%3D%226.%22%5D%7B--ah-lvl%3A0.06%7Duse%5Bh%5E%3D%227.%22%5D%7B--ah-lvl%3A0.07%7Duse%5Bh%5E%3D%228.%22%5D%7B--ah-lvl%3A0.08%7Duse%5Bh%5E%3D%229.%22%5D%7B--ah-lvl%3A0.09%7Duse%5Bh%5E%3D%2210.%22%5D%7B--ah-lvl%3A0.10%7Duse%5Bh%5E%3D%2211.%22%5D%7B--ah-lvl%3A0.11%7Duse%5Bh%5E%3D%2212.%22%5D%7B--ah-lvl%3A0.12%7Duse%5Bh%5E%3D%2213.%22%5D%7B--ah-lvl%3A0.13%7Duse%5Bh%5E%3D%2214.%22%5D%7B--ah-lvl%3A0.14%7Duse%5Bh%5E%3D%2215.%22%5D%7B--ah-lvl%3A0.15%7Duse%5Bh%5E%3D%2216.%22%5D%7B--ah-lvl%3A0.16%7Duse%5Bh%5E%3D%2217.%22%5D%7B--ah-lvl%3A0.17%7Duse%5Bh%5E%3D%2218.%22%5D%7B--ah-lvl%3A0.18%7Duse%5Bh%5E%3D%2219.%22%5D%7B--ah-lvl%3A0.19%7Duse%5Bh%5E%3D%2220.%22%5D%7B--ah-lvl%3A0.20%7Duse%5Bh%5E%3D%2221.%22%5D%7B--ah-lvl%3A0.21%7Duse%5Bh%5E%3D%2222.%22%5D%7B--ah-lvl%3A0.22%7Duse%5Bh%5E%3D%2223.%22%5D%7B--ah-lvl%3A0.23%7Duse%5Bh%5E%3D%2224.%22%5D%7B--ah-lvl%3A0.24%7Duse%5Bh%5E%3D%2225.%22%5D%7B--ah-lvl%3A0.25%7Duse%5Bh%5E%3D%2226.%22%5D%7B--ah-lvl%3A0.26%7Duse%5Bh%5E%3D%2227.%22%5D%7B--ah-lvl%3A0.27%7Duse%5Bh%5E%3D%2228.%22%5D%7B--ah-lvl%3A0.28%7Duse%5Bh%5E%3D%2229.%22%5D%7B--ah-lvl%3A0.29%7Duse%5Bh%5E%3D%2230.%22%5D%7B--ah-lvl%3A0.30%7Duse%5Bh%5E%3D%2231.%22%5D%7B--ah-lvl%3A0.31%7Duse%5Bh%5E%3D%2232.%22%5D%7B--ah-lvl%3A0.32%7Duse%5Bh%5E%3D%2233.%22%5D%7B--ah-lvl%3A0.33%7Duse%5Bh%5E%3D%2234.%22%5D%7B--ah-lvl%3A0.34%7Duse%5Bh%5E%3D%2235.%22%5D%7B--ah-lvl%3A0.35%7Duse%5Bh%5E%3D%2236.%22%5D%7B--ah-lvl%3A0.36%7Duse%5Bh%5E%3D%2237.%22%5D%7B--ah-lvl%3A0.37%7Duse%5Bh%5E%3D%2238.%22%5D%7B--ah-lvl%3A0.38%7Duse%5Bh%5E%3D%2239.%22%5D%7B--ah-lvl%3A0.39%7Duse%5Bh%5E%3D%2240.%22%5D%7B--ah-lvl%3A0.40%7Duse%5Bh%5E%3D%2241.%22%5D%7B--ah-lvl%3A0.41%7Duse%5Bh%5E%3D%2242.%22%5D%7B--ah-lvl%3A0.42%7Duse%5Bh%5E%3D%2243.%22%5D%7B--ah-lvl%3A0.43%7Duse%5Bh%5E%3D%2244.%22%5D%7B--ah-lvl%3A0.44%7Duse%5Bh%5E%3D%2245.%22%5D%7B--ah-lvl%3A0.45%7Duse%5Bh%5E%3D%2246.%22%5D%7B--ah-lvl%3A0.46%7Duse%5Bh%5E%3D%2247.%22%5D%7B--ah-lvl%3A0.47%7Duse%5Bh%5E%3D%2248.%22%5D%7B--ah-lvl%3A0.48%7Duse%5Bh%5E%3D%2249.%22%5D%7B--ah-lvl%3A0.49%7Duse%5Bh%5E%3D%2250.%22%5D%7B--ah-lvl%3A0.50%7Duse%5Bh%5E%3D%2251.%22%5D%7B--ah-lvl%3A0.51%7Duse%5Bh%5E%3D%2252.%22%5D%7B--ah-lvl%3A0.52%7Duse%5Bh%5E%3D%2253.%22%5D%7B--ah-lvl%3A0.53%7Duse%5Bh%5E%3D%2254.%22%5D%7B--ah-lvl%3A0.54%7Duse%5Bh%5E%3D%2255.%22%5D%7B--ah-lvl%3A0.55%7Duse%5Bh%5E%3D%2256.%22%5D%7B--ah-lvl%3A0.56%7Duse%5Bh%5E%3D%2257.%22%5D%7B--ah-lvl%3A0.57%7Duse%5Bh%5E%3D%2258.%22%5D%7B--ah-lvl%3A0.58%7Duse%5Bh%5E%3D%2259.%22%5D%7B--ah-lvl%3A0.59%7Duse%5Bh%5E%3D%2260.%22%5D%7B--ah-lvl%3A0.60%7Duse%5Bh%5E%3D%2261.%22%5D%7B--ah-lvl%3A0.61%7Duse%5Bh%5E%3D%2262.%22%5D%7B--ah-lvl%3A0.62%7Duse%5Bh%5E%3D%2263.%22%5D%7B--ah-lvl%3A0.63%7Duse%5Bh%5E%3D%2264.%22%5D%7B--ah-lvl%3A0.64%7Duse%5Bh%5E%3D%2265.%22%5D%7B--ah-lvl%3A0.65%7Duse%5Bh%5E%3D%2266.%22%5D%7B--ah-lvl%3A0.66%7Duse%5Bh%5E%3D%2267.%22%5D%7B--ah-lvl%3A0.67%7Duse%5Bh%5E%3D%2268.%22%5D%7B--ah-lvl%3A0.68%7Duse%5Bh%5E%3D%2269.%22%5D%7B--ah-lvl%3A0.69%7Duse%5Bh%5E%3D%2270.%22%5D%7B--ah-lvl%3A0.70%7Duse%5Bh%5E%3D%2271.%22%5D%7B--ah-lvl%3A0.71%7Duse%5Bh%5E%3D%2272.%22%5D%7B--ah-lvl%3A0.72%7Duse%5Bh%5E%3D%2273.%22%5D%7B--ah-lvl%3A0.73%7Duse%5Bh%5E%3D%2274.%22%5D%7B--ah-lvl%3A0.74%7Duse%5Bh%5E%3D%2275.%22%5D%7B--ah-lvl%3A0.75%7Duse%5Bh%5E%3D%2276.%22%5D%7B--ah-lvl%3A0.76%7Duse%5Bh%5E%3D%2277.%22%5D%7B--ah-lvl%3A0.77%7Duse%5Bh%5E%3D%2278.%22%5D%7B--ah-lvl%3A0.78%7Duse%5Bh%5E%3D%2279.%22%5D%7B--ah-lvl%3A0.79%7Duse%5Bh%5E%3D%2280.%22%5D%7B--ah-lvl%3A0.80%7Duse%5Bh%5E%3D%2281.%22%5D%7B--ah-lvl%3A0.81%7Duse%5Bh%5E%3D%2282.%22%5D%7B--ah-lvl%3A0.82%7Duse%5Bh%5E%3D%2283.%22%5D%7B--ah-lvl%3A0.83%7Duse%5Bh%5E%3D%2284.%22%5D%7B--ah-lvl%3A0.84%7Duse%5Bh%5E%3D%2285.%22%5D%7B--ah-lvl%3A0.85%7Duse%5Bh%5E%3D%2286.%22%5D%7B--ah-lvl%3A0.86%7Duse%5Bh%5E%3D%2287.%22%5D%7B--ah-lvl%3A0.87%7Duse%5Bh%5E%3D%2288.%22%5D%7B--ah-lvl%3A0.88%7Duse%5Bh%5E%3D%2289.%22%5D%7B--ah-lvl%3A0.89%7Duse%5Bh%5E%3D%2290.%22%5D%7B--ah-lvl%3A0.90%7Duse%5Bh%5E%3D%2291.%22%5D%7B--ah-lvl%3A0.91%7Duse%5Bh%5E%3D%2292.%22%5D%7B--ah-lvl%3A0.92%7Duse%5Bh%5E%3D%2293.%22%5D%7B--ah-lvl%3A0.93%7Duse%5Bh%5E%3D%2294.%22%5D%7B--ah-lvl%3A0.94%7Duse%5Bh%5E%3D%2295.%22%5D%7B--ah-lvl%3A0.95%7Duse%5Bh%5E%3D%2296.%22%5D%7B--ah-lvl%3A0.96%7Duse%5Bh%5E%3D%2297.%22%5D%7B--ah-lvl%3A0.97%7Duse%5Bh%5E%3D%2298.%22%5D%7B--ah-lvl%3A0.98%7Duse%5Bh%5E%3D%2299.%22%5D%7B--ah-lvl%3A0.99%7Duse%5Bh%5E%3D%22100.%22%5D%7B--ah-lvl%3A1.00%7D.ah-liquid%7Btransform%3AscaleY(var(--ah-lvl%2C0))%3Btransform-box%3Afill-box%3Btransform-origin%3Abottom%3B%7D%3C%2Fstyle%3E%0A%20%20%3C!--%20%E6%B6%B2%E4%BD%8D%E8%AF%BB%E6%95%B0%E6%9D%A1%EF%BC%9A%E5%8D%A0%E6%BB%A1%E7%AE%A1%E5%86%85%E5%85%A8%E9%AB%98%EF%BC%8CscaleY%20%E8%87%AA%E5%BA%95%E7%94%9F%E9%95%BF%EF%BC%8C%E9%A2%9C%E8%89%B2%E7%BB%A7%E6%89%BF%20use%20fill%20--%3E%0A%20%20%3Crect%20class%3D%22ah-liquid%22%20x%3D%226%22%20y%3D%226%22%20width%3D%2212%22%20height%3D%2252%22%20rx%3D%226%22%2F%3E%0A%20%20%3C!--%20%E6%B5%8B%E9%87%8F%E7%AE%A1%E5%A3%B3%EF%BC%9A%E5%AE%9A%E8%89%B2%E6%8F%8F%E8%BE%B9%20--%3E%0A%20%20%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%2216%22%20height%3D%2256%22%20rx%3D%228%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%3C!--%20%E5%88%BB%E5%BA%A6%EF%BC%88%E5%8F%B3%E4%BE%A7%EF%BC%8C%E4%B8%BB%E5%88%BB%E5%BA%A6%200%2F50%2F100%25%EF%BC%89%20--%3E%0A%20%20%3Cg%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%3E%3Cline%20x1%3D%2220%22%20y1%3D%2258.0%22%20x2%3D%2226%22%20y2%3D%2258.0%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%2252.8%22%20x2%3D%2223%22%20y2%3D%2252.8%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%2247.6%22%20x2%3D%2223%22%20y2%3D%2247.6%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%2242.4%22%20x2%3D%2223%22%20y2%3D%2242.4%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%2237.2%22%20x2%3D%2223%22%20y2%3D%2237.2%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%2232.0%22%20x2%3D%2226%22%20y2%3D%2232.0%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%2226.8%22%20x2%3D%2223%22%20y2%3D%2226.8%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%2221.6%22%20x2%3D%2223%22%20y2%3D%2221.6%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%2216.4%22%20x2%3D%2223%22%20y2%3D%2216.4%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%2211.2%22%20x2%3D%2223%22%20y2%3D%2211.2%22%2F%3E%3Cline%20x1%3D%2220%22%20y1%3D%226.0%22%20x2%3D%2226%22%20y2%3D%226.0%22%2F%3E%3C%2Fg%3E%0A%3C%2Fsvg%3E",
+  "title": "液位计",
+  "type": "svg",
+  "width": 28,
+}
+`;
+
+exports[`罐（fill 约定族） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 64,
+  "id": "ah-tank",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "%",
+          "value": 50,
+        },
+        "y": {
+          "unit": "%",
+          "value": 0,
+        },
+      },
+      "position": "leftTop",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 100,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "液色",
+      "type": "color",
+      "val": "#1677ff",
+    },
+    "h": {
+      "title": "液位高度 %",
+      "type": "number",
+      "val": 50,
+    },
+  },
+  "svg": "<svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+  <style>use[h="0"]{--ah-lvl:0.00}use[h="1"]{--ah-lvl:0.01}use[h="2"]{--ah-lvl:0.02}use[h="3"]{--ah-lvl:0.03}use[h="4"]{--ah-lvl:0.04}use[h="5"]{--ah-lvl:0.05}use[h="6"]{--ah-lvl:0.06}use[h="7"]{--ah-lvl:0.07}use[h="8"]{--ah-lvl:0.08}use[h="9"]{--ah-lvl:0.09}use[h="10"]{--ah-lvl:0.10}use[h="11"]{--ah-lvl:0.11}use[h="12"]{--ah-lvl:0.12}use[h="13"]{--ah-lvl:0.13}use[h="14"]{--ah-lvl:0.14}use[h="15"]{--ah-lvl:0.15}use[h="16"]{--ah-lvl:0.16}use[h="17"]{--ah-lvl:0.17}use[h="18"]{--ah-lvl:0.18}use[h="19"]{--ah-lvl:0.19}use[h="20"]{--ah-lvl:0.20}use[h="21"]{--ah-lvl:0.21}use[h="22"]{--ah-lvl:0.22}use[h="23"]{--ah-lvl:0.23}use[h="24"]{--ah-lvl:0.24}use[h="25"]{--ah-lvl:0.25}use[h="26"]{--ah-lvl:0.26}use[h="27"]{--ah-lvl:0.27}use[h="28"]{--ah-lvl:0.28}use[h="29"]{--ah-lvl:0.29}use[h="30"]{--ah-lvl:0.30}use[h="31"]{--ah-lvl:0.31}use[h="32"]{--ah-lvl:0.32}use[h="33"]{--ah-lvl:0.33}use[h="34"]{--ah-lvl:0.34}use[h="35"]{--ah-lvl:0.35}use[h="36"]{--ah-lvl:0.36}use[h="37"]{--ah-lvl:0.37}use[h="38"]{--ah-lvl:0.38}use[h="39"]{--ah-lvl:0.39}use[h="40"]{--ah-lvl:0.40}use[h="41"]{--ah-lvl:0.41}use[h="42"]{--ah-lvl:0.42}use[h="43"]{--ah-lvl:0.43}use[h="44"]{--ah-lvl:0.44}use[h="45"]{--ah-lvl:0.45}use[h="46"]{--ah-lvl:0.46}use[h="47"]{--ah-lvl:0.47}use[h="48"]{--ah-lvl:0.48}use[h="49"]{--ah-lvl:0.49}use[h="50"]{--ah-lvl:0.50}use[h="51"]{--ah-lvl:0.51}use[h="52"]{--ah-lvl:0.52}use[h="53"]{--ah-lvl:0.53}use[h="54"]{--ah-lvl:0.54}use[h="55"]{--ah-lvl:0.55}use[h="56"]{--ah-lvl:0.56}use[h="57"]{--ah-lvl:0.57}use[h="58"]{--ah-lvl:0.58}use[h="59"]{--ah-lvl:0.59}use[h="60"]{--ah-lvl:0.60}use[h="61"]{--ah-lvl:0.61}use[h="62"]{--ah-lvl:0.62}use[h="63"]{--ah-lvl:0.63}use[h="64"]{--ah-lvl:0.64}use[h="65"]{--ah-lvl:0.65}use[h="66"]{--ah-lvl:0.66}use[h="67"]{--ah-lvl:0.67}use[h="68"]{--ah-lvl:0.68}use[h="69"]{--ah-lvl:0.69}use[h="70"]{--ah-lvl:0.70}use[h="71"]{--ah-lvl:0.71}use[h="72"]{--ah-lvl:0.72}use[h="73"]{--ah-lvl:0.73}use[h="74"]{--ah-lvl:0.74}use[h="75"]{--ah-lvl:0.75}use[h="76"]{--ah-lvl:0.76}use[h="77"]{--ah-lvl:0.77}use[h="78"]{--ah-lvl:0.78}use[h="79"]{--ah-lvl:0.79}use[h="80"]{--ah-lvl:0.80}use[h="81"]{--ah-lvl:0.81}use[h="82"]{--ah-lvl:0.82}use[h="83"]{--ah-lvl:0.83}use[h="84"]{--ah-lvl:0.84}use[h="85"]{--ah-lvl:0.85}use[h="86"]{--ah-lvl:0.86}use[h="87"]{--ah-lvl:0.87}use[h="88"]{--ah-lvl:0.88}use[h="89"]{--ah-lvl:0.89}use[h="90"]{--ah-lvl:0.90}use[h="91"]{--ah-lvl:0.91}use[h="92"]{--ah-lvl:0.92}use[h="93"]{--ah-lvl:0.93}use[h="94"]{--ah-lvl:0.94}use[h="95"]{--ah-lvl:0.95}use[h="96"]{--ah-lvl:0.96}use[h="97"]{--ah-lvl:0.97}use[h="98"]{--ah-lvl:0.98}use[h="99"]{--ah-lvl:0.99}use[h="100"]{--ah-lvl:1.00}use[h^="0."]{--ah-lvl:0.00}use[h^="1."]{--ah-lvl:0.01}use[h^="2."]{--ah-lvl:0.02}use[h^="3."]{--ah-lvl:0.03}use[h^="4."]{--ah-lvl:0.04}use[h^="5."]{--ah-lvl:0.05}use[h^="6."]{--ah-lvl:0.06}use[h^="7."]{--ah-lvl:0.07}use[h^="8."]{--ah-lvl:0.08}use[h^="9."]{--ah-lvl:0.09}use[h^="10."]{--ah-lvl:0.10}use[h^="11."]{--ah-lvl:0.11}use[h^="12."]{--ah-lvl:0.12}use[h^="13."]{--ah-lvl:0.13}use[h^="14."]{--ah-lvl:0.14}use[h^="15."]{--ah-lvl:0.15}use[h^="16."]{--ah-lvl:0.16}use[h^="17."]{--ah-lvl:0.17}use[h^="18."]{--ah-lvl:0.18}use[h^="19."]{--ah-lvl:0.19}use[h^="20."]{--ah-lvl:0.20}use[h^="21."]{--ah-lvl:0.21}use[h^="22."]{--ah-lvl:0.22}use[h^="23."]{--ah-lvl:0.23}use[h^="24."]{--ah-lvl:0.24}use[h^="25."]{--ah-lvl:0.25}use[h^="26."]{--ah-lvl:0.26}use[h^="27."]{--ah-lvl:0.27}use[h^="28."]{--ah-lvl:0.28}use[h^="29."]{--ah-lvl:0.29}use[h^="30."]{--ah-lvl:0.30}use[h^="31."]{--ah-lvl:0.31}use[h^="32."]{--ah-lvl:0.32}use[h^="33."]{--ah-lvl:0.33}use[h^="34."]{--ah-lvl:0.34}use[h^="35."]{--ah-lvl:0.35}use[h^="36."]{--ah-lvl:0.36}use[h^="37."]{--ah-lvl:0.37}use[h^="38."]{--ah-lvl:0.38}use[h^="39."]{--ah-lvl:0.39}use[h^="40."]{--ah-lvl:0.40}use[h^="41."]{--ah-lvl:0.41}use[h^="42."]{--ah-lvl:0.42}use[h^="43."]{--ah-lvl:0.43}use[h^="44."]{--ah-lvl:0.44}use[h^="45."]{--ah-lvl:0.45}use[h^="46."]{--ah-lvl:0.46}use[h^="47."]{--ah-lvl:0.47}use[h^="48."]{--ah-lvl:0.48}use[h^="49."]{--ah-lvl:0.49}use[h^="50."]{--ah-lvl:0.50}use[h^="51."]{--ah-lvl:0.51}use[h^="52."]{--ah-lvl:0.52}use[h^="53."]{--ah-lvl:0.53}use[h^="54."]{--ah-lvl:0.54}use[h^="55."]{--ah-lvl:0.55}use[h^="56."]{--ah-lvl:0.56}use[h^="57."]{--ah-lvl:0.57}use[h^="58."]{--ah-lvl:0.58}use[h^="59."]{--ah-lvl:0.59}use[h^="60."]{--ah-lvl:0.60}use[h^="61."]{--ah-lvl:0.61}use[h^="62."]{--ah-lvl:0.62}use[h^="63."]{--ah-lvl:0.63}use[h^="64."]{--ah-lvl:0.64}use[h^="65."]{--ah-lvl:0.65}use[h^="66."]{--ah-lvl:0.66}use[h^="67."]{--ah-lvl:0.67}use[h^="68."]{--ah-lvl:0.68}use[h^="69."]{--ah-lvl:0.69}use[h^="70."]{--ah-lvl:0.70}use[h^="71."]{--ah-lvl:0.71}use[h^="72."]{--ah-lvl:0.72}use[h^="73."]{--ah-lvl:0.73}use[h^="74."]{--ah-lvl:0.74}use[h^="75."]{--ah-lvl:0.75}use[h^="76."]{--ah-lvl:0.76}use[h^="77."]{--ah-lvl:0.77}use[h^="78."]{--ah-lvl:0.78}use[h^="79."]{--ah-lvl:0.79}use[h^="80."]{--ah-lvl:0.80}use[h^="81."]{--ah-lvl:0.81}use[h^="82."]{--ah-lvl:0.82}use[h^="83."]{--ah-lvl:0.83}use[h^="84."]{--ah-lvl:0.84}use[h^="85."]{--ah-lvl:0.85}use[h^="86."]{--ah-lvl:0.86}use[h^="87."]{--ah-lvl:0.87}use[h^="88."]{--ah-lvl:0.88}use[h^="89."]{--ah-lvl:0.89}use[h^="90."]{--ah-lvl:0.90}use[h^="91."]{--ah-lvl:0.91}use[h^="92."]{--ah-lvl:0.92}use[h^="93."]{--ah-lvl:0.93}use[h^="94."]{--ah-lvl:0.94}use[h^="95."]{--ah-lvl:0.95}use[h^="96."]{--ah-lvl:0.96}use[h^="97."]{--ah-lvl:0.97}use[h^="98."]{--ah-lvl:0.98}use[h^="99."]{--ah-lvl:0.99}use[h^="100."]{--ah-lvl:1.00}.ah-liquid{transform:scaleY(var(--ah-lvl,0));transform-box:fill-box;transform-origin:bottom;}</style>
+  <!-- 液位柱：占满罐内全高，scaleY 按 ah-lvl 变量自底生长，颜色继承 use fill（注释内禁双连字符） -->
+  <rect class="ah-liquid" x="9" y="9" width="30" height="46" rx="3"/>
+  <!-- 罐壳：定色描边、不吞状态色 -->
+  <rect x="7" y="7" width="34" height="50" rx="4" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1.5"/>
+  <!-- 侧壁刻度：0/25/50/75/100%（液面 y = 55 - 46*pct/100） -->
+  <g stroke="rgba(0,0,0,0.55)" stroke-width="1">
+    <line x1="1" y1="55" x2="7" y2="55"/>
+    <line x1="2" y1="43.5" x2="7" y2="43.5"/>
+    <line x1="1" y1="32" x2="7" y2="32"/>
+    <line x1="2" y1="20.5" x2="7" y2="20.5"/>
+    <line x1="1" y1="9" x2="7" y2="9"/>
+  </g>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-tank%22%20viewBox%3D%220%200%2048%2064%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Cstyle%3Euse%5Bh%3D%220%22%5D%7B--ah-lvl%3A0.00%7Duse%5Bh%3D%221%22%5D%7B--ah-lvl%3A0.01%7Duse%5Bh%3D%222%22%5D%7B--ah-lvl%3A0.02%7Duse%5Bh%3D%223%22%5D%7B--ah-lvl%3A0.03%7Duse%5Bh%3D%224%22%5D%7B--ah-lvl%3A0.04%7Duse%5Bh%3D%225%22%5D%7B--ah-lvl%3A0.05%7Duse%5Bh%3D%226%22%5D%7B--ah-lvl%3A0.06%7Duse%5Bh%3D%227%22%5D%7B--ah-lvl%3A0.07%7Duse%5Bh%3D%228%22%5D%7B--ah-lvl%3A0.08%7Duse%5Bh%3D%229%22%5D%7B--ah-lvl%3A0.09%7Duse%5Bh%3D%2210%22%5D%7B--ah-lvl%3A0.10%7Duse%5Bh%3D%2211%22%5D%7B--ah-lvl%3A0.11%7Duse%5Bh%3D%2212%22%5D%7B--ah-lvl%3A0.12%7Duse%5Bh%3D%2213%22%5D%7B--ah-lvl%3A0.13%7Duse%5Bh%3D%2214%22%5D%7B--ah-lvl%3A0.14%7Duse%5Bh%3D%2215%22%5D%7B--ah-lvl%3A0.15%7Duse%5Bh%3D%2216%22%5D%7B--ah-lvl%3A0.16%7Duse%5Bh%3D%2217%22%5D%7B--ah-lvl%3A0.17%7Duse%5Bh%3D%2218%22%5D%7B--ah-lvl%3A0.18%7Duse%5Bh%3D%2219%22%5D%7B--ah-lvl%3A0.19%7Duse%5Bh%3D%2220%22%5D%7B--ah-lvl%3A0.20%7Duse%5Bh%3D%2221%22%5D%7B--ah-lvl%3A0.21%7Duse%5Bh%3D%2222%22%5D%7B--ah-lvl%3A0.22%7Duse%5Bh%3D%2223%22%5D%7B--ah-lvl%3A0.23%7Duse%5Bh%3D%2224%22%5D%7B--ah-lvl%3A0.24%7Duse%5Bh%3D%2225%22%5D%7B--ah-lvl%3A0.25%7Duse%5Bh%3D%2226%22%5D%7B--ah-lvl%3A0.26%7Duse%5Bh%3D%2227%22%5D%7B--ah-lvl%3A0.27%7Duse%5Bh%3D%2228%22%5D%7B--ah-lvl%3A0.28%7Duse%5Bh%3D%2229%22%5D%7B--ah-lvl%3A0.29%7Duse%5Bh%3D%2230%22%5D%7B--ah-lvl%3A0.30%7Duse%5Bh%3D%2231%22%5D%7B--ah-lvl%3A0.31%7Duse%5Bh%3D%2232%22%5D%7B--ah-lvl%3A0.32%7Duse%5Bh%3D%2233%22%5D%7B--ah-lvl%3A0.33%7Duse%5Bh%3D%2234%22%5D%7B--ah-lvl%3A0.34%7Duse%5Bh%3D%2235%22%5D%7B--ah-lvl%3A0.35%7Duse%5Bh%3D%2236%22%5D%7B--ah-lvl%3A0.36%7Duse%5Bh%3D%2237%22%5D%7B--ah-lvl%3A0.37%7Duse%5Bh%3D%2238%22%5D%7B--ah-lvl%3A0.38%7Duse%5Bh%3D%2239%22%5D%7B--ah-lvl%3A0.39%7Duse%5Bh%3D%2240%22%5D%7B--ah-lvl%3A0.40%7Duse%5Bh%3D%2241%22%5D%7B--ah-lvl%3A0.41%7Duse%5Bh%3D%2242%22%5D%7B--ah-lvl%3A0.42%7Duse%5Bh%3D%2243%22%5D%7B--ah-lvl%3A0.43%7Duse%5Bh%3D%2244%22%5D%7B--ah-lvl%3A0.44%7Duse%5Bh%3D%2245%22%5D%7B--ah-lvl%3A0.45%7Duse%5Bh%3D%2246%22%5D%7B--ah-lvl%3A0.46%7Duse%5Bh%3D%2247%22%5D%7B--ah-lvl%3A0.47%7Duse%5Bh%3D%2248%22%5D%7B--ah-lvl%3A0.48%7Duse%5Bh%3D%2249%22%5D%7B--ah-lvl%3A0.49%7Duse%5Bh%3D%2250%22%5D%7B--ah-lvl%3A0.50%7Duse%5Bh%3D%2251%22%5D%7B--ah-lvl%3A0.51%7Duse%5Bh%3D%2252%22%5D%7B--ah-lvl%3A0.52%7Duse%5Bh%3D%2253%22%5D%7B--ah-lvl%3A0.53%7Duse%5Bh%3D%2254%22%5D%7B--ah-lvl%3A0.54%7Duse%5Bh%3D%2255%22%5D%7B--ah-lvl%3A0.55%7Duse%5Bh%3D%2256%22%5D%7B--ah-lvl%3A0.56%7Duse%5Bh%3D%2257%22%5D%7B--ah-lvl%3A0.57%7Duse%5Bh%3D%2258%22%5D%7B--ah-lvl%3A0.58%7Duse%5Bh%3D%2259%22%5D%7B--ah-lvl%3A0.59%7Duse%5Bh%3D%2260%22%5D%7B--ah-lvl%3A0.60%7Duse%5Bh%3D%2261%22%5D%7B--ah-lvl%3A0.61%7Duse%5Bh%3D%2262%22%5D%7B--ah-lvl%3A0.62%7Duse%5Bh%3D%2263%22%5D%7B--ah-lvl%3A0.63%7Duse%5Bh%3D%2264%22%5D%7B--ah-lvl%3A0.64%7Duse%5Bh%3D%2265%22%5D%7B--ah-lvl%3A0.65%7Duse%5Bh%3D%2266%22%5D%7B--ah-lvl%3A0.66%7Duse%5Bh%3D%2267%22%5D%7B--ah-lvl%3A0.67%7Duse%5Bh%3D%2268%22%5D%7B--ah-lvl%3A0.68%7Duse%5Bh%3D%2269%22%5D%7B--ah-lvl%3A0.69%7Duse%5Bh%3D%2270%22%5D%7B--ah-lvl%3A0.70%7Duse%5Bh%3D%2271%22%5D%7B--ah-lvl%3A0.71%7Duse%5Bh%3D%2272%22%5D%7B--ah-lvl%3A0.72%7Duse%5Bh%3D%2273%22%5D%7B--ah-lvl%3A0.73%7Duse%5Bh%3D%2274%22%5D%7B--ah-lvl%3A0.74%7Duse%5Bh%3D%2275%22%5D%7B--ah-lvl%3A0.75%7Duse%5Bh%3D%2276%22%5D%7B--ah-lvl%3A0.76%7Duse%5Bh%3D%2277%22%5D%7B--ah-lvl%3A0.77%7Duse%5Bh%3D%2278%22%5D%7B--ah-lvl%3A0.78%7Duse%5Bh%3D%2279%22%5D%7B--ah-lvl%3A0.79%7Duse%5Bh%3D%2280%22%5D%7B--ah-lvl%3A0.80%7Duse%5Bh%3D%2281%22%5D%7B--ah-lvl%3A0.81%7Duse%5Bh%3D%2282%22%5D%7B--ah-lvl%3A0.82%7Duse%5Bh%3D%2283%22%5D%7B--ah-lvl%3A0.83%7Duse%5Bh%3D%2284%22%5D%7B--ah-lvl%3A0.84%7Duse%5Bh%3D%2285%22%5D%7B--ah-lvl%3A0.85%7Duse%5Bh%3D%2286%22%5D%7B--ah-lvl%3A0.86%7Duse%5Bh%3D%2287%22%5D%7B--ah-lvl%3A0.87%7Duse%5Bh%3D%2288%22%5D%7B--ah-lvl%3A0.88%7Duse%5Bh%3D%2289%22%5D%7B--ah-lvl%3A0.89%7Duse%5Bh%3D%2290%22%5D%7B--ah-lvl%3A0.90%7Duse%5Bh%3D%2291%22%5D%7B--ah-lvl%3A0.91%7Duse%5Bh%3D%2292%22%5D%7B--ah-lvl%3A0.92%7Duse%5Bh%3D%2293%22%5D%7B--ah-lvl%3A0.93%7Duse%5Bh%3D%2294%22%5D%7B--ah-lvl%3A0.94%7Duse%5Bh%3D%2295%22%5D%7B--ah-lvl%3A0.95%7Duse%5Bh%3D%2296%22%5D%7B--ah-lvl%3A0.96%7Duse%5Bh%3D%2297%22%5D%7B--ah-lvl%3A0.97%7Duse%5Bh%3D%2298%22%5D%7B--ah-lvl%3A0.98%7Duse%5Bh%3D%2299%22%5D%7B--ah-lvl%3A0.99%7Duse%5Bh%3D%22100%22%5D%7B--ah-lvl%3A1.00%7Duse%5Bh%5E%3D%220.%22%5D%7B--ah-lvl%3A0.00%7Duse%5Bh%5E%3D%221.%22%5D%7B--ah-lvl%3A0.01%7Duse%5Bh%5E%3D%222.%22%5D%7B--ah-lvl%3A0.02%7Duse%5Bh%5E%3D%223.%22%5D%7B--ah-lvl%3A0.03%7Duse%5Bh%5E%3D%224.%22%5D%7B--ah-lvl%3A0.04%7Duse%5Bh%5E%3D%225.%22%5D%7B--ah-lvl%3A0.05%7Duse%5Bh%5E%3D%226.%22%5D%7B--ah-lvl%3A0.06%7Duse%5Bh%5E%3D%227.%22%5D%7B--ah-lvl%3A0.07%7Duse%5Bh%5E%3D%228.%22%5D%7B--ah-lvl%3A0.08%7Duse%5Bh%5E%3D%229.%22%5D%7B--ah-lvl%3A0.09%7Duse%5Bh%5E%3D%2210.%22%5D%7B--ah-lvl%3A0.10%7Duse%5Bh%5E%3D%2211.%22%5D%7B--ah-lvl%3A0.11%7Duse%5Bh%5E%3D%2212.%22%5D%7B--ah-lvl%3A0.12%7Duse%5Bh%5E%3D%2213.%22%5D%7B--ah-lvl%3A0.13%7Duse%5Bh%5E%3D%2214.%22%5D%7B--ah-lvl%3A0.14%7Duse%5Bh%5E%3D%2215.%22%5D%7B--ah-lvl%3A0.15%7Duse%5Bh%5E%3D%2216.%22%5D%7B--ah-lvl%3A0.16%7Duse%5Bh%5E%3D%2217.%22%5D%7B--ah-lvl%3A0.17%7Duse%5Bh%5E%3D%2218.%22%5D%7B--ah-lvl%3A0.18%7Duse%5Bh%5E%3D%2219.%22%5D%7B--ah-lvl%3A0.19%7Duse%5Bh%5E%3D%2220.%22%5D%7B--ah-lvl%3A0.20%7Duse%5Bh%5E%3D%2221.%22%5D%7B--ah-lvl%3A0.21%7Duse%5Bh%5E%3D%2222.%22%5D%7B--ah-lvl%3A0.22%7Duse%5Bh%5E%3D%2223.%22%5D%7B--ah-lvl%3A0.23%7Duse%5Bh%5E%3D%2224.%22%5D%7B--ah-lvl%3A0.24%7Duse%5Bh%5E%3D%2225.%22%5D%7B--ah-lvl%3A0.25%7Duse%5Bh%5E%3D%2226.%22%5D%7B--ah-lvl%3A0.26%7Duse%5Bh%5E%3D%2227.%22%5D%7B--ah-lvl%3A0.27%7Duse%5Bh%5E%3D%2228.%22%5D%7B--ah-lvl%3A0.28%7Duse%5Bh%5E%3D%2229.%22%5D%7B--ah-lvl%3A0.29%7Duse%5Bh%5E%3D%2230.%22%5D%7B--ah-lvl%3A0.30%7Duse%5Bh%5E%3D%2231.%22%5D%7B--ah-lvl%3A0.31%7Duse%5Bh%5E%3D%2232.%22%5D%7B--ah-lvl%3A0.32%7Duse%5Bh%5E%3D%2233.%22%5D%7B--ah-lvl%3A0.33%7Duse%5Bh%5E%3D%2234.%22%5D%7B--ah-lvl%3A0.34%7Duse%5Bh%5E%3D%2235.%22%5D%7B--ah-lvl%3A0.35%7Duse%5Bh%5E%3D%2236.%22%5D%7B--ah-lvl%3A0.36%7Duse%5Bh%5E%3D%2237.%22%5D%7B--ah-lvl%3A0.37%7Duse%5Bh%5E%3D%2238.%22%5D%7B--ah-lvl%3A0.38%7Duse%5Bh%5E%3D%2239.%22%5D%7B--ah-lvl%3A0.39%7Duse%5Bh%5E%3D%2240.%22%5D%7B--ah-lvl%3A0.40%7Duse%5Bh%5E%3D%2241.%22%5D%7B--ah-lvl%3A0.41%7Duse%5Bh%5E%3D%2242.%22%5D%7B--ah-lvl%3A0.42%7Duse%5Bh%5E%3D%2243.%22%5D%7B--ah-lvl%3A0.43%7Duse%5Bh%5E%3D%2244.%22%5D%7B--ah-lvl%3A0.44%7Duse%5Bh%5E%3D%2245.%22%5D%7B--ah-lvl%3A0.45%7Duse%5Bh%5E%3D%2246.%22%5D%7B--ah-lvl%3A0.46%7Duse%5Bh%5E%3D%2247.%22%5D%7B--ah-lvl%3A0.47%7Duse%5Bh%5E%3D%2248.%22%5D%7B--ah-lvl%3A0.48%7Duse%5Bh%5E%3D%2249.%22%5D%7B--ah-lvl%3A0.49%7Duse%5Bh%5E%3D%2250.%22%5D%7B--ah-lvl%3A0.50%7Duse%5Bh%5E%3D%2251.%22%5D%7B--ah-lvl%3A0.51%7Duse%5Bh%5E%3D%2252.%22%5D%7B--ah-lvl%3A0.52%7Duse%5Bh%5E%3D%2253.%22%5D%7B--ah-lvl%3A0.53%7Duse%5Bh%5E%3D%2254.%22%5D%7B--ah-lvl%3A0.54%7Duse%5Bh%5E%3D%2255.%22%5D%7B--ah-lvl%3A0.55%7Duse%5Bh%5E%3D%2256.%22%5D%7B--ah-lvl%3A0.56%7Duse%5Bh%5E%3D%2257.%22%5D%7B--ah-lvl%3A0.57%7Duse%5Bh%5E%3D%2258.%22%5D%7B--ah-lvl%3A0.58%7Duse%5Bh%5E%3D%2259.%22%5D%7B--ah-lvl%3A0.59%7Duse%5Bh%5E%3D%2260.%22%5D%7B--ah-lvl%3A0.60%7Duse%5Bh%5E%3D%2261.%22%5D%7B--ah-lvl%3A0.61%7Duse%5Bh%5E%3D%2262.%22%5D%7B--ah-lvl%3A0.62%7Duse%5Bh%5E%3D%2263.%22%5D%7B--ah-lvl%3A0.63%7Duse%5Bh%5E%3D%2264.%22%5D%7B--ah-lvl%3A0.64%7Duse%5Bh%5E%3D%2265.%22%5D%7B--ah-lvl%3A0.65%7Duse%5Bh%5E%3D%2266.%22%5D%7B--ah-lvl%3A0.66%7Duse%5Bh%5E%3D%2267.%22%5D%7B--ah-lvl%3A0.67%7Duse%5Bh%5E%3D%2268.%22%5D%7B--ah-lvl%3A0.68%7Duse%5Bh%5E%3D%2269.%22%5D%7B--ah-lvl%3A0.69%7Duse%5Bh%5E%3D%2270.%22%5D%7B--ah-lvl%3A0.70%7Duse%5Bh%5E%3D%2271.%22%5D%7B--ah-lvl%3A0.71%7Duse%5Bh%5E%3D%2272.%22%5D%7B--ah-lvl%3A0.72%7Duse%5Bh%5E%3D%2273.%22%5D%7B--ah-lvl%3A0.73%7Duse%5Bh%5E%3D%2274.%22%5D%7B--ah-lvl%3A0.74%7Duse%5Bh%5E%3D%2275.%22%5D%7B--ah-lvl%3A0.75%7Duse%5Bh%5E%3D%2276.%22%5D%7B--ah-lvl%3A0.76%7Duse%5Bh%5E%3D%2277.%22%5D%7B--ah-lvl%3A0.77%7Duse%5Bh%5E%3D%2278.%22%5D%7B--ah-lvl%3A0.78%7Duse%5Bh%5E%3D%2279.%22%5D%7B--ah-lvl%3A0.79%7Duse%5Bh%5E%3D%2280.%22%5D%7B--ah-lvl%3A0.80%7Duse%5Bh%5E%3D%2281.%22%5D%7B--ah-lvl%3A0.81%7Duse%5Bh%5E%3D%2282.%22%5D%7B--ah-lvl%3A0.82%7Duse%5Bh%5E%3D%2283.%22%5D%7B--ah-lvl%3A0.83%7Duse%5Bh%5E%3D%2284.%22%5D%7B--ah-lvl%3A0.84%7Duse%5Bh%5E%3D%2285.%22%5D%7B--ah-lvl%3A0.85%7Duse%5Bh%5E%3D%2286.%22%5D%7B--ah-lvl%3A0.86%7Duse%5Bh%5E%3D%2287.%22%5D%7B--ah-lvl%3A0.87%7Duse%5Bh%5E%3D%2288.%22%5D%7B--ah-lvl%3A0.88%7Duse%5Bh%5E%3D%2289.%22%5D%7B--ah-lvl%3A0.89%7Duse%5Bh%5E%3D%2290.%22%5D%7B--ah-lvl%3A0.90%7Duse%5Bh%5E%3D%2291.%22%5D%7B--ah-lvl%3A0.91%7Duse%5Bh%5E%3D%2292.%22%5D%7B--ah-lvl%3A0.92%7Duse%5Bh%5E%3D%2293.%22%5D%7B--ah-lvl%3A0.93%7Duse%5Bh%5E%3D%2294.%22%5D%7B--ah-lvl%3A0.94%7Duse%5Bh%5E%3D%2295.%22%5D%7B--ah-lvl%3A0.95%7Duse%5Bh%5E%3D%2296.%22%5D%7B--ah-lvl%3A0.96%7Duse%5Bh%5E%3D%2297.%22%5D%7B--ah-lvl%3A0.97%7Duse%5Bh%5E%3D%2298.%22%5D%7B--ah-lvl%3A0.98%7Duse%5Bh%5E%3D%2299.%22%5D%7B--ah-lvl%3A0.99%7Duse%5Bh%5E%3D%22100.%22%5D%7B--ah-lvl%3A1.00%7D.ah-liquid%7Btransform%3AscaleY(var(--ah-lvl%2C0))%3Btransform-box%3Afill-box%3Btransform-origin%3Abottom%3B%7D%3C%2Fstyle%3E%0A%20%20%3C!--%20%E6%B6%B2%E4%BD%8D%E6%9F%B1%EF%BC%9A%E5%8D%A0%E6%BB%A1%E7%BD%90%E5%86%85%E5%85%A8%E9%AB%98%EF%BC%8CscaleY%20%E6%8C%89%20ah-lvl%20%E5%8F%98%E9%87%8F%E8%87%AA%E5%BA%95%E7%94%9F%E9%95%BF%EF%BC%8C%E9%A2%9C%E8%89%B2%E7%BB%A7%E6%89%BF%20use%20fill%EF%BC%88%E6%B3%A8%E9%87%8A%E5%86%85%E7%A6%81%E5%8F%8C%E8%BF%9E%E5%AD%97%E7%AC%A6%EF%BC%89%20--%3E%0A%20%20%3Crect%20class%3D%22ah-liquid%22%20x%3D%229%22%20y%3D%229%22%20width%3D%2230%22%20height%3D%2246%22%20rx%3D%223%22%2F%3E%0A%20%20%3C!--%20%E7%BD%90%E5%A3%B3%EF%BC%9A%E5%AE%9A%E8%89%B2%E6%8F%8F%E8%BE%B9%E3%80%81%E4%B8%8D%E5%90%9E%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Crect%20x%3D%227%22%20y%3D%227%22%20width%3D%2234%22%20height%3D%2250%22%20rx%3D%224%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221.5%22%2F%3E%0A%20%20%3C!--%20%E4%BE%A7%E5%A3%81%E5%88%BB%E5%BA%A6%EF%BC%9A0%2F25%2F50%2F75%2F100%25%EF%BC%88%E6%B6%B2%E9%9D%A2%20y%20%3D%2055%20-%2046*pct%2F100%EF%BC%89%20--%3E%0A%20%20%3Cg%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%3E%0A%20%20%20%20%3Cline%20x1%3D%221%22%20y1%3D%2255%22%20x2%3D%227%22%20y2%3D%2255%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%222%22%20y1%3D%2243.5%22%20x2%3D%227%22%20y2%3D%2243.5%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%221%22%20y1%3D%2232%22%20x2%3D%227%22%20y2%3D%2232%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%222%22%20y1%3D%2220.5%22%20x2%3D%227%22%20y2%3D%2220.5%22%2F%3E%0A%20%20%20%20%3Cline%20x1%3D%221%22%20y1%3D%229%22%20x2%3D%227%22%20y2%3D%229%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E",
+  "title": "罐",
+  "type": "svg",
+  "width": 48,
+}
+`;
+
+exports[`蝶阀（fill 约定族） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 48,
+  "id": "ah-butterfly-valve",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "阀体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- 手柄横杆 / 阀杆：不写 fill 靠 use 属性继承状态色 -->
+  <rect x="22" y="2" width="20" height="3.5" rx="1.75"/>
+  <rect x="31" y="6" width="2" height="10"/>
+  <!-- 左右接管 -->
+  <rect x="2" y="21" width="14" height="6" rx="1"/>
+  <rect x="48" y="21" width="14" height="6" rx="1"/>
+  <!-- 中心蝶盘 -->
+  <circle cx="32" cy="24" r="9"/>
+  <!-- 定色轮廓：蝶盘外环 + 接管边线 -->
+  <circle cx="32" cy="24" r="9" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+  <rect x="2" y="21" width="14" height="6" rx="1" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+  <rect x="48" y="21" width="14" height="6" rx="1" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-butterfly-valve%22%20viewBox%3D%220%200%2064%2048%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3C!--%20%E6%89%8B%E6%9F%84%E6%A8%AA%E6%9D%86%20%2F%20%E9%98%80%E6%9D%86%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Crect%20x%3D%2222%22%20y%3D%222%22%20width%3D%2220%22%20height%3D%223.5%22%20rx%3D%221.75%22%2F%3E%0A%20%20%3Crect%20x%3D%2231%22%20y%3D%226%22%20width%3D%222%22%20height%3D%2210%22%2F%3E%0A%20%20%3C!--%20%E5%B7%A6%E5%8F%B3%E6%8E%A5%E7%AE%A1%20--%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%2221%22%20width%3D%2214%22%20height%3D%226%22%20rx%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2221%22%20width%3D%2214%22%20height%3D%226%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E4%B8%AD%E5%BF%83%E8%9D%B6%E7%9B%98%20--%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2224%22%20r%3D%229%22%2F%3E%0A%20%20%3C!--%20%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%EF%BC%9A%E8%9D%B6%E7%9B%98%E5%A4%96%E7%8E%AF%20%2B%20%E6%8E%A5%E7%AE%A1%E8%BE%B9%E7%BA%BF%20--%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2224%22%20r%3D%229%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%2221%22%20width%3D%2214%22%20height%3D%226%22%20rx%3D%221%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2221%22%20width%3D%2214%22%20height%3D%226%22%20rx%3D%221%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "蝶阀",
+  "type": "svg",
+  "width": 64,
+}
+`;
+
+exports[`闸阀（fill 约定族） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 40,
+  "id": "ah-gate-valve",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "阀体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- 领结阀体：两楔面 + 阀杆，不写 fill 靠 use 属性继承状态色 -->
+  <path d="M4 8 L28 20 L4 32 Z"/>
+  <path d="M60 8 L36 20 L60 32 Z"/>
+  <rect x="30.5" y="9" width="3" height="12" rx="1"/>
+  <!-- 手轮：唯一定色件 -->
+  <ellipse cx="32" cy="5" rx="9" ry="3.5" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="2"/>
+  <!-- 阀体描边（定色轮廓，叠于状态色之上） -->
+  <path d="M4 8 L28 20 L4 32 Z M60 8 L36 20 L60 32 Z" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-gate-valve%22%20viewBox%3D%220%200%2064%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3C!--%20%E9%A2%86%E7%BB%93%E9%98%80%E4%BD%93%EF%BC%9A%E4%B8%A4%E6%A5%94%E9%9D%A2%20%2B%20%E9%98%80%E6%9D%86%EF%BC%8C%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Cpath%20d%3D%22M4%208%20L28%2020%20L4%2032%20Z%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M60%208%20L36%2020%20L60%2032%20Z%22%2F%3E%0A%20%20%3Crect%20x%3D%2230.5%22%20y%3D%229%22%20width%3D%223%22%20height%3D%2212%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E6%89%8B%E8%BD%AE%EF%BC%9A%E5%94%AF%E4%B8%80%E5%AE%9A%E8%89%B2%E4%BB%B6%20--%3E%0A%20%20%3Cellipse%20cx%3D%2232%22%20cy%3D%225%22%20rx%3D%229%22%20ry%3D%223.5%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%3C!--%20%E9%98%80%E4%BD%93%E6%8F%8F%E8%BE%B9%EF%BC%88%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%EF%BC%8C%E5%8F%A0%E4%BA%8E%E7%8A%B6%E6%80%81%E8%89%B2%E4%B9%8B%E4%B8%8A%EF%BC%89%20--%3E%0A%20%20%3Cpath%20d%3D%22M4%208%20L28%2020%20L4%2032%20Z%20M60%208%20L36%2020%20L60%2032%20Z%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "闸阀",
+  "type": "svg",
+  "width": 64,
+}
+`;
