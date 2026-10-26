@@ -11,7 +11,8 @@ const routes = [
   { path: '/dev/probe', component: () => import('./dev/Probe.vue') },
 ]
 
-export const router = createRouter({ history: createWebHistory(), routes })
+// BASE_URL 随部署形态：dev '/'；build '/hmi/'（gateway hmi_dist 前缀——T18 vite.config）
+export const router = createRouter({ history: createWebHistory(import.meta.env.BASE_URL), routes })
 
 router.beforeEach((to) => {
   const publicPath = to.path === '/login' || to.path.startsWith('/dev/')

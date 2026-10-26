@@ -58,13 +58,16 @@ export function parseFrame(type: string, raw: string): RtPoint[] {
 
 // ---------- 流层（浏览器 EventSource，E2E 验证） ----------
 
+import { API_BASE, SSE_TOKEN_IN_QUERY } from './endpoints'
+
 export type StreamState = 'online' | 'offline' | 'auth-failed'
 
 export interface RtdataStreamOptions {
   devs: string[]
+  /** 缺省 endpoints.API_BASE（gateway 部署 '/api/rsiot'——T18） */
   base?: string
   interval?: number
-  /** 每次（重）连前取 token 同步 Cookie（SSE 鉴权通道，见文件头） */
+  /** 每次（重）连前取 token（鉴权形态随部署：dev=同步 Cookie；gateway=进 query，endpoints.ts） */
   getToken?: () => string | null
   onPoint: (p: RtPoint) => void
   onState?: (s: StreamState) => void
@@ -94,10 +97,19 @@ export function createRtdataStream(opts: RtdataStreamOptions): { close(): void; 
     if (t) document.cookie = `token=${encodeURIComponent(t)}; path=/`
   }
 
+  /** 订阅 URL：query-token 形态（gateway）把 JWT 拼进 URL——网关层1 只认 Bearer/?token=
+   *  不认 Cookie，转发时注入 Authorization（endpoints.ts 文件头）；dev 形态走 Cookie。 */
+  const streamUrl = (): string => {
+    const url = buildSubscribeUrl({ devs, base: opts.base ?? API_BASE, interval: opts.interval })
+    if (!SSE_TOKEN_IN_QUERY) return url
+    const t = opts.getToken?.()
+    return t ? `${url}&token=${encodeURIComponent(t)}` : url
+  }
+
   const open = (): void => {
     if (closed) return
     syncCookie()
-    es = new EventSource(buildSubscribeUrl({ devs, base: opts.base, interval: opts.interval }))
+    es = new EventSource(streamUrl())
     es.addEventListener('open', () => { failures = 0; bo.reset(); opts.onState?.('online') })
     for (const type of ['snapshot', 'datachange'] as const) {
       es.addEventListener(type, (ev) => {
@@ -118,8 +130,7 @@ export function createRtdataStream(opts: RtdataStreamOptions): { close(): void; 
   const reconnect = async (): Promise<void> => {
     if (closed) return
     if (failures >= 3) {
-      const unauthorized = await probeUnauthorized(
-        buildSubscribeUrl({ devs, base: opts.base, interval: opts.interval }), opts.getToken?.() ?? null)
+      const unauthorized = await probeUnauthorized(streamUrl(), opts.getToken?.() ?? null)
       if (unauthorized) { closed = true; opts.onState?.('auth-failed'); return }
     }
     timer = setTimeout(open, bo.next())

@@ -110,11 +110,14 @@ export class AlarmStore {
   }
 }
 
-// ---------- 事件流层（浏览器 EventSource，E2E 验证；鉴权同 sse.ts Cookie 通道） ----------
+// ---------- 事件流层（浏览器 EventSource，E2E 验证；鉴权形态随部署同 sse.ts） ----------
+
+import { API_BASE, SSE_TOKEN_IN_QUERY } from './endpoints'
 
 export interface AlarmStreamOptions {
+  /** 缺省 endpoints.API_BASE（gateway 部署 '/api/rsiot'——T18） */
   base?: string
-  /** 每次（重）连前同步 Cookie token（Bearer 对 EventSource 不可设） */
+  /** 每次（重）连前取 token（dev=Cookie；gateway=?token= query——endpoints.ts） */
   getToken?: () => string | null
   onEvent: (e: AlarmEvent) => void
   onState?: (s: 'online' | 'offline') => void
@@ -130,8 +133,13 @@ export function createAlarmStream(opts: AlarmStreamOptions): { close(): void } {
   const open = (): void => {
     if (closed) return
     const token = opts.getToken?.()
-    if (token) document.cookie = `token=${encodeURIComponent(token)}; path=/`
-    es = new EventSource(`${opts.base ?? ''}/api/v1/events?types=alarm`)
+    let url = `${opts.base ?? API_BASE}/api/v1/events?types=alarm`
+    if (SSE_TOKEN_IN_QUERY) {
+      if (token) url += `&token=${encodeURIComponent(token)}`
+    } else if (token) {
+      document.cookie = `token=${encodeURIComponent(token)}; path=/`
+    }
+    es = new EventSource(url)
     es.addEventListener('open', () => { bo.reset(); opts.onState?.('online') })
     es.addEventListener('alarm', (ev) => {
       const e = parseAlarmEvent((ev as MessageEvent).data)

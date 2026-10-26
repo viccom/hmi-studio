@@ -1,7 +1,10 @@
 /**
  * rs-iot REST 客户端：JWT 头自动注入 + 非 2xx 抛 ApiError + 401 回调（登出跳转）。
- * base 传 '' 时走同源（vite proxy / gateway 部署两种形态都覆盖）。
+ * base 传 '' 时走同源（vite proxy / gateway 部署两种形态都覆盖）；
+ * 缺省 base = endpoints.API_BASE（T18 gateway 部署 build 烘入 '/api/rsiot'）。
  */
+import { API_BASE } from './endpoints'
+
 export class ApiError extends Error {
   constructor(readonly status: number, readonly body: unknown, message?: string) {
     super(message ?? `api ${status}`)
@@ -30,7 +33,7 @@ async function parseBody(res: Response): Promise<unknown> {
 
 async function request(opts: ApiOptions, method: string, path: string, body?: unknown): Promise<unknown> {
   const token = tokenStore.get()
-  const res = await fetch((opts.base ?? '') + path, {
+  const res = await fetch((opts.base ?? API_BASE) + path, {
     method,
     headers: {
       ...(body !== undefined ? { 'content-type': 'application/json' } : {}),

@@ -3,6 +3,7 @@
  * login 失败不抛——返回 {ok:false,message} 交给登录页展示。
  */
 import { api, ApiError, tokenStore } from './api'
+import { LOGIN_PATH } from './endpoints'
 
 const USER_KEY = 'hmi_user'
 
@@ -11,7 +12,9 @@ export type LoginResult = { ok: true; user: AuthedUser } | { ok: false; message:
 
 export async function login(userId: string, pass: string): Promise<LoginResult> {
   try {
-    const body = (await api().post('/api/v1/user/login', { user_id: userId, pass })) as {
+    // dev=rs-iot 直连；gateway 部署=/api/gw/login（gateway 自有 PUBLIC 端点——**不带
+    // /api/rsiot 前缀**，base 固定同源；两形态 LOGIN_PATH 均为完整路径——endpoints.ts）
+    const body = (await api({ base: '' }).post(LOGIN_PATH, { user_id: userId, pass })) as {
       status?: string; token?: string; user?: AuthedUser
     }
     if (body?.status !== 'ok' || !body.token) return { ok: false, message: '登录响应异常' }
