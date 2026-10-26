@@ -15,6 +15,7 @@ import { screensApi, unwrapDoc } from '../lib/screens'
 import { collectBinds } from '../lib/binds'
 import { createRtdataStream, type RtPoint, type StreamState } from '../lib/sse'
 import { api, tokenStore } from '../lib/api'
+import { logout, getAuthedUser } from '../lib/auth'
 import { installBridge } from '../lib/bridge'
 import { createDispatcher, createNavStack } from '../lib/nav'
 import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
@@ -32,12 +33,22 @@ const previewRef = ref<InstanceType<typeof MtPreview>>()
 const meta = ref<{ name?: string; group?: string }>({})
 const state = ref<StreamState>('offline')
 const deadFields = ref<string[]>([])
+/** 订阅面（去重点位）——状态栏展示用，故 reactive */
+const bindFields = ref<string[]>([])
 /** 当前画面 slug：容器内跳转只换 doc 不换组件实例（router-view 无 key），route.params 不再可信 */
 const currentSlug = ref(slug)
 
 let stream: ReturnType<typeof createRtdataStream> | undefined
 const received = new Set<string>()
-let bindFields: string[] = []
+
+const userName = getAuthedUser()?.user_id ?? ''
+const stateLabel = (): string =>
+  state.value === 'online' ? '在线' : state.value === 'auth-failed' ? '凭证失效' : '离线'
+
+function doLogout(): void {
+  logout()
+  void router.replace('/login')
+}
 
 // ---- T8 告警骨架 ----
 const alarmStore = new AlarmStore()
@@ -73,14 +84,14 @@ const navStack = createNavStack()
 
 const onPoint = (p: RtPoint): void => {
   received.add(p.field)
-  deadFields.value = bindFields.filter((f) => !received.has(f))
+  deadFields.value = bindFields.value.filter((f) => !received.has(f))
   previewRef.value?.setDevicePointByID(p.field, p.value)
 }
 
 /** SSE 按新画面 bind 集重订（挂载/跳转共用）：关旧流（或改订）+ 清收数；无绑定 → 关流离线 */
 const resubscribe = (done: IExportJson): void => {
   const { fields, devs } = collectBinds(done)
-  bindFields = fields
+  bindFields.value = fields
   received.clear()
   deadFields.value = []
   if (devs.length === 0) {
@@ -94,8 +105,14 @@ const resubscribe = (done: IExportJson): void => {
     devs,
     getToken: tokenStore.get,
     onPoint,
-    onState: (s) => { state.value = s },
+    onState: onStreamState,
   })
+}
+
+/** 状态桥 + 凭证失效登出链（T16 relogin 选型）：SSE 探测 401 → 走全局同款登出（不存凭据自动重登录） */
+function onStreamState(s: StreamState): void {
+  state.value = s
+  if (s === 'auth-failed') doLogout()
 }
 
 /** 容器内跳转：GET 目标 doc → setImportJson → URL 同步（replace）→ SSE 重订；404 报错停留当前画面 */
@@ -152,6 +169,13 @@ const bridge = installBridge({
   },
 })
 
+// ---- T16 状态栏：命令历史（bridge 环形 20 条）----
+const cmdHistory = bridge.history
+const fmtTime = (ts: number): string =>
+  new Date(ts).toLocaleTimeString('zh-CN', { hour12: false })
+const stateTagType = (s: string): 'success' | 'danger' | 'warning' | 'info' =>
+  s === 'confirmed' ? 'success' : s === 'error' ? 'danger' : s === 'timeout' ? 'warning' : 'info'
+
 onMounted(async () => {
   // 自绘图元注册（幂等）：MtPreview 渲染 svg 图元同样查注册表——不注册则自绘图元静默空白
   registerSymbols()
@@ -188,34 +212,97 @@ onUnmounted(() => {
 
 <template>
   <main class="view-page">
-    <header class="view-topbar">
-      <span class="screen-name">{{ meta.name ?? currentSlug }}</span>
-      <span class="screen-slug">{{ currentSlug }}</span>
-      <span class="state" :class="state" :data-state="state">{{ state === 'online' ? '在线' : '离线' }}</span>
-      <span v-if="deadFields.length" class="dead" :title="deadFields.join('、')">无数据 {{ deadFields.length }} 点</span>
-      <ThemeToggle />
-    </header>
     <AlarmBanner :alarm="currentAlarm" @open="drawerOpen = true" />
     <MtPreview ref="previewRef" :show-popover="false" class="view-body" @onEventCallBack="onMtEvent" />
     <AlarmDrawer v-model="drawerOpen" :active="activeAlarms" :history="historyAlarms" @clear="clearAlarm" />
+
+    <!-- T16 底部状态栏：左 画面名/在线灯/订阅点数/deadFields；右 命令历史/用户/登出。
+         offline 时整条警示色（断线 UX）。 -->
+    <footer class="view-statusbar" :class="{ offline: state !== 'online' }" data-testid="status-bar">
+      <span class="sb-name">{{ meta.name ?? currentSlug }}</span>
+      <span class="sb-slug">{{ currentSlug }}</span>
+      <span class="state" :class="state" :data-state="state">{{ stateLabel() }}</span>
+      <span class="sb-points" title="订阅点位数（去重 field）">订阅 {{ bindFields.length }} 点</span>
+      <el-popover v-if="deadFields.length" trigger="click" :width="280">
+        <template #reference>
+          <button class="sb-btn sb-dead" data-testid="dead-trigger">无数据 {{ deadFields.length }} 点</button>
+        </template>
+        <ul class="dead-list">
+          <li v-for="f in deadFields" :key="f">{{ f }}</li>
+        </ul>
+      </el-popover>
+      <span class="sb-flex" />
+      <el-popover trigger="click" :width="420">
+        <template #reference>
+          <button class="sb-btn" data-testid="history-trigger">
+            命令历史<span v-if="cmdHistory.length" class="sb-badge">{{ cmdHistory.length }}</span>
+          </button>
+        </template>
+        <el-table v-if="cmdHistory.length" :data="cmdHistory" size="small" max-height="260">
+          <el-table-column label="时间" width="88">
+            <template #default="{ row }">{{ fmtTime(row.ts) }}</template>
+          </el-table-column>
+          <el-table-column label="点位">
+            <template #default="{ row }">{{ row.devid }}.{{ row.tag }}</template>
+          </el-table-column>
+          <el-table-column label="值" width="70">
+            <template #default="{ row }">{{ JSON.stringify(row.value) }}</template>
+          </el-table-column>
+          <el-table-column label="状态" width="92">
+            <template #default="{ row }">
+              <el-tag :type="stateTagType(row.state)" size="small">{{ row.state }}</el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+        <el-empty v-else description="暂无命令" :image-size="40" />
+      </el-popover>
+      <ThemeToggle />
+      <span v-if="userName" class="sb-user">{{ userName }}</span>
+      <el-button class="sb-logout" link size="small" @click="doLogout">登出</el-button>
+    </footer>
   </main>
 </template>
 
 <style scoped>
 .view-page { height: 100vh; display: flex; flex-direction: column; }
-.view-topbar {
+.view-body { flex: 1; min-height: 0; }
+.view-statusbar {
   display: flex; align-items: center; gap: 12px;
   height: 32px; padding: 0 16px; flex-shrink: 0;
-  border-bottom: 1px solid var(--el-border-color-light);
+  border-top: 1px solid var(--el-border-color-light);
+  background: var(--el-fill-color-lighter);
+  font-size: 12px;
 }
-.screen-name { font-weight: 600; }
-.screen-slug { color: var(--el-text-color-secondary); font-size: 12px; font-family: monospace; }
-.state { margin-left: auto; font-size: 12px; }
+/* 断线 UX：offline 整条警示色 */
+.view-statusbar.offline {
+  background: color-mix(in srgb, var(--el-color-warning) 18%, var(--el-bg-color));
+  border-top-color: color-mix(in srgb, var(--el-color-warning) 45%, transparent);
+}
+.sb-name { font-weight: 600; }
+.sb-slug { color: var(--el-text-color-secondary); font-family: monospace; }
+.state { display: inline-flex; align-items: center; }
 .state::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
 .state.online { color: var(--el-color-success); }
 .state.online::before { background: var(--el-color-success); }
-.state.offline { color: var(--el-text-color-secondary); }
-.state.offline::before { background: var(--el-text-color-disabled); }
-.dead { color: var(--el-color-warning); font-size: 12px; }
-.view-body { flex: 1; min-height: 0; }
+.state.offline { color: var(--el-color-warning); }
+.state.offline::before { background: var(--el-color-warning); }
+.state.auth-failed { color: var(--el-color-danger); }
+.state.auth-failed::before { background: var(--el-color-danger); }
+.sb-points { color: var(--el-text-color-secondary); }
+.sb-flex { flex: 1; }
+.sb-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: none; padding: 2px 6px; border-radius: 4px; font-size: 12px;
+  background: transparent; color: var(--el-text-color-regular); cursor: pointer;
+}
+.sb-btn:hover { background: var(--el-fill-color-light); }
+.sb-dead { color: var(--el-color-warning); }
+.sb-badge {
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+  background: var(--el-color-primary); color: #fff;
+  font-size: 11px; line-height: 16px; text-align: center;
+}
+.sb-user { color: var(--el-text-color-secondary); }
+.dead-list { margin: 0; padding: 0 0 0 4px; list-style: none; font-family: monospace; }
+.dead-list li { padding: 2px 0; }
 </style>

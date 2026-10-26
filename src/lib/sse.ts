@@ -58,7 +58,7 @@ export function parseFrame(type: string, raw: string): RtPoint[] {
 
 // ---------- 流层（浏览器 EventSource，E2E 验证） ----------
 
-export type StreamState = 'online' | 'offline'
+export type StreamState = 'online' | 'offline' | 'auth-failed'
 
 export interface RtdataStreamOptions {
   devs: string[]
@@ -68,8 +68,17 @@ export interface RtdataStreamOptions {
   getToken?: () => string | null
   onPoint: (p: RtPoint) => void
   onState?: (s: StreamState) => void
-  /** 连续第 3 次失败起，重连前先重登录换 token */
-  relogin?: () => Promise<void>
+}
+
+/** 探测凭证是否失效：EventSource error 不带 HTTP 状态码，fetch 可读——
+ *  对订阅 URL 发一次性 GET（带 Bearer），仅 401 判失效；网络错误视为非鉴权问题（false）。
+ *  流层 fetch 不进 jsdom 单测——E2E 验证（m4 恒 401 段）。 */
+async function probeUnauthorized(url: string, token: string | null): Promise<boolean> {
+  try {
+    const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    void res.body?.cancel().catch(() => { /* 中断流式响应体，状态码已读到 */ })
+    return res.status === 401
+  } catch { return false }
 }
 
 export function createRtdataStream(opts: RtdataStreamOptions): { close(): void; resubscribe(devs: string[]): void } {
@@ -104,11 +113,16 @@ export function createRtdataStream(opts: RtdataStreamOptions): { close(): void; 
     })
   }
 
+  // 凭证失效链（T16 relogin 选型）：不存凭据自动重登录（安全负资产）——连续 3 次失败
+  // 先 fetch 探测 401；命中则上抛 'auth-failed' 并停止重连，ViewView 走全局登出链回 /login。
   const reconnect = async (): Promise<void> => {
     if (closed) return
-    const delay = bo.next()
-    if (failures >= 3 && opts.relogin) { try { await opts.relogin() } catch { /* 换 token 失败不阻断重连 */ } }
-    timer = setTimeout(open, delay)
+    if (failures >= 3) {
+      const unauthorized = await probeUnauthorized(
+        buildSubscribeUrl({ devs, base: opts.base, interval: opts.interval }), opts.getToken?.() ?? null)
+      if (unauthorized) { closed = true; opts.onState?.('auth-failed'); return }
+    }
+    timer = setTimeout(open, bo.next())
   }
 
   const stop = (): void => {

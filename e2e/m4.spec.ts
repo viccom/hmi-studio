@@ -31,3 +31,93 @@ test.describe('M4 主题（T16-A）', () => {
     expect(await page.evaluate(() => localStorage.getItem('hmi_theme'))).toBe('light')
   })
 })
+
+test.describe('M4 状态栏与命令历史（T16-B）', () => {
+  const cmdSlug = `e2e-t16-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+  test.afterAll(async () => {
+    const { rsiotSweepScreens } = await import('./helpers')
+    await rsiotSweepScreens(/^e2e-t16-/)
+  })
+
+  test('状态栏：画面名/在线灯/订阅点数（demo A 8 bind 收敛 3 去重点）', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto(`/view/${DEMO_A}`)
+    const bar = page.locator('[data-testid="status-bar"]')
+    await expect(bar).toBeVisible({ timeout: 10_000 })
+    await expect(bar.locator('.state.online')).toBeVisible({ timeout: 10_000 })
+    await expect(bar).toContainText('取水泵房（M3 演示）')
+    await expect(bar).toContainText('订阅 3 点')
+  })
+
+  test('deadFields：mock 流只喂 1 点 → 无数据 2 点 + popover 列表', async ({ page }) => {
+    await loginAsAdmin(page)
+    const cell = (v: string): [number, string, string] => [1792980000, '2026-10-26 10:00:00', v]
+    await page.route('**/api/v1/rtdatas/subscribe*', (route) => route.fulfill({
+      status: 200, contentType: 'text/event-stream',
+      body: `event: snapshot\ndata: ${JSON.stringify({
+        dev: 'rsiot',
+        // 只喂 uptime——cpu_percent/alarm_active 两点无数据（F20：cell 必须真数组）
+        points: { 'rsiot.uptime_s': cell('63000') },
+      })}\n\n`,
+    }))
+    await page.goto(`/view/${DEMO_A}`)
+    const dead = page.locator('[data-testid="dead-trigger"]')
+    await expect(dead).toBeVisible({ timeout: 10_000 })
+    await expect(dead).toContainText('无数据 2 点')
+    await dead.click()
+    const pop = page.locator('.el-popover:visible')
+    await expect(pop).toContainText('rsiot.cpu_percent')
+    await expect(pop).toContainText('rsiot.alarm_active')
+  })
+
+  test('命令历史：下发一条 → 入口计数 1 → popover 含点位/值/confirmed', async ({ page }) => {
+    await seedCommandScreen(cmdSlug)
+    await loginAsAdmin(page)
+    await page.route('**/api/v1/command/send', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{"status":"ok"}' }))
+
+    await page.goto(`/view/${cmdSlug}`)
+    await page.locator('[id^="text-vue-"]').click()
+    const box = page.locator('.el-message-box')
+    await box.locator('.el-message-box__btns .el-button--primary').click()
+    await expect(page.locator('.el-message--success')).toBeVisible({ timeout: 5_000 })
+
+    const entry = page.locator('[data-testid="history-trigger"]')
+    await expect(entry).toContainText('1')
+    await entry.click()
+    const pop = page.locator('.el-popover:visible')
+    await expect(pop).toContainText('rsiot.uptime_s')
+    await expect(pop).toContainText('confirmed')
+  })
+
+  test('登出：状态栏按钮 → 清 token 回 /login', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto(`/view/${DEMO_A}`)
+    await expect(page.locator('[data-testid="status-bar"]')).toBeVisible({ timeout: 10_000 })
+    await page.getByRole('button', { name: '登出' }).click()
+    await expect(page).toHaveURL(/\/login$/)
+    expect(await page.evaluate(() => localStorage.getItem('hmi_token'))).toBeNull()
+  })
+
+  test('断线 UX：subscribe 掐断 → 状态灯 offline + 状态条整条警示；解除 → 恢复', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.route('**/api/v1/rtdatas/subscribe*', (route) => route.abort())
+    await page.goto(`/view/${DEMO_A}`)
+    await expect(page.locator('.state.offline')).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('[data-testid="status-bar"].offline')).toBeVisible()
+
+    await page.unroute('**/api/v1/rtdatas/subscribe*')
+    await expect(page.locator('.state.online')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('[data-testid="status-bar"].offline')).toHaveCount(0)
+  })
+
+  test('SSE 凭证失效：subscribe 恒 401 → 探测 auth-failed → 自动登出回 /login', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.route('**/api/v1/rtdatas/subscribe*', (route) =>
+      route.fulfill({ status: 401, contentType: 'text/plain', body: 'invalid token' }))
+    await page.goto(`/view/${DEMO_A}`)
+    // 连续失败 ≥3（退避 1s/2s/4s ≈ 7s）后 fetch 探测 401 → auth-failed → 登出链
+    await expect(page).toHaveURL(/\/login$/, { timeout: 30_000 })
+    expect(await page.evaluate(() => localStorage.getItem('hmi_token'))).toBeNull()
+  })
+})
