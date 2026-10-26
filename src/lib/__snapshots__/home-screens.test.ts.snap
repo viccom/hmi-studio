@@ -1,0 +1,3368 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`home-screens 三屏结构 > 全量快照（防漂移基线） 1`] = `
+"{
+  "power": {
+    "name": "家庭用电监控",
+    "group": "家庭三表演示",
+    "canvasCfg": {
+      "width": 800,
+      "height": 600,
+      "scale": 1,
+      "color": "#141414",
+      "img": "",
+      "guide": true,
+      "adsorp": true,
+      "adsorp_diff": 3,
+      "transform_origin": {
+        "x": 0,
+        "y": 0
+      },
+      "drag_offset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "gridCfg": {
+      "enabled": true,
+      "align": true,
+      "size": 20
+    },
+    "json": [
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-title",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 20,
+          "top": 20,
+          "width": 260
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#e6f7ff",
+          "fontFamily": "黑体",
+          "fontSize": 24,
+          "text": "家庭用电监控",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-lbl-energy",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 28,
+          "left": 320,
+          "top": 20,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 14,
+          "text": "总电能(kWh)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-val-energy",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 440,
+          "top": 20,
+          "width": 150
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 20,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmp-val-energy-text",
+            "pel_id": "text-vue-hmp-val-energy",
+            "bind_id": "home-meter-e1.energy",
+            "bind_name": "energy",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-lbl-today",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 28,
+          "left": 600,
+          "top": 20,
+          "width": 90
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 14,
+          "text": "今日(kWh)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-val-today",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 700,
+          "top": 20,
+          "width": 90
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 20,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmp-val-today-text",
+            "pel_id": "text-vue-hmp-val-today",
+            "bind_id": "home-meter-e1.energy_today",
+            "bind_name": "energy_today",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-lbl-m1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 20,
+          "top": 80,
+          "width": 220
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "1# 电表 home-meter-e1",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-meter-panel-hmp-1",
+        "title": "电表面板",
+        "type": "vue",
+        "tag": "ah-meter-panel",
+        "binfo": {
+          "angle": 0,
+          "width": 280,
+          "height": 210,
+          "left": 20,
+          "top": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#39d353",
+          "v": 0,
+          "i": 0,
+          "p": 0,
+          "pf": 0,
+          "freq": 0,
+          "pulse": false,
+          "status": 0
+        },
+        "binds": [
+          {
+            "id": "bd-ah-meter-panel-hmp-1-v",
+            "pel_id": "ah-meter-panel-hmp-1",
+            "bind_id": "home-meter-e1.voltage",
+            "bind_name": "voltage",
+            "bind_attr": "props.v.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-1-i",
+            "pel_id": "ah-meter-panel-hmp-1",
+            "bind_id": "home-meter-e1.current",
+            "bind_name": "current",
+            "bind_attr": "props.i.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-1-p",
+            "pel_id": "ah-meter-panel-hmp-1",
+            "bind_id": "home-meter-e1.power",
+            "bind_name": "power",
+            "bind_attr": "props.p.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-1-pf",
+            "pel_id": "ah-meter-panel-hmp-1",
+            "bind_id": "home-meter-e1.pf",
+            "bind_name": "pf",
+            "bind_attr": "props.pf.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-1-freq",
+            "pel_id": "ah-meter-panel-hmp-1",
+            "bind_id": "home-meter-e1.frequency",
+            "bind_name": "frequency",
+            "bind_attr": "props.freq.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-1-status",
+            "pel_id": "ah-meter-panel-hmp-1",
+            "bind_id": "home-meter-e1.status",
+            "bind_name": "status",
+            "bind_attr": "props.status.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-1-pulse",
+            "pel_id": "ah-meter-panel-hmp-1",
+            "bind_id": "home-meter-e1.pulse",
+            "bind_name": "pulse",
+            "bind_attr": "props.pulse.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-meter-panel-hmp-1-pulse-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-meter-panel-hmp-1-pulse-on",
+                    "target_id": "ah-meter-panel-hmp-1",
+                    "target_attr": "props.pulse.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-meter-panel-hmp-1-pulse-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-meter-panel-hmp-1-pulse-off",
+                    "target_id": "ah-meter-panel-hmp-1",
+                    "target_attr": "props.pulse.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-lbl-m2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 20,
+          "top": 340,
+          "width": 220
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "2# 电表 home-meter-e2",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-meter-panel-hmp-2",
+        "title": "电表面板",
+        "type": "vue",
+        "tag": "ah-meter-panel",
+        "binfo": {
+          "angle": 0,
+          "width": 280,
+          "height": 210,
+          "left": 20,
+          "top": 380
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#39d353",
+          "v": 0,
+          "i": 0,
+          "p": 0,
+          "pf": 0,
+          "freq": 0,
+          "pulse": false,
+          "status": 0
+        },
+        "binds": [
+          {
+            "id": "bd-ah-meter-panel-hmp-2-v",
+            "pel_id": "ah-meter-panel-hmp-2",
+            "bind_id": "home-meter-e2.voltage",
+            "bind_name": "voltage",
+            "bind_attr": "props.v.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-2-i",
+            "pel_id": "ah-meter-panel-hmp-2",
+            "bind_id": "home-meter-e2.current",
+            "bind_name": "current",
+            "bind_attr": "props.i.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-2-p",
+            "pel_id": "ah-meter-panel-hmp-2",
+            "bind_id": "home-meter-e2.power",
+            "bind_name": "power",
+            "bind_attr": "props.p.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-2-pf",
+            "pel_id": "ah-meter-panel-hmp-2",
+            "bind_id": "home-meter-e2.pf",
+            "bind_name": "pf",
+            "bind_attr": "props.pf.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-2-freq",
+            "pel_id": "ah-meter-panel-hmp-2",
+            "bind_id": "home-meter-e2.frequency",
+            "bind_name": "frequency",
+            "bind_attr": "props.freq.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-2-status",
+            "pel_id": "ah-meter-panel-hmp-2",
+            "bind_id": "home-meter-e2.status",
+            "bind_name": "status",
+            "bind_attr": "props.status.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-meter-panel-hmp-2-pulse",
+            "pel_id": "ah-meter-panel-hmp-2",
+            "bind_id": "home-meter-e2.pulse",
+            "bind_name": "pulse",
+            "bind_attr": "props.pulse.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-meter-panel-hmp-2-pulse-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-meter-panel-hmp-2-pulse-on",
+                    "target_id": "ah-meter-panel-hmp-2",
+                    "target_attr": "props.pulse.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-meter-panel-hmp-2-pulse-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-meter-panel-hmp-2-pulse-off",
+                    "target_id": "ah-meter-panel-hmp-2",
+                    "target_attr": "props.pulse.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-lbl-gauge",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 320,
+          "top": 80,
+          "width": 150
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "1# 有功功率（kW）",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-power-gauge-hmp-1",
+        "title": "电表功率盘",
+        "type": "custom-svg",
+        "tag": "ah-power-gauge",
+        "binfo": {
+          "angle": 0,
+          "width": 234,
+          "height": 208,
+          "left": 320,
+          "top": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#e6b32a",
+          "value": 0,
+          "pulse": false
+        },
+        "binds": [
+          {
+            "id": "bd-ah-power-gauge-hmp-1-value",
+            "pel_id": "ah-power-gauge-hmp-1",
+            "bind_id": "home-meter-e1.power",
+            "bind_name": "power",
+            "bind_attr": "props.value.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-power-gauge-hmp-1-pulse",
+            "pel_id": "ah-power-gauge-hmp-1",
+            "bind_id": "home-meter-e1.pulse",
+            "bind_name": "pulse",
+            "bind_attr": "props.pulse.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-power-gauge-hmp-1-pulse-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-power-gauge-hmp-1-pulse-on",
+                    "target_id": "ah-power-gauge-hmp-1",
+                    "target_attr": "props.pulse.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-power-gauge-hmp-1-pulse-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-power-gauge-hmp-1-pulse-off",
+                    "target_id": "ah-power-gauge-hmp-1",
+                    "target_attr": "props.pulse.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-trend-chart-hmp-1",
+        "title": "趋势图表",
+        "type": "vue",
+        "tag": "ah-trend-chart",
+        "binfo": {
+          "angle": 0,
+          "width": 352,
+          "height": 240,
+          "left": 320,
+          "top": 340
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#f5a623",
+          "points": "[{\\"field\\":\\"home-meter-e1.power\\",\\"label\\":\\"1#有功\\",\\"unit\\":\\"kW\\",\\"color\\":\\"#f5a623\\"},{\\"field\\":\\"home-meter-e1.current\\",\\"label\\":\\"1#电流\\",\\"unit\\":\\"A\\",\\"color\\":\\"#58a6ff\\"}]",
+          "tick0": 0,
+          "tick1": 0,
+          "tick2": 0,
+          "windowSecs": 600,
+          "yUnit": "kW/A"
+        },
+        "binds": [
+          {
+            "id": "bd-ah-trend-chart-hmp-1-tick0",
+            "pel_id": "ah-trend-chart-hmp-1",
+            "bind_id": "home-meter-e1.power",
+            "bind_name": "power",
+            "bind_attr": "props.tick0.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-trend-chart-hmp-1-tick1",
+            "pel_id": "ah-trend-chart-hmp-1",
+            "bind_id": "home-meter-e1.current",
+            "bind_name": "current",
+            "bind_attr": "props.tick1.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-stack-light-hmp-1",
+        "title": "三色警示灯",
+        "type": "custom-svg",
+        "tag": "ah-stack-light",
+        "binfo": {
+          "angle": 0,
+          "width": 83,
+          "height": 156,
+          "left": 700,
+          "top": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#57606a",
+          "red": false,
+          "yellow": false,
+          "green": true
+        },
+        "binds": [
+          {
+            "id": "bd-ah-stack-light-hmp-1-red",
+            "pel_id": "ah-stack-light-hmp-1",
+            "bind_id": "home-meter-e1.pulse",
+            "bind_name": "pulse",
+            "bind_attr": "props.red.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-stack-light-hmp-1-red-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-stack-light-hmp-1-red-on",
+                    "target_id": "ah-stack-light-hmp-1",
+                    "target_attr": "props.red.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-stack-light-hmp-1-red-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-stack-light-hmp-1-red-off",
+                    "target_id": "ah-stack-light-hmp-1",
+                    "target_attr": "props.red.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-lbl-pulse",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 680,
+          "top": 280,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "脉冲指示",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-lbl-status",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 680,
+          "top": 340,
+          "width": 100
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "状态码",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-val-status",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 680,
+          "top": 380,
+          "width": 100
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 20,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmp-val-status-text",
+            "pel_id": "text-vue-hmp-val-status",
+            "bind_id": "home-meter-e1.status",
+            "bind_name": "status",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-nav-button-hmp-w",
+        "title": "跳转按钮",
+        "type": "svg",
+        "tag": "ah-nav-button",
+        "binfo": {
+          "angle": 0,
+          "width": 58,
+          "height": 38,
+          "left": 680,
+          "top": 440
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [
+          {
+            "id": "ev-nav",
+            "type": "click",
+            "action": "customCode",
+            "change_attr": [],
+            "custom_code": "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));",
+            "event_flow_ids": [],
+            "trigger_rule": {}
+          }
+        ],
+        "ports": [],
+        "props": {
+          "fill": "#1677ff",
+          "target": "home-meter-water"
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-lbl-nav-w",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 22,
+          "left": 680,
+          "top": 480,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "← 用水画面",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-nav-button-hmp-g",
+        "title": "跳转按钮",
+        "type": "svg",
+        "tag": "ah-nav-button",
+        "binfo": {
+          "angle": 0,
+          "width": 58,
+          "height": 38,
+          "left": 680,
+          "top": 520
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [
+          {
+            "id": "ev-nav",
+            "type": "click",
+            "action": "customCode",
+            "change_attr": [],
+            "custom_code": "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));",
+            "event_flow_ids": [],
+            "trigger_rule": {}
+          }
+        ],
+        "ports": [],
+        "props": {
+          "fill": "#1677ff",
+          "target": "home-meter-gas"
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmp-lbl-nav-g",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 22,
+          "left": 680,
+          "top": 560,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "→ 燃气画面",
+          "vertical": false
+        },
+        "binds": []
+      }
+    ],
+    "eventList": [],
+    "eventFlow": []
+  },
+  "water": {
+    "name": "家庭用水监控",
+    "group": "家庭三表演示",
+    "canvasCfg": {
+      "width": 800,
+      "height": 600,
+      "scale": 1,
+      "color": "#141414",
+      "img": "",
+      "guide": true,
+      "adsorp": true,
+      "adsorp_diff": 3,
+      "transform_origin": {
+        "x": 0,
+        "y": 0
+      },
+      "drag_offset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "gridCfg": {
+      "enabled": true,
+      "align": true,
+      "size": 20
+    },
+    "json": [
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-title",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 20,
+          "top": 20,
+          "width": 260
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#e6f7ff",
+          "fontFamily": "黑体",
+          "fontSize": 24,
+          "text": "家庭用水监控",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-t1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 28,
+          "left": 320,
+          "top": 20,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 14,
+          "text": "1#累计(m³)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-val-t1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 440,
+          "top": 20,
+          "width": 140
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmw-val-t1-text",
+            "pel_id": "text-vue-hmw-val-t1",
+            "bind_id": "home-meter-w1.flow_total",
+            "bind_name": "flow_total",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-t2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 28,
+          "left": 580,
+          "top": 20,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 14,
+          "text": "2#累计(m³)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-val-t2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 700,
+          "top": 20,
+          "width": 90
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmw-val-t2-text",
+            "pel_id": "text-vue-hmw-val-t2",
+            "bind_id": "home-meter-w2.flow_total",
+            "bind_name": "flow_total",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-m1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 20,
+          "top": 80,
+          "width": 220
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "1# 水表 home-meter-w1",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-water-meter-hmw-1",
+        "title": "水表盘",
+        "type": "custom-svg",
+        "tag": "ah-water-meter",
+        "binfo": {
+          "angle": 0,
+          "width": 288,
+          "height": 224,
+          "left": 20,
+          "top": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#58a6ff",
+          "total": 0,
+          "flow": 0,
+          "reverse": false
+        },
+        "binds": [
+          {
+            "id": "bd-ah-water-meter-hmw-1-total",
+            "pel_id": "ah-water-meter-hmw-1",
+            "bind_id": "home-meter-w1.flow_total",
+            "bind_name": "flow_total",
+            "bind_attr": "props.total.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-water-meter-hmw-1-flow",
+            "pel_id": "ah-water-meter-hmw-1",
+            "bind_id": "home-meter-w1.flow_instant",
+            "bind_name": "flow_instant",
+            "bind_attr": "props.flow.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-water-meter-hmw-1-reverse",
+            "pel_id": "ah-water-meter-hmw-1",
+            "bind_id": "home-meter-w1.reverse_flag",
+            "bind_name": "reverse_flag",
+            "bind_attr": "props.reverse.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-water-meter-hmw-1-reverse-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-water-meter-hmw-1-reverse-on",
+                    "target_id": "ah-water-meter-hmw-1",
+                    "target_attr": "props.reverse.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-water-meter-hmw-1-reverse-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-water-meter-hmw-1-reverse-off",
+                    "target_id": "ah-water-meter-hmw-1",
+                    "target_attr": "props.reverse.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-m2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 80,
+          "width": 220
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "2# 水表 home-meter-w2",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-water-meter-hmw-2",
+        "title": "水表盘",
+        "type": "custom-svg",
+        "tag": "ah-water-meter",
+        "binfo": {
+          "angle": 0,
+          "width": 288,
+          "height": 224,
+          "left": 360,
+          "top": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#58a6ff",
+          "total": 0,
+          "flow": 0,
+          "reverse": false
+        },
+        "binds": [
+          {
+            "id": "bd-ah-water-meter-hmw-2-total",
+            "pel_id": "ah-water-meter-hmw-2",
+            "bind_id": "home-meter-w2.flow_total",
+            "bind_name": "flow_total",
+            "bind_attr": "props.total.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-water-meter-hmw-2-flow",
+            "pel_id": "ah-water-meter-hmw-2",
+            "bind_id": "home-meter-w2.flow_instant",
+            "bind_name": "flow_instant",
+            "bind_attr": "props.flow.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-water-meter-hmw-2-reverse",
+            "pel_id": "ah-water-meter-hmw-2",
+            "bind_id": "home-meter-w2.reverse_flag",
+            "bind_name": "reverse_flag",
+            "bind_attr": "props.reverse.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-water-meter-hmw-2-reverse-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-water-meter-hmw-2-reverse-on",
+                    "target_id": "ah-water-meter-hmw-2",
+                    "target_attr": "props.reverse.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-water-meter-hmw-2-reverse-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-water-meter-hmw-2-reverse-off",
+                    "target_id": "ah-water-meter-hmw-2",
+                    "target_attr": "props.reverse.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-trend-chart-hmw-1",
+        "title": "趋势图表",
+        "type": "vue",
+        "tag": "ah-trend-chart",
+        "binfo": {
+          "angle": 0,
+          "width": 308,
+          "height": 210,
+          "left": 20,
+          "top": 380
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#f5a623",
+          "points": "[{\\"field\\":\\"home-meter-w1.flow_instant\\",\\"label\\":\\"1#瞬时流量\\",\\"unit\\":\\"m³/h\\",\\"color\\":\\"#58a6ff\\"},{\\"field\\":\\"home-meter-w2.flow_instant\\",\\"label\\":\\"2#瞬时流量\\",\\"unit\\":\\"m³/h\\",\\"color\\":\\"#22d3ee\\"}]",
+          "tick0": 0,
+          "tick1": 0,
+          "tick2": 0,
+          "windowSecs": 600,
+          "yUnit": "m³/h"
+        },
+        "binds": [
+          {
+            "id": "bd-ah-trend-chart-hmw-1-tick0",
+            "pel_id": "ah-trend-chart-hmw-1",
+            "bind_id": "home-meter-w1.flow_instant",
+            "bind_name": "flow_instant",
+            "bind_attr": "props.tick0.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-trend-chart-hmw-1-tick1",
+            "pel_id": "ah-trend-chart-hmw-1",
+            "bind_id": "home-meter-w2.flow_instant",
+            "bind_name": "flow_instant",
+            "bind_attr": "props.tick1.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-rev1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 380,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "1# 逆流标志",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-val-rev1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 480,
+          "top": 380,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmw-val-rev1-text",
+            "pel_id": "text-vue-hmw-val-rev1",
+            "bind_id": "home-meter-w1.reverse_flag",
+            "bind_name": "reverse_flag",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "text-vue-hmw-val-rev1-fill-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmw-val-rev1-fill-on",
+                    "target_id": "text-vue-hmw-val-rev1",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#f5222d"
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "text-vue-hmw-val-rev1-fill-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmw-val-rev1-fill-off",
+                    "target_id": "text-vue-hmw-val-rev1",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#52c41a"
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-rev2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 420,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "2# 逆流标志",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-val-rev2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 480,
+          "top": 420,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmw-val-rev2-text",
+            "pel_id": "text-vue-hmw-val-rev2",
+            "bind_id": "home-meter-w2.reverse_flag",
+            "bind_name": "reverse_flag",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "text-vue-hmw-val-rev2-fill-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmw-val-rev2-fill-on",
+                    "target_id": "text-vue-hmw-val-rev2",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#f5222d"
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "text-vue-hmw-val-rev2-fill-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmw-val-rev2-fill-off",
+                    "target_id": "text-vue-hmw-val-rev2",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#52c41a"
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-vlv1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 460,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "1# 阀门",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-val-vlv1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 480,
+          "top": 460,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmw-val-vlv1-text",
+            "pel_id": "text-vue-hmw-val-vlv1",
+            "bind_id": "home-meter-w1.valve",
+            "bind_name": "valve",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "text-vue-hmw-val-vlv1-fill-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmw-val-vlv1-fill-on",
+                    "target_id": "text-vue-hmw-val-vlv1",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#52c41a"
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "text-vue-hmw-val-vlv1-fill-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmw-val-vlv1-fill-off",
+                    "target_id": "text-vue-hmw-val-vlv1",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#f5222d"
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-vlv2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 500,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "2# 阀门",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-val-vlv2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 480,
+          "top": 500,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmw-val-vlv2-text",
+            "pel_id": "text-vue-hmw-val-vlv2",
+            "bind_id": "home-meter-w2.valve",
+            "bind_name": "valve",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "text-vue-hmw-val-vlv2-fill-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmw-val-vlv2-fill-on",
+                    "target_id": "text-vue-hmw-val-vlv2",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#52c41a"
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "text-vue-hmw-val-vlv2-fill-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmw-val-vlv2-fill-off",
+                    "target_id": "text-vue-hmw-val-vlv2",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#f5222d"
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-nav-button-hmw-e",
+        "title": "跳转按钮",
+        "type": "svg",
+        "tag": "ah-nav-button",
+        "binfo": {
+          "angle": 0,
+          "width": 58,
+          "height": 38,
+          "left": 660,
+          "top": 380
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [
+          {
+            "id": "ev-nav",
+            "type": "click",
+            "action": "customCode",
+            "change_attr": [],
+            "custom_code": "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));",
+            "event_flow_ids": [],
+            "trigger_rule": {}
+          }
+        ],
+        "ports": [],
+        "props": {
+          "fill": "#1677ff",
+          "target": "home-meter-power"
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-nav-e",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 22,
+          "left": 640,
+          "top": 420,
+          "width": 140
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "← 用电画面",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-nav-button-hmw-g",
+        "title": "跳转按钮",
+        "type": "svg",
+        "tag": "ah-nav-button",
+        "binfo": {
+          "angle": 0,
+          "width": 58,
+          "height": 38,
+          "left": 660,
+          "top": 460
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [
+          {
+            "id": "ev-nav",
+            "type": "click",
+            "action": "customCode",
+            "change_attr": [],
+            "custom_code": "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));",
+            "event_flow_ids": [],
+            "trigger_rule": {}
+          }
+        ],
+        "ports": [],
+        "props": {
+          "fill": "#1677ff",
+          "target": "home-meter-gas"
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmw-lbl-nav-g",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 22,
+          "left": 640,
+          "top": 500,
+          "width": 140
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "→ 燃气画面",
+          "vertical": false
+        },
+        "binds": []
+      }
+    ],
+    "eventList": [],
+    "eventFlow": []
+  },
+  "gas": {
+    "name": "家庭燃气监控",
+    "group": "家庭三表演示",
+    "canvasCfg": {
+      "width": 800,
+      "height": 600,
+      "scale": 1,
+      "color": "#141414",
+      "img": "",
+      "guide": true,
+      "adsorp": true,
+      "adsorp_diff": 3,
+      "transform_origin": {
+        "x": 0,
+        "y": 0
+      },
+      "drag_offset": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    "gridCfg": {
+      "enabled": true,
+      "align": true,
+      "size": 20
+    },
+    "json": [
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-title",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 20,
+          "top": 20,
+          "width": 260
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#e6f7ff",
+          "fontFamily": "黑体",
+          "fontSize": 24,
+          "text": "家庭燃气监控",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-t1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 28,
+          "left": 320,
+          "top": 20,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 14,
+          "text": "1#累计(m³)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-val-t1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 440,
+          "top": 20,
+          "width": 140
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmg-val-t1-text",
+            "pel_id": "text-vue-hmg-val-t1",
+            "bind_id": "home-meter-g1.gas_total",
+            "bind_name": "gas_total",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-bal1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 28,
+          "left": 580,
+          "top": 20,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 14,
+          "text": "余额(元)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-val-bal1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 36,
+          "left": 700,
+          "top": 20,
+          "width": 90
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmg-val-bal1-text",
+            "pel_id": "text-vue-hmg-val-bal1",
+            "bind_id": "home-meter-g1.balance",
+            "bind_name": "balance",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "text-vue-hmg-val-bal1-bal-low",
+                "rule": {
+                  "operator": "<",
+                  "value": 20
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmg-val-bal1-bal-low",
+                    "target_id": "text-vue-hmg-val-bal1",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#faad14"
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "text-vue-hmg-val-bal1-bal-ok",
+                "rule": {
+                  "operator": ">=",
+                  "value": 20
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmg-val-bal1-bal-ok",
+                    "target_id": "text-vue-hmg-val-bal1",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#FFF700"
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-m1",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 20,
+          "top": 80,
+          "width": 220
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "1# 燃气表 home-meter-g1",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-gas-meter-hmg-1",
+        "title": "燃气表盘",
+        "type": "custom-svg",
+        "tag": "ah-gas-meter",
+        "binfo": {
+          "angle": 0,
+          "width": 288,
+          "height": 224,
+          "left": 20,
+          "top": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#e6f7ff",
+          "total": 0,
+          "balance": 0,
+          "valve": false,
+          "leak": false
+        },
+        "binds": [
+          {
+            "id": "bd-ah-gas-meter-hmg-1-total",
+            "pel_id": "ah-gas-meter-hmg-1",
+            "bind_id": "home-meter-g1.gas_total",
+            "bind_name": "gas_total",
+            "bind_attr": "props.total.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-gas-meter-hmg-1-balance",
+            "pel_id": "ah-gas-meter-hmg-1",
+            "bind_id": "home-meter-g1.balance",
+            "bind_name": "balance",
+            "bind_attr": "props.balance.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-gas-meter-hmg-1-valve",
+            "pel_id": "ah-gas-meter-hmg-1",
+            "bind_id": "home-meter-g1.valve",
+            "bind_name": "valve",
+            "bind_attr": "props.valve.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-gas-meter-hmg-1-valve-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-gas-meter-hmg-1-valve-on",
+                    "target_id": "ah-gas-meter-hmg-1",
+                    "target_attr": "props.valve.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-gas-meter-hmg-1-valve-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-gas-meter-hmg-1-valve-off",
+                    "target_id": "ah-gas-meter-hmg-1",
+                    "target_attr": "props.valve.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          },
+          {
+            "id": "bd-ah-gas-meter-hmg-1-leak",
+            "pel_id": "ah-gas-meter-hmg-1",
+            "bind_id": "home-meter-g1.leak_alarm",
+            "bind_name": "leak_alarm",
+            "bind_attr": "props.leak.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-gas-meter-hmg-1-leak-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-gas-meter-hmg-1-leak-on",
+                    "target_id": "ah-gas-meter-hmg-1",
+                    "target_attr": "props.leak.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-gas-meter-hmg-1-leak-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-gas-meter-hmg-1-leak-off",
+                    "target_id": "ah-gas-meter-hmg-1",
+                    "target_attr": "props.leak.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-m2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 80,
+          "width": 220
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "2# 燃气表 home-meter-g2",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-gas-meter-hmg-2",
+        "title": "燃气表盘",
+        "type": "custom-svg",
+        "tag": "ah-gas-meter",
+        "binfo": {
+          "angle": 0,
+          "width": 288,
+          "height": 224,
+          "left": 360,
+          "top": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#e6f7ff",
+          "total": 0,
+          "balance": 0,
+          "valve": false,
+          "leak": false
+        },
+        "binds": [
+          {
+            "id": "bd-ah-gas-meter-hmg-2-total",
+            "pel_id": "ah-gas-meter-hmg-2",
+            "bind_id": "home-meter-g2.gas_total",
+            "bind_name": "gas_total",
+            "bind_attr": "props.total.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-gas-meter-hmg-2-balance",
+            "pel_id": "ah-gas-meter-hmg-2",
+            "bind_id": "home-meter-g2.balance",
+            "bind_name": "balance",
+            "bind_attr": "props.balance.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-gas-meter-hmg-2-valve",
+            "pel_id": "ah-gas-meter-hmg-2",
+            "bind_id": "home-meter-g2.valve",
+            "bind_name": "valve",
+            "bind_attr": "props.valve.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-gas-meter-hmg-2-valve-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-gas-meter-hmg-2-valve-on",
+                    "target_id": "ah-gas-meter-hmg-2",
+                    "target_attr": "props.valve.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-gas-meter-hmg-2-valve-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-gas-meter-hmg-2-valve-off",
+                    "target_id": "ah-gas-meter-hmg-2",
+                    "target_attr": "props.valve.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          },
+          {
+            "id": "bd-ah-gas-meter-hmg-2-leak",
+            "pel_id": "ah-gas-meter-hmg-2",
+            "bind_id": "home-meter-g2.leak_alarm",
+            "bind_name": "leak_alarm",
+            "bind_attr": "props.leak.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-gas-meter-hmg-2-leak-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-gas-meter-hmg-2-leak-on",
+                    "target_id": "ah-gas-meter-hmg-2",
+                    "target_attr": "props.leak.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-gas-meter-hmg-2-leak-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-gas-meter-hmg-2-leak-off",
+                    "target_id": "ah-gas-meter-hmg-2",
+                    "target_attr": "props.leak.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-stack-light-hmg-1",
+        "title": "三色警示灯",
+        "type": "custom-svg",
+        "tag": "ah-stack-light",
+        "binfo": {
+          "angle": 0,
+          "width": 83,
+          "height": 156,
+          "left": 700,
+          "top": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#57606a",
+          "red": false,
+          "yellow": false,
+          "green": true
+        },
+        "binds": [
+          {
+            "id": "bd-ah-stack-light-hmg-1-red",
+            "pel_id": "ah-stack-light-hmg-1",
+            "bind_id": "home-meter-g1.leak_alarm",
+            "bind_name": "leak_alarm",
+            "bind_attr": "props.red.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "ah-stack-light-hmg-1-red-on",
+                "rule": {
+                  "operator": "=",
+                  "value": true
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-stack-light-hmg-1-red-on",
+                    "target_id": "ah-stack-light-hmg-1",
+                    "target_attr": "props.red.val",
+                    "target_value": true
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "ah-stack-light-hmg-1-red-off",
+                "rule": {
+                  "operator": "=",
+                  "value": false
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-ah-stack-light-hmg-1-red-off",
+                    "target_id": "ah-stack-light-hmg-1",
+                    "target_attr": "props.red.val",
+                    "target_value": false
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-leak",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 680,
+          "top": 280,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "泄漏报警",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-trend-chart-hmg-1",
+        "title": "趋势图表",
+        "type": "vue",
+        "tag": "ah-trend-chart",
+        "binfo": {
+          "angle": 0,
+          "width": 308,
+          "height": 210,
+          "left": 20,
+          "top": 380
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#f5a623",
+          "points": "[{\\"field\\":\\"home-meter-g1.gas_instant\\",\\"label\\":\\"1#瞬时气量\\",\\"unit\\":\\"m³/h\\",\\"color\\":\\"#e6b32a\\"},{\\"field\\":\\"home-meter-g2.gas_instant\\",\\"label\\":\\"2#瞬时气量\\",\\"unit\\":\\"m³/h\\",\\"color\\":\\"#22d3ee\\"}]",
+          "tick0": 0,
+          "tick1": 0,
+          "tick2": 0,
+          "windowSecs": 600,
+          "yUnit": "m³/h"
+        },
+        "binds": [
+          {
+            "id": "bd-ah-trend-chart-hmg-1-tick0",
+            "pel_id": "ah-trend-chart-hmg-1",
+            "bind_id": "home-meter-g1.gas_instant",
+            "bind_name": "gas_instant",
+            "bind_attr": "props.tick0.val",
+            "bind_mapping": [],
+            "triggers": []
+          },
+          {
+            "id": "bd-ah-trend-chart-hmg-1-tick1",
+            "pel_id": "ah-trend-chart-hmg-1",
+            "bind_id": "home-meter-g2.gas_instant",
+            "bind_name": "gas_instant",
+            "bind_attr": "props.tick1.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-bal2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 420,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "2# 余额(元)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-val-bal2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 480,
+          "top": 420,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmg-val-bal2-text",
+            "pel_id": "text-vue-hmg-val-bal2",
+            "bind_id": "home-meter-g2.balance",
+            "bind_name": "balance",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": [
+              {
+                "id": "text-vue-hmg-val-bal2-bal-low",
+                "rule": {
+                  "operator": "<",
+                  "value": 20
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmg-val-bal2-bal-low",
+                    "target_id": "text-vue-hmg-val-bal2",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#faad14"
+                  }
+                ],
+                "custom_code": ""
+              },
+              {
+                "id": "text-vue-hmg-val-bal2-bal-ok",
+                "rule": {
+                  "operator": ">=",
+                  "value": 20
+                },
+                "action": "changeAttr",
+                "change_attr": [
+                  {
+                    "id": "ca-text-vue-hmg-val-bal2-bal-ok",
+                    "target_id": "text-vue-hmg-val-bal2",
+                    "target_attr": "props.fill.val",
+                    "target_value": "#FFF700"
+                  }
+                ],
+                "custom_code": ""
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-t2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 24,
+          "left": 360,
+          "top": 460,
+          "width": 120
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "2# 累计(m³)",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-val-t2",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 32,
+          "left": 480,
+          "top": 460,
+          "width": 110
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#FFF700",
+          "fontFamily": "黑体",
+          "fontSize": 18,
+          "text": "—",
+          "vertical": false
+        },
+        "binds": [
+          {
+            "id": "bd-text-vue-hmg-val-t2-text",
+            "pel_id": "text-vue-hmg-val-t2",
+            "bind_id": "home-meter-g2.gas_total",
+            "bind_name": "gas_total",
+            "bind_attr": "props.text.val",
+            "bind_mapping": [],
+            "triggers": []
+          }
+        ]
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-safe",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 28,
+          "left": 360,
+          "top": 380,
+          "width": 430
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#faad14",
+          "fontFamily": "黑体",
+          "fontSize": 14,
+          "text": "安全提示：泄漏报警联动关阀——leak_alarm=1 自动关阀，请立即检修",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-nav-button-hmg-e",
+        "title": "跳转按钮",
+        "type": "svg",
+        "tag": "ah-nav-button",
+        "binfo": {
+          "angle": 0,
+          "width": 58,
+          "height": 38,
+          "left": 660,
+          "top": 420
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [
+          {
+            "id": "ev-nav",
+            "type": "click",
+            "action": "customCode",
+            "change_attr": [],
+            "custom_code": "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));",
+            "event_flow_ids": [],
+            "trigger_rule": {}
+          }
+        ],
+        "ports": [],
+        "props": {
+          "fill": "#1677ff",
+          "target": "home-meter-power"
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-nav-e",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 22,
+          "left": 640,
+          "top": 460,
+          "width": 140
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "← 用电画面",
+          "vertical": false
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "ah-nav-button-hmg-w",
+        "title": "跳转按钮",
+        "type": "svg",
+        "tag": "ah-nav-button",
+        "binfo": {
+          "angle": 0,
+          "width": 58,
+          "height": 38,
+          "left": 660,
+          "top": 500
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [
+          {
+            "id": "ev-nav",
+            "type": "click",
+            "action": "customCode",
+            "change_attr": [],
+            "custom_code": "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));",
+            "event_flow_ids": [],
+            "trigger_rule": {}
+          }
+        ],
+        "ports": [],
+        "props": {
+          "fill": "#1677ff",
+          "target": "home-meter-water"
+        },
+        "binds": []
+      },
+      {
+        "active": false,
+        "hide": false,
+        "lock": false,
+        "resize": true,
+        "rotate": true,
+        "id": "text-vue-hmg-lbl-nav-w",
+        "title": "文字",
+        "type": "vue",
+        "tag": "text-vue",
+        "binfo": {
+          "angle": 0,
+          "height": 22,
+          "left": 640,
+          "top": 540,
+          "width": 140
+        },
+        "common_animations": {
+          "val": "",
+          "delay": "delay-0s",
+          "speed": "slow",
+          "repeat": "infinite"
+        },
+        "events": [],
+        "ports": [],
+        "props": {
+          "fill": "#8fa3b8",
+          "fontFamily": "黑体",
+          "fontSize": 13,
+          "text": "→ 用水画面",
+          "vertical": false
+        },
+        "binds": []
+      }
+    ],
+    "eventList": [],
+    "eventFlow": []
+  }
+}"
+`;

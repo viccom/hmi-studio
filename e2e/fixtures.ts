@@ -1,5 +1,6 @@
 import { rsiotPutScreen } from './helpers'
 import { buildDemoScreen, buildCatalogScreen, DEMO_CATALOG } from '../src/lib/demo-screen'
+import { buildHomeScreens, HOME_E, HOME_W, HOME_G } from '../src/lib/home-screens'
 
 /**
  * M2 数据段种子画面（T6）——形状全部来自 2026-10-25 编辑器/BindProbe 实测：
@@ -130,6 +131,19 @@ export async function seedDemoScreens(): Promise<void> {
  */
 export async function seedCatalogDemo(): Promise<void> {
   await rsiotPutScreen(DEMO_CATALOG, buildCatalogScreen())
+}
+
+/**
+ * P3 家庭三表三屏（长期资产）：slug 恒定 home-meter-power/water/gas，PUT 全量 upsert 幂等——
+ * 与 e2e-t* 清扫语义相反，**任何测试不得删除这三张画面**（同 water-demo-m3 约定）。
+ * 组态源 = src/lib/home-screens.ts buildHomeScreens()（纯函数，结构防漂移快照在彼处单测）；
+ * 数据面 = 真实活数据 home-meter-e/w/g 系列（周期 2s）。
+ */
+export async function seedHomeScreens(): Promise<void> {
+  const { power, water, gas } = buildHomeScreens()
+  await rsiotPutScreen(HOME_E, power)
+  await rsiotPutScreen(HOME_W, water)
+  await rsiotPutScreen(HOME_G, gas)
 }
 
 /**
