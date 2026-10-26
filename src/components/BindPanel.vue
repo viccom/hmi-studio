@@ -7,6 +7,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import type { CompareOperator, IDoneJson, IDoneJsonBindList } from 'maotu'
 import { fetchDeviceTreeRich, type RichDeviceNode, type RichTagNode } from '../lib/device-tree'
+import { uid } from '../lib/uid'
 
 const props = defineProps<{ item: IDoneJson }>()
 
@@ -68,7 +69,7 @@ function addBind() {
   const pt = selectedPoint.value
   if (!pt || !attrPath.value) return
   const nb: IDoneJsonBindList = {
-    id: crypto.randomUUID(),
+    id: uid(),
     pel_id: props.item.id,
     bind_id: pt.id, // <devid>.<tag> = bind_id 唯一寻址格式
     bind_name: pt.label, // tag 名
@@ -102,11 +103,11 @@ function addTrigger(b: IDoneJsonBindList) {
   if (draft.value === '' || !draft.target_attr) return
   const num = Number(draft.value)
   const t: IDoneJsonBindList['triggers'][number] = {
-    id: crypto.randomUUID(),
+    id: uid(),
     rule: { operator: draft.operator, value: Number.isNaN(num) ? draft.value : num },
     action: 'changeAttr',
     change_attr: [{
-      id: crypto.randomUUID(),
+      id: uid(),
       target_id: props.item.id,
       target_attr: draft.target_attr,
       target_value: draft.target_value,
