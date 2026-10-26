@@ -1431,7 +1431,7 @@ exports[`home-tab-screens 页签三屏结构 > 全量快照（防漂移基线）
                   "id": "ca-text-vue-hgt1-v-valve-fill-on",
                   "target_id": "text-vue-hgt1-v-valve",
                   "target_attr": "props.fill.val",
-                  "target_value": "#f5222d"
+                  "target_value": "#52c41a"
                 }
               ],
               "custom_code": ""
@@ -1448,7 +1448,7 @@ exports[`home-tab-screens 页签三屏结构 > 全量快照（防漂移基线）
                   "id": "ca-text-vue-hgt1-v-valve-fill-off",
                   "target_id": "text-vue-hgt1-v-valve",
                   "target_attr": "props.fill.val",
-                  "target_value": "#52c41a"
+                  "target_value": "#f5222d"
                 }
               ],
               "custom_code": ""
@@ -2337,7 +2337,7 @@ exports[`home-tab-screens 页签三屏结构 > 全量快照（防漂移基线）
                   "id": "ca-text-vue-hgt2-v-valve-fill-on",
                   "target_id": "text-vue-hgt2-v-valve",
                   "target_attr": "props.fill.val",
-                  "target_value": "#f5222d"
+                  "target_value": "#52c41a"
                 }
               ],
               "custom_code": ""
@@ -2354,7 +2354,7 @@ exports[`home-tab-screens 页签三屏结构 > 全量快照（防漂移基线）
                   "id": "ca-text-vue-hgt2-v-valve-fill-off",
                   "target_id": "text-vue-hgt2-v-valve",
                   "target_attr": "props.fill.val",
-                  "target_value": "#52c41a"
+                  "target_value": "#f5222d"
                 }
               ],
               "custom_code": ""
@@ -5827,7 +5827,7 @@ exports[`home-tab-screens 页签三屏结构 > 全量快照（防漂移基线）
                   "id": "ca-text-vue-hwt1-v-valve-fill-on",
                   "target_id": "text-vue-hwt1-v-valve",
                   "target_attr": "props.fill.val",
-                  "target_value": "#f5222d"
+                  "target_value": "#52c41a"
                 }
               ],
               "custom_code": ""
@@ -5844,7 +5844,7 @@ exports[`home-tab-screens 页签三屏结构 > 全量快照（防漂移基线）
                   "id": "ca-text-vue-hwt1-v-valve-fill-off",
                   "target_id": "text-vue-hwt1-v-valve",
                   "target_attr": "props.fill.val",
-                  "target_value": "#52c41a"
+                  "target_value": "#f5222d"
                 }
               ],
               "custom_code": ""
@@ -6463,7 +6463,7 @@ exports[`home-tab-screens 页签三屏结构 > 全量快照（防漂移基线）
                   "id": "ca-text-vue-hwt2-v-valve-fill-on",
                   "target_id": "text-vue-hwt2-v-valve",
                   "target_attr": "props.fill.val",
-                  "target_value": "#f5222d"
+                  "target_value": "#52c41a"
                 }
               ],
               "custom_code": ""
@@ -6480,7 +6480,7 @@ exports[`home-tab-screens 页签三屏结构 > 全量快照（防漂移基线）
                   "id": "ca-text-vue-hwt2-v-valve-fill-off",
                   "target_id": "text-vue-hwt2-v-valve",
                   "target_attr": "props.fill.val",
-                  "target_value": "#52c41a"
+                  "target_value": "#f5222d"
                 }
               ],
               "custom_code": ""
