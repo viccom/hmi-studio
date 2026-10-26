@@ -19,13 +19,14 @@ const svgItems = (items: Array<Record<string, unknown>>) => items.filter((i) => 
 const textItems = (items: Array<Record<string, unknown>>) => items.filter((i) => i.tag === 'text-vue')
 
 describe('demo-screen 取水泵房（A）', () => {
-  it('G-M3 规模：≥12 图元 = 10 自绘 svg（9 类全覆盖）+ ≥2 值牌文本', () => {
+  it('G-M3 规模：≥12 图元 = 10 自绘 svg + ≥2 值牌文本', () => {
     expect(svgItems(itemsA)).toHaveLength(10)
     expect(textItems(itemsA).length).toBeGreaterThanOrEqual(4) // 值牌×2 + 标题/标签
     expect(itemsA.length).toBeGreaterThanOrEqual(12)
-    // 9 类注册图元全部上画（每类 ≥1）
-    const tags = new Set(svgItems(itemsA).map((i) => i.tag))
-    expect([...tags].sort()).toEqual(allSymbols().map((s) => s.id).sort())
+    // 上画自绘图元 ⊆ 注册表（Jr 导入契约前提）——全量覆盖判据归 catalog-demo（图元陈列室）
+    for (const i of svgItems(itemsA)) {
+      expect(allSymbols().some((s) => s.id === i.tag), `未注册图元 ${String(i.tag)}`).toBe(true)
+    }
   })
 
   it('Jr 导入契约：svg 图元 props 平面键 ⊆ 注册表默认键（多键导入即抛 undefined.val）', () => {

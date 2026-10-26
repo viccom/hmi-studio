@@ -10,6 +10,12 @@ import { flowMeter } from './flow-meter'
 import { motor } from './motor'
 import { disSwitch } from './dis-switch'
 import { navButton } from './nav-button'
+import { checkValve } from './check-valve'
+import { ballValve } from './ball-valve'
+import { safetyValve } from './safety-valve'
+import { solenoidValve } from './solenoid-valve'
+import { fan } from './fan'
+import { agitator } from './agitator'
 
 const SYMBOLS: HmiSymbol[] = [
   pumpCentrifugal,
@@ -21,6 +27,12 @@ const SYMBOLS: HmiSymbol[] = [
   motor,
   disSwitch,
   navButton,
+  checkValve,
+  ballValve,
+  safetyValve,
+  solenoidValve,
+  fan,
+  agitator,
 ]
 
 export function allSymbols(): HmiSymbol[] {

@@ -1,0 +1,403 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`安全阀（svg 工艺批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 48,
+  "id": "ah-safety-valve",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "%",
+          "value": 50,
+        },
+        "y": {
+          "unit": "%",
+          "value": 100,
+        },
+      },
+      "position": "rightTop",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "阀体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- 角式阀体（下口立管延伸至底边 y 48=in 锚位 + 右侧泄放腔）：不写 fill 靠 use 属性继承状态色 -->
+  <rect x="24" y="28" width="16" height="20" rx="2"/>
+  <rect x="14" y="16" width="36" height="16" rx="3"/>
+  <!-- 泄放短管 + 阀瓣（腔内横向件）+ 顶杆：状态色继承 -->
+  <rect x="48" y="19" width="14" height="10" rx="1"/>
+  <rect x="20" y="22" width="10" height="4" rx="1"/>
+  <rect x="30" y="10" width="4" height="8" rx="1"/>
+  <!-- 斜置弹簧（三段斜列折线，加粗定色件）+ 弹簧座 -->
+  <g fill="none" stroke="rgba(0,0,0,0.65)" stroke-width="2.5">
+    <path d="M23 14 L39 3 L23 9 L39 2"/>
+  </g>
+  <rect x="21" y="6" width="14" height="3" rx="1" fill="rgba(0,0,0,0.55)"/>
+  <!-- 阀体定色轮廓 -->
+  <rect x="14" y="16" width="36" height="16" rx="3" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-safety-valve%22%20viewBox%3D%220%200%2064%2048%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3C!--%20%E8%A7%92%E5%BC%8F%E9%98%80%E4%BD%93%EF%BC%88%E4%B8%8B%E5%8F%A3%E7%AB%8B%E7%AE%A1%E5%BB%B6%E4%BC%B8%E8%87%B3%E5%BA%95%E8%BE%B9%20y%2048%3Din%20%E9%94%9A%E4%BD%8D%20%2B%20%E5%8F%B3%E4%BE%A7%E6%B3%84%E6%94%BE%E8%85%94%EF%BC%89%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Crect%20x%3D%2224%22%20y%3D%2228%22%20width%3D%2216%22%20height%3D%2220%22%20rx%3D%222%22%2F%3E%0A%20%20%3Crect%20x%3D%2214%22%20y%3D%2216%22%20width%3D%2236%22%20height%3D%2216%22%20rx%3D%223%22%2F%3E%0A%20%20%3C!--%20%E6%B3%84%E6%94%BE%E7%9F%AD%E7%AE%A1%20%2B%20%E9%98%80%E7%93%A3%EF%BC%88%E8%85%94%E5%86%85%E6%A8%AA%E5%90%91%E4%BB%B6%EF%BC%89%2B%20%E9%A1%B6%E6%9D%86%EF%BC%9A%E7%8A%B6%E6%80%81%E8%89%B2%E7%BB%A7%E6%89%BF%20--%3E%0A%20%20%3Crect%20x%3D%2248%22%20y%3D%2219%22%20width%3D%2214%22%20height%3D%2210%22%20rx%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%2222%22%20width%3D%2210%22%20height%3D%224%22%20rx%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2230%22%20y%3D%2210%22%20width%3D%224%22%20height%3D%228%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E6%96%9C%E7%BD%AE%E5%BC%B9%E7%B0%A7%EF%BC%88%E4%B8%89%E6%AE%B5%E6%96%9C%E5%88%97%E6%8A%98%E7%BA%BF%EF%BC%8C%E5%8A%A0%E7%B2%97%E5%AE%9A%E8%89%B2%E4%BB%B6%EF%BC%89%2B%20%E5%BC%B9%E7%B0%A7%E5%BA%A7%20--%3E%0A%20%20%3Cg%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.65)%22%20stroke-width%3D%222.5%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M23%2014%20L39%203%20L23%209%20L39%202%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3Crect%20x%3D%2221%22%20y%3D%226%22%20width%3D%2214%22%20height%3D%223%22%20rx%3D%221%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%3C!--%20%E9%98%80%E4%BD%93%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%20--%3E%0A%20%20%3Crect%20x%3D%2214%22%20y%3D%2216%22%20width%3D%2236%22%20height%3D%2216%22%20rx%3D%223%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "安全阀",
+  "type": "svg",
+  "width": 64,
+}
+`;
+
+exports[`搅拌器（svg 工艺批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 64,
+  "id": "ah-agitator",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "px",
+          "value": 10,
+        },
+      },
+      "position": "leftTop",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "%",
+          "value": 50,
+        },
+        "y": {
+          "unit": "%",
+          "value": 0,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "animation": {
+      "title": "旋转动画",
+      "type": "switch",
+      "val": false,
+    },
+    "fill": {
+      "title": "主体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes ah-agit-spin { to { transform: rotate(360deg); } }
+    .ah-paddle { animation: ah-agit-spin 1.6s linear infinite; animation-play-state: var(--ah-run, paused); transform-box: fill-box; transform-origin: center; }
+    use[animation="true"] { --ah-run: running; }
+  </style>
+  <!-- 电机座（含散热纹定色缝）+ 垂直轴：不写 fill 靠 use 属性继承状态色 -->
+  <rect x="8" y="2" width="32" height="16" rx="3"/>
+  <rect x="22" y="18" width="4" height="28" rx="1"/>
+  <!-- 安装法兰（定色件） -->
+  <rect x="4" y="4" width="4" height="12" rx="1" fill="rgba(0,0,0,0.55)"/>
+  <!-- 十字桨叶（绕轴心旋转动件，深色叠于状态色之上）：bbox (12..36, 45.5..54.5) 中心=轴心
+       (24,50)，回转半径 12.8 内接 viewBox（64 高内不裁切） -->
+  <g class="ah-paddle">
+    <path d="M24 46 L12 45.5 L12 54.5 L24 54 Z" fill="rgba(0,0,0,0.55)"/>
+    <path d="M24 46 L36 45.5 L36 54.5 L24 54 Z" fill="rgba(0,0,0,0.55)"/>
+    <circle cx="24" cy="50" r="3" fill="rgba(0,0,0,0.7)"/>
+  </g>
+  <!-- 电机座定色轮廓 -->
+  <rect x="8" y="2" width="32" height="16" rx="3" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-agitator%22%20viewBox%3D%220%200%2048%2064%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Cstyle%3E%0A%20%20%20%20%40keyframes%20ah-agit-spin%20%7B%20to%20%7B%20transform%3A%20rotate(360deg)%3B%20%7D%20%7D%0A%20%20%20%20.ah-paddle%20%7B%20animation%3A%20ah-agit-spin%201.6s%20linear%20infinite%3B%20animation-play-state%3A%20var(--ah-run%2C%20paused)%3B%20transform-box%3A%20fill-box%3B%20transform-origin%3A%20center%3B%20%7D%0A%20%20%20%20use%5Banimation%3D%22true%22%5D%20%7B%20--ah-run%3A%20running%3B%20%7D%0A%20%20%3C%2Fstyle%3E%0A%20%20%3C!--%20%E7%94%B5%E6%9C%BA%E5%BA%A7%EF%BC%88%E5%90%AB%E6%95%A3%E7%83%AD%E7%BA%B9%E5%AE%9A%E8%89%B2%E7%BC%9D%EF%BC%89%2B%20%E5%9E%82%E7%9B%B4%E8%BD%B4%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Crect%20x%3D%228%22%20y%3D%222%22%20width%3D%2232%22%20height%3D%2216%22%20rx%3D%223%22%2F%3E%0A%20%20%3Crect%20x%3D%2222%22%20y%3D%2218%22%20width%3D%224%22%20height%3D%2228%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E5%AE%89%E8%A3%85%E6%B3%95%E5%85%B0%EF%BC%88%E5%AE%9A%E8%89%B2%E4%BB%B6%EF%BC%89%20--%3E%0A%20%20%3Crect%20x%3D%224%22%20y%3D%224%22%20width%3D%224%22%20height%3D%2212%22%20rx%3D%221%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%3C!--%20%E5%8D%81%E5%AD%97%E6%A1%A8%E5%8F%B6%EF%BC%88%E7%BB%95%E8%BD%B4%E5%BF%83%E6%97%8B%E8%BD%AC%E5%8A%A8%E4%BB%B6%EF%BC%8C%E6%B7%B1%E8%89%B2%E5%8F%A0%E4%BA%8E%E7%8A%B6%E6%80%81%E8%89%B2%E4%B9%8B%E4%B8%8A%EF%BC%89%EF%BC%9Abbox%20(12..36%2C%2045.5..54.5)%20%E4%B8%AD%E5%BF%83%3D%E8%BD%B4%E5%BF%83%0A%20%20%20%20%20%20%20(24%2C50)%EF%BC%8C%E5%9B%9E%E8%BD%AC%E5%8D%8A%E5%BE%84%2012.8%20%E5%86%85%E6%8E%A5%20viewBox%EF%BC%8864%20%E9%AB%98%E5%86%85%E4%B8%8D%E8%A3%81%E5%88%87%EF%BC%89%20--%3E%0A%20%20%3Cg%20class%3D%22ah-paddle%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M24%2046%20L12%2045.5%20L12%2054.5%20L24%2054%20Z%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M24%2046%20L36%2045.5%20L36%2054.5%20L24%2054%20Z%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2224%22%20cy%3D%2250%22%20r%3D%223%22%20fill%3D%22rgba(0%2C0%2C0%2C0.7)%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3C!--%20%E7%94%B5%E6%9C%BA%E5%BA%A7%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%20--%3E%0A%20%20%3Crect%20x%3D%228%22%20y%3D%222%22%20width%3D%2232%22%20height%3D%2216%22%20rx%3D%223%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "搅拌器",
+  "type": "svg",
+  "width": 48,
+}
+`;
+
+exports[`止回阀（svg 工艺批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 40,
+  "id": "ah-check-valve",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "阀体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- 领结阀体两楔面 + 阀腔圆：不写 fill 靠 use 属性继承状态色 -->
+  <path d="M4 8 L26 20 L4 32 Z"/>
+  <path d="M60 8 L38 20 L60 32 Z"/>
+  <circle cx="32" cy="20" r="12"/>
+  <!-- 单向箭头（导通方向，定色件）+ 阀体定色轮廓 -->
+  <path d="M20 20 H42 M36 14 L44 20 L36 26" fill="none" stroke="rgba(0,0,0,0.65)" stroke-width="2.5"/>
+  <path d="M4 8 L26 20 L4 32 Z M60 8 L38 20 L60 32 Z" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+  <circle cx="32" cy="20" r="12" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-check-valve%22%20viewBox%3D%220%200%2064%2040%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3C!--%20%E9%A2%86%E7%BB%93%E9%98%80%E4%BD%93%E4%B8%A4%E6%A5%94%E9%9D%A2%20%2B%20%E9%98%80%E8%85%94%E5%9C%86%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Cpath%20d%3D%22M4%208%20L26%2020%20L4%2032%20Z%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M60%208%20L38%2020%20L60%2032%20Z%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2220%22%20r%3D%2212%22%2F%3E%0A%20%20%3C!--%20%E5%8D%95%E5%90%91%E7%AE%AD%E5%A4%B4%EF%BC%88%E5%AF%BC%E9%80%9A%E6%96%B9%E5%90%91%EF%BC%8C%E5%AE%9A%E8%89%B2%E4%BB%B6%EF%BC%89%2B%20%E9%98%80%E4%BD%93%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%20--%3E%0A%20%20%3Cpath%20d%3D%22M20%2020%20H42%20M36%2014%20L44%2020%20L36%2026%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.65)%22%20stroke-width%3D%222.5%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M4%208%20L26%2020%20L4%2032%20Z%20M60%208%20L38%2020%20L60%2032%20Z%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2220%22%20r%3D%2212%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "止回阀",
+  "type": "svg",
+  "width": 64,
+}
+`;
+
+exports[`球阀（svg 工艺批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 56,
+  "id": "ah-ball-valve",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "阀体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+    "open": {
+      "title": "开位（柄平行管向）",
+      "type": "switch",
+      "val": true,
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .ah-handle { transform: rotate(var(--ah-hdl, 0deg)); transform-box: fill-box; transform-origin: center; }
+    use[open="true"] { --ah-hdl: 0deg; }
+    use[open="false"] { --ah-hdl: 90deg; }
+  </style>
+  <!-- 领结管口两楔面（流道中心 y 28）+ 中央球体 + 阀杆：不写 fill 靠 use 属性继承状态色 -->
+  <path d="M4 22 L22 28 L4 34 Z"/>
+  <path d="M60 22 L42 28 L60 34 Z"/>
+  <circle cx="32" cy="28" r="7"/>
+  <rect x="30.5" y="17" width="3" height="6" rx="1"/>
+  <!-- 翼柄（open prop 驱动 90° 翻转，枢轴 bbox 中心 (32,13)=柄轴） -->
+  <g class="ah-handle">
+    <rect x="22" y="11" width="20" height="4" rx="2"/>
+    <circle cx="32" cy="13" r="2.5" fill="rgba(0,0,0,0.55)"/>
+  </g>
+  <!-- 阀体定色轮廓 -->
+  <path d="M4 22 L22 28 L4 34 Z M60 22 L42 28 L60 34 Z" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+  <circle cx="32" cy="28" r="7" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-ball-valve%22%20viewBox%3D%220%200%2064%2056%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Cstyle%3E%0A%20%20%20%20.ah-handle%20%7B%20transform%3A%20rotate(var(--ah-hdl%2C%200deg))%3B%20transform-box%3A%20fill-box%3B%20transform-origin%3A%20center%3B%20%7D%0A%20%20%20%20use%5Bopen%3D%22true%22%5D%20%7B%20--ah-hdl%3A%200deg%3B%20%7D%0A%20%20%20%20use%5Bopen%3D%22false%22%5D%20%7B%20--ah-hdl%3A%2090deg%3B%20%7D%0A%20%20%3C%2Fstyle%3E%0A%20%20%3C!--%20%E9%A2%86%E7%BB%93%E7%AE%A1%E5%8F%A3%E4%B8%A4%E6%A5%94%E9%9D%A2%EF%BC%88%E6%B5%81%E9%81%93%E4%B8%AD%E5%BF%83%20y%2028%EF%BC%89%2B%20%E4%B8%AD%E5%A4%AE%E7%90%83%E4%BD%93%20%2B%20%E9%98%80%E6%9D%86%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Cpath%20d%3D%22M4%2022%20L22%2028%20L4%2034%20Z%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M60%2022%20L42%2028%20L60%2034%20Z%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2228%22%20r%3D%227%22%2F%3E%0A%20%20%3Crect%20x%3D%2230.5%22%20y%3D%2217%22%20width%3D%223%22%20height%3D%226%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E7%BF%BC%E6%9F%84%EF%BC%88open%20prop%20%E9%A9%B1%E5%8A%A8%2090%C2%B0%20%E7%BF%BB%E8%BD%AC%EF%BC%8C%E6%9E%A2%E8%BD%B4%20bbox%20%E4%B8%AD%E5%BF%83%20(32%2C13)%3D%E6%9F%84%E8%BD%B4%EF%BC%89%20--%3E%0A%20%20%3Cg%20class%3D%22ah-handle%22%3E%0A%20%20%20%20%3Crect%20x%3D%2222%22%20y%3D%2211%22%20width%3D%2220%22%20height%3D%224%22%20rx%3D%222%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2213%22%20r%3D%222.5%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3C!--%20%E9%98%80%E4%BD%93%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%20--%3E%0A%20%20%3Cpath%20d%3D%22M4%2022%20L22%2028%20L4%2034%20Z%20M60%2022%20L42%2028%20L60%2034%20Z%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2228%22%20r%3D%227%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "球阀",
+  "type": "svg",
+  "width": 64,
+}
+`;
+
+exports[`电磁阀（svg 工艺批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 48,
+  "id": "ah-solenoid-valve",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "阀体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- 领结阀体两楔面（流道中心 y 24）+ 阀杆：不写 fill 靠 use 属性继承状态色 -->
+  <path d="M4 15 L28 24 L4 33 Z"/>
+  <path d="M60 15 L36 24 L60 33 Z"/>
+  <rect x="30.5" y="15" width="3" height="9" rx="1"/>
+  <!-- 线圈方块（电气标识，定色件）：外壳 + S 型绕组折线 -->
+  <rect x="24" y="2" width="16" height="12" rx="2" fill="rgba(0,0,0,0.55)"/>
+  <path d="M27 8 Q29.5 4.5 32 8 Q34.5 11.5 37 8" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.6"/>
+  <!-- 阀体定色轮廓 -->
+  <path d="M4 15 L28 24 L4 33 Z M60 15 L36 24 L60 33 Z" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-solenoid-valve%22%20viewBox%3D%220%200%2064%2048%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3C!--%20%E9%A2%86%E7%BB%93%E9%98%80%E4%BD%93%E4%B8%A4%E6%A5%94%E9%9D%A2%EF%BC%88%E6%B5%81%E9%81%93%E4%B8%AD%E5%BF%83%20y%2024%EF%BC%89%2B%20%E9%98%80%E6%9D%86%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Cpath%20d%3D%22M4%2015%20L28%2024%20L4%2033%20Z%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M60%2015%20L36%2024%20L60%2033%20Z%22%2F%3E%0A%20%20%3Crect%20x%3D%2230.5%22%20y%3D%2215%22%20width%3D%223%22%20height%3D%229%22%20rx%3D%221%22%2F%3E%0A%20%20%3C!--%20%E7%BA%BF%E5%9C%88%E6%96%B9%E5%9D%97%EF%BC%88%E7%94%B5%E6%B0%94%E6%A0%87%E8%AF%86%EF%BC%8C%E5%AE%9A%E8%89%B2%E4%BB%B6%EF%BC%89%EF%BC%9A%E5%A4%96%E5%A3%B3%20%2B%20S%20%E5%9E%8B%E7%BB%95%E7%BB%84%E6%8A%98%E7%BA%BF%20--%3E%0A%20%20%3Crect%20x%3D%2224%22%20y%3D%222%22%20width%3D%2216%22%20height%3D%2212%22%20rx%3D%222%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M27%208%20Q29.5%204.5%2032%208%20Q34.5%2011.5%2037%208%22%20fill%3D%22none%22%20stroke%3D%22rgba(255%2C255%2C255%2C0.85)%22%20stroke-width%3D%221.6%22%2F%3E%0A%20%20%3C!--%20%E9%98%80%E4%BD%93%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%20--%3E%0A%20%20%3Cpath%20d%3D%22M4%2015%20L28%2024%20L4%2033%20Z%20M60%2015%20L36%2024%20L60%2033%20Z%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "电磁阀",
+  "type": "svg",
+  "width": 64,
+}
+`;
+
+exports[`风机（svg 工艺批） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 64,
+  "id": "ah-fan",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "%",
+          "value": 50,
+        },
+        "y": {
+          "unit": "%",
+          "value": 0,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "animation": {
+      "title": "旋转动画",
+      "type": "switch",
+      "val": false,
+    },
+    "fill": {
+      "title": "壳体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes ah-fan-spin { to { transform: rotate(360deg); } }
+    .ah-rotor { animation: ah-fan-spin 1s linear infinite; animation-play-state: var(--ah-run, paused); transform-box: fill-box; transform-origin: center; }
+    use[animation="true"] { --ah-run: running; }
+  </style>
+  <!-- 侧进风口 + 顶出风短管 + 蜗壳圆：不写 fill 靠 use 属性继承状态色 -->
+  <rect x="2" y="26" width="12" height="12" rx="1"/>
+  <rect x="26" y="2" width="12" height="12" rx="1"/>
+  <circle cx="32" cy="34" r="24"/>
+  <!-- 四叶叶轮 + 轮毂：唯一定色动件（深色叠于状态色之上，同泵叶轮） -->
+  <g class="ah-rotor">
+    <path d="M32 34 C28 26 29 20 32 12 C35 20 36 26 32 34 Z" fill="rgba(0,0,0,0.55)"/>
+    <path d="M32 34 C40 30 46 31 54 34 C46 37 40 38 32 34 Z" fill="rgba(0,0,0,0.55)"/>
+    <path d="M32 34 C36 42 35 48 32 56 C29 48 28 42 32 34 Z" fill="rgba(0,0,0,0.55)"/>
+    <path d="M32 34 C24 38 18 37 10 34 C18 31 24 30 32 34 Z" fill="rgba(0,0,0,0.55)"/>
+    <circle cx="32" cy="34" r="4" fill="rgba(0,0,0,0.7)"/>
+  </g>
+  <!-- 壳体定色轮廓 -->
+  <circle cx="32" cy="34" r="24" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-fan%22%20viewBox%3D%220%200%2064%2064%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Cstyle%3E%0A%20%20%20%20%40keyframes%20ah-fan-spin%20%7B%20to%20%7B%20transform%3A%20rotate(360deg)%3B%20%7D%20%7D%0A%20%20%20%20.ah-rotor%20%7B%20animation%3A%20ah-fan-spin%201s%20linear%20infinite%3B%20animation-play-state%3A%20var(--ah-run%2C%20paused)%3B%20transform-box%3A%20fill-box%3B%20transform-origin%3A%20center%3B%20%7D%0A%20%20%20%20use%5Banimation%3D%22true%22%5D%20%7B%20--ah-run%3A%20running%3B%20%7D%0A%20%20%3C%2Fstyle%3E%0A%20%20%3C!--%20%E4%BE%A7%E8%BF%9B%E9%A3%8E%E5%8F%A3%20%2B%20%E9%A1%B6%E5%87%BA%E9%A3%8E%E7%9F%AD%E7%AE%A1%20%2B%20%E8%9C%97%E5%A3%B3%E5%9C%86%EF%BC%9A%E4%B8%8D%E5%86%99%20fill%20%E9%9D%A0%20use%20%E5%B1%9E%E6%80%A7%E7%BB%A7%E6%89%BF%E7%8A%B6%E6%80%81%E8%89%B2%20--%3E%0A%20%20%3Crect%20x%3D%222%22%20y%3D%2226%22%20width%3D%2212%22%20height%3D%2212%22%20rx%3D%221%22%2F%3E%0A%20%20%3Crect%20x%3D%2226%22%20y%3D%222%22%20width%3D%2212%22%20height%3D%2212%22%20rx%3D%221%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2234%22%20r%3D%2224%22%2F%3E%0A%20%20%3C!--%20%E5%9B%9B%E5%8F%B6%E5%8F%B6%E8%BD%AE%20%2B%20%E8%BD%AE%E6%AF%82%EF%BC%9A%E5%94%AF%E4%B8%80%E5%AE%9A%E8%89%B2%E5%8A%A8%E4%BB%B6%EF%BC%88%E6%B7%B1%E8%89%B2%E5%8F%A0%E4%BA%8E%E7%8A%B6%E6%80%81%E8%89%B2%E4%B9%8B%E4%B8%8A%EF%BC%8C%E5%90%8C%E6%B3%B5%E5%8F%B6%E8%BD%AE%EF%BC%89%20--%3E%0A%20%20%3Cg%20class%3D%22ah-rotor%22%3E%0A%20%20%20%20%3Cpath%20d%3D%22M32%2034%20C28%2026%2029%2020%2032%2012%20C35%2020%2036%2026%2032%2034%20Z%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M32%2034%20C40%2030%2046%2031%2054%2034%20C46%2037%2040%2038%2032%2034%20Z%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M32%2034%20C36%2042%2035%2048%2032%2056%20C29%2048%2028%2042%2032%2034%20Z%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%22M32%2034%20C24%2038%2018%2037%2010%2034%20C18%2031%2024%2030%2032%2034%20Z%22%20fill%3D%22rgba(0%2C0%2C0%2C0.55)%22%2F%3E%0A%20%20%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2234%22%20r%3D%224%22%20fill%3D%22rgba(0%2C0%2C0%2C0.7)%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%20%20%3C!--%20%E5%A3%B3%E4%BD%93%E5%AE%9A%E8%89%B2%E8%BD%AE%E5%BB%93%20--%3E%0A%20%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2234%22%20r%3D%2224%22%20fill%3D%22none%22%20stroke%3D%22rgba(0%2C0%2C0%2C0.55)%22%20stroke-width%3D%221%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "风机",
+  "type": "svg",
+  "width": 64,
+}
+`;
