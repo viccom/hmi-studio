@@ -6,7 +6,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
   "group": "水处理演示",
   "canvasCfg": {
     "width": 800,
-    "height": 600,
+    "height": 950,
     "scale": 1,
     "color": "#141414",
     "img": "",
@@ -57,7 +57,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
         "fill": "#e6f7ff",
         "fontFamily": "黑体",
         "fontSize": 24,
-        "text": "图元陈列室 · 21 类 HMI 图元",
+        "text": "图元陈列室 · HMI 图元全目录",
         "vertical": false
       },
       "binds": []
@@ -1541,6 +1541,86 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
         "label": "模式"
       },
       "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-sec4",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 22,
+        "left": 24,
+        "top": 600,
+        "width": 200
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "── 三表与趋势（P2）──",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-trend-chart-cat-1",
+      "title": "趋势图表",
+      "type": "vue",
+      "tag": "ah-trend-chart",
+      "binfo": {
+        "angle": 0,
+        "width": 220,
+        "height": 150,
+        "left": 24,
+        "top": 624
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "points": "[{\\"field\\":\\"rsiot.cpu_percent\\",\\"label\\":\\"CPU\\",\\"unit\\":\\"%\\",\\"color\\":\\"#f5a623\\"}]",
+        "tick0": 0,
+        "tick1": 0,
+        "tick2": 0,
+        "windowSecs": 600,
+        "yUnit": "kW"
+      },
+      "binds": [
+        {
+          "id": "bd-ah-trend-chart-cat-1",
+          "pel_id": "ah-trend-chart-cat-1",
+          "bind_id": "rsiot.cpu_percent",
+          "bind_name": "cpu_percent",
+          "bind_attr": "props.tick0.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
     }
   ],
   "eventList": [],

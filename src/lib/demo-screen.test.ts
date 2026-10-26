@@ -158,12 +158,12 @@ it('全量快照（防漂移基线）', () => {
 })
 
 describe('demo-screen 图元陈列室（catalog）', () => {
-  it('全量覆盖：21 类注册图元每类 ≥1 上画（registry 全量覆盖判据的承载画面）', () => {
+  it('全量覆盖：注册图元每类恰好 1 上画（registry 全量覆盖判据的承载画面；计数随注册表派生不腐烂）', () => {
     // 陈列室含 svg/custom-svg/vue 三路线——按 tag ≠ text-vue 统计（svgItems 只数 svg 型）
     const symItems = itemsCat.filter((i) => String(i.tag) !== 'text-vue')
     const tags = new Set(symItems.map((i) => String(i.tag)))
     expect([...tags].sort()).toEqual(allSymbols().map((s) => s.id).sort())
-    expect(symItems).toHaveLength(21)
+    expect(symItems).toHaveLength(allSymbols().length) // 恰好每类一个（无重复）
   })
 
   it('绑定面 ≥4 图元接真实活点，触发链 ≥2（互斥收口成对）', () => {
@@ -193,13 +193,15 @@ describe('demo-screen 图元陈列室（catalog）', () => {
     }
   })
 
-  it('布局防重叠出界：陈列室全部 binfo 在 800x600 内且两两不相交', () => {
+  it('布局防重叠出界：陈列室全部 binfo 在画布（canvasCfg）内且两两不相交', () => {
+    // 画布尺寸从 canvasCfg 派生（P2 陈列室扩高至 950）——判据意图「不出画布」不写死数值
+    const canvasCfg = cat.canvasCfg as { width: number; height: number }
     const boxes = itemsCat.map((i) => i.binfo as { left: number; top: number; width: number; height: number })
     for (const bx of boxes) {
       expect(bx.left).toBeGreaterThanOrEqual(0)
       expect(bx.top).toBeGreaterThanOrEqual(0)
-      expect(bx.left + bx.width).toBeLessThanOrEqual(800)
-      expect(bx.top + bx.height).toBeLessThanOrEqual(600)
+      expect(bx.left + bx.width).toBeLessThanOrEqual(canvasCfg.width)
+      expect(bx.top + bx.height).toBeLessThanOrEqual(canvasCfg.height)
     }
     for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
       const p = boxes[i], q = boxes[j]

@@ -21,6 +21,7 @@ import AhThermometer from './AhThermometer.vue'
 import AhStackLight from './AhStackLight.vue'
 import AhPushButton from './AhPushButton.vue'
 import AhSelectorSwitch from './AhSelectorSwitch.vue'
+import AhTrendChart from './AhTrendChart.vue'
 
 export const SYMBOL_GROUP = 'HMI 图元'
 
@@ -38,6 +39,7 @@ export const VUE_SYMBOL_COMPONENTS: Record<string, Component> = {
   [vueTagFor('ah-stack-light')]: AhStackLight,
   [vueTagFor('ah-push-button')]: AhPushButton,
   [vueTagFor('ah-selector-switch')]: AhSelectorSwitch,
+  [vueTagFor('ah-trend-chart')]: AhTrendChart,
 }
 
 /** 全局组件注册（main.ts createApp 后调用一次；app.component 幂等覆盖） */

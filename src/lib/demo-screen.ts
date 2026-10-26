@@ -179,13 +179,19 @@ const boolBinds = (pelId: string, attr: string): IDoneJsonBindList[] => [bind(pe
   trig(`${pelId}-off`, '=', 0, pelId, false, `props.${attr}.val`),
 ])]
 
-/** 纯函数组态：图元陈列室（21 类全覆盖——registry 全量覆盖判据的承载画面）。无随机、无副作用。 */
+/** 纯函数组态：图元陈列室（registry 全量覆盖判据的承载画面）。无随机、无副作用。
+ * 画布 800×950（P2 三表与趋势节自 y596 起追加，出界/重叠判据由布局测试按 canvasCfg 推导）。 */
 export function buildCatalogScreen(): ScreenDoc {
   const c: ScreenDoc = {
-    name: '图元陈列室', group: '水处理演示', ...canvas(),
+    name: '图元陈列室', group: '水处理演示',
+    canvasCfg: {
+      width: 800, height: 950, scale: 1, color: '#141414', img: '',
+      guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
+    },
+    gridCfg: { enabled: true, align: true, size: 10 },
     json: [
       // 标题行 + 顶部活点值牌
-      textItem(`text-vue-${C}-title`, { text: '图元陈列室 · 21 类 HMI 图元', left: 16, top: 8, width: 430, height: 34, fill: '#e6f7ff', fontSize: 24 }),
+      textItem(`text-vue-${C}-title`, { text: '图元陈列室 · HMI 图元全目录', left: 16, top: 8, width: 430, height: 34, fill: '#e6f7ff', fontSize: 24 }),
       textItem(`text-vue-${C}-lbl-up`, { text: '运行时长(s)', left: 452, top: 16, width: 108, height: 26, fill: '#8fa3b8', fontSize: 14 }),
       textItem(`text-vue-${C}-val-up`, { text: '—', left: 564, top: 12, width: 88, height: 32, fill: '#FFF700', fontSize: 18, bindId: 'rsiot.uptime_s' }),
       textItem(`text-vue-${C}-lbl-cpu`, { text: 'CPU(%)', left: 660, top: 16, width: 66, height: 26, fill: '#8fa3b8', fontSize: 14 }),
@@ -219,6 +225,14 @@ export function buildCatalogScreen(): ScreenDoc {
       svgItem('ah-nav-button', cid('nav-button'), { left: 150, top: 498, scale: 1.4, props: { target: DEMO_A } }),
       svgItem('ah-push-button', cid('push-button'), { left: 240, top: 464, scale: 1.2 }),
       svgItem('ah-selector-switch', cid('selector-switch'), { left: 360, top: 456, scale: 1.3 }),
+      // 分区四：三表与趋势（P2，自 y596 起——避让操作区隔离开关 y490-586）
+      textItem(`text-vue-${C}-sec4`, { text: '── 三表与趋势（P2）──', left: 24, top: 600, width: 200, height: 22, fill: '#8fa3b8', fontSize: 14 }),
+      // 趋势数据通道（机制展示位）：cpu_percent 绑 tick0 直写 → 环形缓冲 → 曲线（AhTrendChart 头注释）
+      svgItem('ah-trend-chart', cid('trend-chart'), {
+        left: 24, top: 624,
+        props: { points: JSON.stringify([{ field: 'rsiot.cpu_percent', label: 'CPU', unit: '%', color: '#f5a623' }]) },
+        binds: [bind(cid('trend-chart'), 'rsiot.cpu_percent', 'props.tick0.val')],
+      }),
     ],
     eventList: [], eventFlow: [],
   }
