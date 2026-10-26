@@ -51,3 +51,8 @@ export function registerSymbols(): void {
   if (leftAsideStore.config.has(SYMBOL_GROUP)) return
   leftAsideStore.registerConfig(SYMBOL_GROUP, allSymbols())
 }
+
+// W9：跳转按钮目标画面下拉。options 存活于 nav-button.ts 模块态（注册项描述符引用同一数组），
+// EditView 加载画面卡片后注入；已注册场景由 registerConfig 同名覆盖语义刷新（F9）。
+export { setNavTargetOptions, upgradeNavTargets } from './nav-button'
+export type { ScreenOpt } from './nav-button'

@@ -89,8 +89,9 @@ exports[`跳转按钮（批 2） > 结构快照（ILeftAsideConfigItemPublic） 
       "val": "#1677ff",
     },
     "target": {
-      "title": "目标画面 slug",
-      "type": "input",
+      "options": [],
+      "title": "目标画面",
+      "type": "select",
       "val": "",
     },
   },

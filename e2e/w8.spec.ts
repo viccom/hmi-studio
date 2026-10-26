@@ -157,6 +157,45 @@ test.describe('W8 绑定面板与画面分组', () => {
     await rsiotDeleteScreen(slug)
   })
 
+
+  test('段4 跳转按钮目标画面下拉：select 面板化 → 下拉选画面 → 保存落库（W9 反馈）', async ({ page }) => {
+    await loginAsAdmin(page)
+    const slugB = 'water-demo-m3-b'
+    // 长期资产纪律：备份 → 断言 → 回写（water-demo-m3-b 自带 nav-button 实例）
+    const token = await fetch('http://127.0.0.1:8790/api/v1/user/login', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ user_id: 'admin', pass: 'admin' }),
+    }).then((r) => r.json()).then((d) => d.token)
+    const auth = { Authorization: `Bearer ${token}` }
+    const original = await fetch(`http://127.0.0.1:8790/api/v1/screens/${slugB}`, { headers: auth }).then((r) => r.json())
+    const restore = () => fetch(`http://127.0.0.1:8790/api/v1/screens/${slugB}`, {
+      method: 'PUT', headers: { ...auth, 'content-type': 'application/json' },
+      body: JSON.stringify(original.doc),
+    })
+    await restore()
+    try {
+      await page.goto(`/edit/${slugB}`)
+      await page.locator('#mtCanvasArea [id^="ah-nav-button-"]').click()
+      // 属性面板：目标画面 = select 型（旧实例经 upgradeNavTargets 就地升级）
+      const panel = page.locator('.mt-edit-aside:has(#mt-right-aside)')
+      const targetRow = panel.locator('.el-form-item', { hasText: '目标画面' })
+      await expect(targetRow.locator('.el-select')).toBeVisible()
+      // 下拉选项 = 画面列表（名称主体）——选「取水泵房」
+      await targetRow.locator('.el-select').click()
+      await page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '取水泵房' }).click()
+      // 保存 → doc 落库断言 target 变更
+      const putReq = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes(`/screens/${slugB}`))
+      await page.locator('button .el-icon[title="保存"]').click()
+      await putReq
+      const doc = await fetch(`http://127.0.0.1:8790/api/v1/screens/${slugB}`, { headers: auth }).then((r) => r.json())
+      const nav = doc.doc.json.find((n: { id?: string }) => String(n.id).startsWith('ah-nav-button-'))
+      // maotu 保存态 props 为平面值（F12：保存扁平、导入 Jr 归一化回描述符）——select 落库即字符串
+      expect(nav.props.target).toBe('water-demo-m3')
+    } finally {
+      await restore()
+    }
+  })
+
   test.afterAll(async () => {
     // 段2 slug 前缀 w8-<rand>、段3 前缀 e2e-w8-——失败残留两种都要扫
     await rsiotSweepScreens(/^e2e-w8-|^w8-[a-z0-9]/)

@@ -16,7 +16,7 @@ import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
 import { fetchDeviceTree, type IDeviceInfo } from '../lib/device-tree'
 import { getAuthedUser, logout } from '../lib/auth'
 import { installBridge } from '../lib/bridge'
-import { registerSymbols } from '../symbols'
+import { registerSymbols, setNavTargetOptions, upgradeNavTargets } from '../symbols'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import BindPanel from '../components/BindPanel.vue'
 
@@ -40,6 +40,7 @@ async function loadScreen() {
     const { doc } = await sApi.get(slug.value)
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
+    upgradeNavTargets(done) // 存量跳转按钮 input→select（拖入为注册项深拷贝，旧实例需就地升级）
     editRef.value?.setImportJson(done)
   } catch {
     ElMessage.error('画面加载失败')
@@ -48,8 +49,8 @@ async function loadScreen() {
 
 onMounted(async () => {
   registerSymbols()
+  await loadSwitcherScreens() // 先于 loadScreen：nav-button options 注入后，存量实例升级才带得上列表
   await loadScreen()
-  void loadSwitcherScreens()
   // 在线设备树（失败静默为空——编辑器离线仍可组态，绑定列表面板为空）
   deviceInfo.value = await fetchDeviceTree()
 })
@@ -72,6 +73,7 @@ const switchSections = computed(() => groupSections(screens.value))
 async function loadSwitcherScreens() {
   try {
     screens.value = await loadScreenCards(sApi)
+    setNavTargetOptions(screens.value.map((c) => ({ value: c.id, label: c.name ?? c.id })))
   } catch {
     // 切换器非关键路径：加载失败静默为空（主加载 loadScreen 已报错）
   }

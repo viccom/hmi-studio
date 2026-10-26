@@ -46,6 +46,6 @@ describe('跳转按钮默认事件模板（F6：拖入实例携带）', () => {
   })
 
   it('target 为 input 描述符（右面板可填目标 slug）', () => {
-    expect(navButton.props.target?.type).toBe('input')
+    expect(navButton.props.target?.type).toBe('select')
   })
 })

@@ -1,7 +1,8 @@
 /**
  * 跳转按钮（T13 批 2，F6 落锤载体）：工业按钮造型（SVG 手绘斜面 bezel + 面板 + 右向箭头）。
  * - fill(color)：按钮面板色，靠 <use fill> 继承（types.ts ①），绑 props.fill.val 可做状态色
- * - target(input)：目标画面 slug
+ * - target(select)：目标画面——options=画面列表（W9 反馈：slug 手输→面板下拉），
+ *   EditView 加载画面后 setNavTargetOptions 注入 + upgradeNavTargets 升级存量实例
  * - **默认 click 事件模板**（types.ts ⑦ 实证：registerConfig 展开保留 events，拖拽建元
  *   `events: Le.events ?? []` 且 Le 为深拷贝——每实例独立携带）：运行页点击即容器内跳转。
  *   custom_code 用 window 级 $mtEventCallBack/$getItemAttrByID（maotu 空后缀实例的全局名，
@@ -24,12 +25,36 @@ const SVG = `<svg viewBox="0 0 48 32" xmlns="http://www.w3.org/2000/svg">
 export const NAV_EVENT_CODE =
   "$mtEventCallBack('nav', $item_info.id, $getItemAttrByID($item_info.id, 'props.target.val'));"
 
+/** 目标画面下拉项（W9 反馈：slug 手输不友好 → 属性面板 select 型，options=画面列表） */
+export interface ScreenOpt { value: string; label: string }
+
+/** 编辑器加载画面列表后注入（symbols/index.ts setScreenOptions 委托）；空数组=面板显示空但 val 保留 */
+let targetOptions: ScreenOpt[] = []
+export function setNavTargetOptions(o: ScreenOpt[]): void {
+  targetOptions = o
+  navButton.props.target = { title: '目标画面', type: 'select', val: navButton.props.target?.val ?? '', options: o }
+}
+
+/**
+ * 存量实例升级：拖入建元是注册项深拷贝（F6 实证），旧实例 target 仍是 input 型描述符——
+ * 编辑器加载画面后对 done_json 内全部 nav-button 实例就地升级（val 保留，其余图元不动）。
+ */
+export function upgradeNavTargets(done: { json: Iterable<{ id?: unknown; props?: Record<string, unknown> }> }): void {
+  for (const n of done.json) {
+    if (typeof n.id !== 'string' || !n.id.startsWith('ah-nav-button')) continue
+    const props = n.props
+    if (!props || typeof props.target !== 'object' || props.target === null) continue
+    const t = props.target as { title?: string; type?: string; val?: unknown }
+    props.target = { title: t.title ?? '目标画面', type: 'select', val: t.val ?? '', options: targetOptions }
+  }
+}
+
 export const navButton: HmiSymbol = {
   id: 'ah-nav-button', title: '跳转按钮', type: 'svg', thumbnail: svgThumbnail(SVG, 'ah-nav-button'),
   svg: SVG, width: 48, height: 32,
   props: {
     fill: { title: '面板色', type: 'color', val: '#1677ff' },
-    target: { title: '目标画面 slug', type: 'input', val: '' },
+    target: { title: '目标画面', type: 'select', val: '', options: [] },
   },
   ports: [],
   events: [{
