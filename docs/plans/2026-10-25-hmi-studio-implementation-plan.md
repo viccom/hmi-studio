@@ -88,6 +88,14 @@
 
 **T16-T18 执行回填**：① 主题单源 html.dark（F23：maotu 深色=祖先选择器即跟随；自带 toggle 传 use-theme-toggle=false 防双源）；② relogin 选型落地=**不存凭据**——sse.ts 连续 3 次失败 fetch 探测订阅 URL 401（EventSource error 无状态码）→ onState('auth-failed') 停止重连 → ViewView 走全局同款登出回 /login；③ 状态栏订阅点数 = collectBinds **去重 field 数**（demo A 8 bind 收敛 3——任务书「8 绑定点数=8」按 bind 条目数理解，实展示去重点数，e2e 断言 3）；④ 缩略图选型 = **MtPreview 真渲染**（F21② 成本实测可接受），降级占位仅针对 agent-hmi 旧格式兼容守卫（F21③：一卡抛错中断同批挂载的实测陷阱）；⑤ 并发 cap 6→4（screen-list 默认值 + 单测固化）；⑥ base '/hmi/' 仅 production mode（dev/test 维持 '/'——21 条既有 e2e 零改动全绿），部署寻址单源 endpoints.ts（F22：登录端点不进 /api/rsiot 前缀是首版 401 实测修正点）；⑦ gateway.toml 只改运行配置不入 git（.bak 备份留原地），dist 部署到主仓 /root/myprojects/webhmi/hmi-studio/dist（master 合并后以同脚本重建）
 
+**W7 用户反馈轮（2026-10-26，编辑器可用性三项）**：
+
+| 项 | 内容 | 验证 | commit |
+|----|------|------|--------|
+| W7-A | 编辑器顶部条功能化：画面切换器（loadScreenCards 复用，route watch + MtEdit `:key=slug` 重挂）+「+ 新建画面」/ 预览新窗（onPreviewClick 接线，router.resolve 保 base）/ 用户+登出 /「‹ 画面列表」 | e2e w7 段1-3 | c479a1f |
+| W7-B | 右面板 tab 头常驻：**根因=maotu 内置 element-plus 把 el-tabs 渲染成 [content, header]**（tab 头在 DOM 底部）；flex+order:-1 重排到顶 + sticky top（滚动容器=el-aside 本体，实测） | e2e w7 段4（sticky + 滚到底钉顶 + 途中切 tab） | 6e31110 |
+| W7-C | e2e/w7.spec.ts 4 例 + 全门（单测 129 / e2e 36 全绿）+ 部署重建（gateway /hmi/ 200，index 指纹 C3zWZb2D→DSpH7jGO，EditView css 含新规则） | 全门 + gateway 资产指纹 | aefd800 |
+
 ## 4. 任务详情
 
 ### T0 工程基建
