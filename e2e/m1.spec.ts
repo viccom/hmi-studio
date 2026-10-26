@@ -81,7 +81,7 @@ test.describe('M1 画面列表', () => {
 // - maotu 左面板图元 = el-collapse-item 组内 div[draggable=true]，HTML5 dragstart 设内部 intention
 // - 画布 = #mtCanvasArea，监听 dragover(preventDefault)/drop 创建图元（无需 dataTransfer 数据）
 // - Playwright locator.dragTo() 走浏览器拖拽拦截协议，原生触发 dragstart/drop —— 实测一次成功
-// - 组内图元无 DOM id，按注册顺序 nth 定位（symbols/index.ts TRIAL_SYMBOLS 顺序：泵=2）
+// - 组内图元无 DOM id，按注册顺序 nth 定位（symbols/registry.ts allSymbols 顺序：泵=0，T11 起正式图元）
 // - 保存按钮 = button .el-icon[title="保存"]（maotu 工具栏 tooltip title）
 test.describe('M1 编辑器', () => {
   const slug = `e2e-t4-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
@@ -96,9 +96,9 @@ test.describe('M1 编辑器', () => {
   }
 
   async function expandHmiGroup(page: Page) {
-    const group = page.locator('.el-collapse-item', { hasText: 'agent-hmi' }).first()
+    const group = page.locator('.el-collapse-item', { hasText: 'HMI 图元' }).first()
     await group.locator('.el-collapse-item__header').click()
-    await expect(group.locator('div[draggable="true"]')).toHaveCount(4)
+    await expect(group.locator('div[draggable="true"]')).toHaveCount(1)
     return group
   }
 
@@ -126,8 +126,8 @@ test.describe('M1 编辑器', () => {
     // 拖入判据：画布出现 id 以 ah-pump- 开头的图元节点（拖入时内联 svg 渲染，重载后 img 渲染——以节点 id 为准）
     const pumpNode = canvas.locator('[id^="ah-pump-"]')
 
-    // 拖入离心泵（注册顺序第 3 个）到画布 (200,150)
-    await group.locator('div[draggable="true"]').nth(2)
+    // 拖入离心泵（registry 首个图元）到画布 (200,150)
+    await group.locator('div[draggable="true"]').nth(0)
       .dragTo(canvas, { targetPosition: { x: 200, y: 150 } })
     await expect(pumpNode).toHaveCount(1)
 

@@ -1,0 +1,70 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`离心泵（首图元） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 64,
+  "id": "ah-pump",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftBottom",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "animation": {
+      "title": "旋转动画",
+      "type": "switch",
+      "val": false,
+    },
+    "fill": {
+      "title": "主体色",
+      "type": "color",
+      "val": "#52c41a",
+    },
+  },
+  "svg": "<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes ah-pump-spin { to { transform: rotate(360deg); } }
+    .ah-rotor { animation: ah-pump-spin 1.2s linear infinite; animation-play-state: var(--ah-run, paused); transform-box: fill-box; transform-origin: center; }
+    use[animation="true"] { --ah-run: running; }
+  </style>
+  <!-- 入口短管 / 出口短管 / 泵壳：不写 fill，靠 use 属性继承状态色 -->
+  <rect x="2" y="26" width="16" height="12" rx="1" stroke="#262626" stroke-width="1"/>
+  <rect x="46" y="26" width="16" height="12" rx="1" stroke="#262626" stroke-width="1"/>
+  <circle cx="32" cy="32" r="18" stroke="#262626" stroke-width="1"/>
+  <!-- 叶轮三角 + 轮毂：唯一定色动件（深色叠于状态色之上） -->
+  <g class="ah-rotor">
+    <path d="M32 21 L41 43 L23 43 Z" fill="rgba(0,0,0,0.55)"/>
+    <circle cx="32" cy="36" r="3.5" fill="rgba(0,0,0,0.55)"/>
+  </g>
+</svg>",
+  "thumbnail": "",
+  "title": "离心泵",
+  "type": "svg",
+  "width": 64,
+}
+`;
