@@ -33,6 +33,7 @@
 | F17 | 动画双路径（T11 实证）：① **子件旋转**（泵采用）= svg 内嵌 `<style>` 随 use 克隆进影子树生效（浏览器行为，Playwright 像素实证）+ 控制链 `use[animation="true"]{--ah-run:running}`（文档级样式可匹配 use 本身）→ 自定义属性**跨影子树继承** → 子件 `animation-play-state:var(--ah-run,paused)`；由 `animation`(switch) prop 驱动，绑 `props.animation.val` 直写启停（与 fill 同款通路，编辑器开关实测启停）；② **整件旋转** = maotu `common_animations {val:'rotate360', delay:'delay-0s', speed:'slow', repeat:'infinite'}`——`rotate360` 为 maotu 在 dist/style.css **自增的关键帧**（stock animate.css 无此类，style.css 已随 main.ts 引入），类拼在图元**包裹 div** 上（管口随整体转，泵弃用）；右面板「动画配置」抽屉（基础动画 tab→强调组）配置或 triggers changeAttr `common_animations.val` 运行时控（Nl 通用点路径 setter + 该 attr 在绑定可选列表内）；③ ports 仅 **leftTop/leftBottom/rightTop** 三锚位（bundle Cd 函数只处理三者）——设计原稿的 rightBottom **不存在**，静默落画布原点 {0,0}（lint PORT_POSITION 拦截，出口统一 rightTop） | T11 Playwright 编辑器/抽屉/done_json 保存实证 + bundle Cd/Nl/FP/Td 实读 |
 | F18 | 液位连续值驱动路径（T12 实证）：use 元素属性**无法参与 CSS 计算**（attr() 跨浏览器不可用；maotu bind_mapping 是离散值映射非表达式，vP 无映射行匹配还会跳过写入）→ 可行链 = svg 内嵌 style「属性选择器枚举」`use[h="N"]{--ah-lvl:N/100}`（0..100 整数档）+ `use[h^="N."]` 前缀规则兜浮点（37.5→0.37 向下取整）→ 自定义属性**继承**进影子树 → `.ah-liquid{transform:scaleY(var(--ah-lvl,0));transform-box:fill-box;transform-origin:bottom}` 自底生长（height 是几何属性非样式，继承不可达——scaleY 而非 height 的原因）；越界/负数无规则命中回落 0（空罐）。/view 像素实证：罐 h=0/25/50/100 → 液色占比 0/11.7/22.5/44.9% 线性。**三个静默失败陷阱**（均已机械化拦/修）：① svg 内 XML 注释含 `--` → dataURI 按 XML 解析整图 parsererror 空白（lint 第五规则 SVG_COMMENT）；② 消费端必须是**类选择器** `.ah-liquid{}`（裸 `ah-liquid{` 是元素名选择器永不命中）；③ /view（MtPreview）渲染自绘图元同样查注册表——ViewView 漏调 registerSymbols() 则自绘图元静默空白（已修，与 EditView 同款幂等注册） | T12 Playwright /view 像素采样 + dataURI 解码对照 + 隔离文档二分定位 |
 | F19 | 注册项默认值边界（T13 实证，**F6 落锤**）：① `events` **可以**随注册项带默认模板——registerConfig 展开保留 events 字段，拖拽建元 `events: Le.events ?? []` 且 `Le = vt(注册项)` 为 JSON 深拷贝（每实例独立、不污染注册默认），保存(ud)/导入(Jr) 原样保留——nav-button 默认跳转事件即此（拖入→保存→读 done_json 一字不差实证；/view 点击容器内跳转 __navCount=1、编辑画布点击仅选中）；② `common_animations` **不能**预设——registerConfig 对注册项无条件覆写为空默认 `{val:'',delay:'delay-0s',speed:'slow',repeat:'infinite'}`，电机整件旋转启用路径 = 右面板动画抽屉或 triggers changeAttr `common_animations.val`；③ 事件模板可用的 window 级全局：`$mtEventCallBack`/`$getItemAttrByID`/`$setItemAttrByID` 为 maotu 挂的**空后缀实例名**（`window["$getItemAttrByID"+suffix]`，suffix 默认 ""——多实例同页才加后缀）；`$getItemAttrByID(id,'props.x.val')` 经 yi 点路径解析器取实例属性 | T13 Playwright 拖入→保存→done_json 直读 + /view 跳转实证 + bundle registerConfig/vt/yi/3854321 window 赋值实读 |
+| F20 | SSE 代理 mock **可行**（T15 实证，段2 选型落锤=路 A）：`page.route('**/rtdatas/subscribe*')` + `route.fulfill({contentType:'text/event-stream', body:'event: snapshot\ndata: {…}\n\n'})`——Chromium EventSource 对 fulfill 的**完整响应体照常逐帧解析派发**（open→snapshot→error 同毫秒，流完即断）；断流后 sse.ts 退避重连 ~1s 周期 → route 闭包内服务变量可切（95→20 双相验证）。断言链 = dataURI `<img>` src decode 读 use 属性（TP 序列化 `fill="…"`/`h="…"`，无需截图比色）。**陷阱**：snapshot 的 cell 必须是**真数组** `[ts,localTime,"值串"]`（F11 形状）——手拼 JSON 时把 cell 写成字符串会被 `JSON.stringify` 二次编码，`toPoint` 的 `Array.isArray` 拒收 → **静默无数据**（无 warn、无报错，onPoint 根本不触发——仅值牌/图元不动可察）；对照判别法：`window.$setItemAttrByID` 手写可见 + `__vue_app__` 树调 `setDevicePointByID` 可见 → 锁定解析层 | T15 段2 全绿 + 五轮 probe 实证（页内 ES 对照/EventSource 包装计时/vue 树手动调用/window 全局写入） |
 
 **风险与对策**：① ~~maotu SVG 复合图元内文本注入未验~~ **已关闭（F16：不可行，文本一律走内置文本图元）**；② SSE token 过期 → T5 重连时重登录换 token；③ ~~默认事件模板拖拽实例化未验~~ **已关闭（F19①：events 随注册项实例化，nav-button 实证）**；④ 画面规模 N+1 列表 → T17 并发上限 + 后续 rs-iot 轻端点。
 
@@ -70,13 +71,15 @@
 | T11 | 图元基建：注册管道 + 约定 lint + 首个图元（泵）验证文本注入边界 | M3 | lint 单测 | ☑ | 3272be8..f11b125 |
 | T12 | 图元批 1：阀×2/罐/液位计/流量计（fill 约定） | M3 | lint + 快照 | ☑ | 6d9e748 |
 | T13 | 图元批 2：电机/隔离开关/nav-button（默认事件）/值牌 | M3 | 默认事件实证 | ☑ | fca500c |
-| T14 | 水处理演示画面组态入库 | M3 | G-M3 | ☐ | |
-| T15 | M3 E2E 汇总门 | M3 | G-M3 | ☐ | |
+| T14 | 水处理演示画面组态入库 | M3 | G-M3 | ☑ | 9402fd8 |
+| T15 | M3 E2E 汇总门 | M3 | G-M3 | ☑ | 8a09876 |
 | T16 | 主题(dark 默认)/状态栏/命令历史/断线 UX | M4 | E2E 断线段 | ☐ | |
 | T17 | 缩略图 + 列表性能（并发上限） | M4 | 画面列表 E2E | ☐ | |
 | T18 | build + gateway 部署 + LAN 验证 | M4 | G-M4 | ☐ | |
 
 **G-M2 达成 2026-10-25 · e2e 15/15**（数据段 uptime 双采样变化 / 命令段 payload 契约 {instance:'self',devid,cmd:'write'} / 跳转段 URL+`__navCount` 防刷新 / 断链段 offline→online；单测 65/65 含事件词表）
+
+**G-M3 达成 2026-10-26 · 单测 122/122 + e2e 21/21**（m3 段1 计数 18 图元 = 10 自绘全覆盖 9 类 + 8 文本 ≥12 / 段2 阈值变色走 **SSE mock 路线成功**：route.fulfill 自制 text/event-stream → snapshot 真实派发 → cpu=95 泵 `fill="#f5222d"` + 罐 `h="95"` + 值牌，cpu=20 回绿收口（F20）/ 段3 横幅随 alarms 快照显隐 / 段4 互跳闭环 `__navCount`=2 + `$rsiot.back()` 弹栈 / 段5 rs-iot doc 保真 18 图元 + 触发链三元组入库；演示画面 water-demo-m3/-b 为长期资产不清扫）
 
 ## 4. 任务详情
 
@@ -290,6 +293,8 @@ T12（fill 约定族）：闸阀/蝶阀/罐/液位计/流量计——罐与液�
 ### T14-T15 演示画面 + M3 门
 
 手工组态"水处理-取水泵房"画面入 rs-iot（≥12 图元、≥3 绑定、≥1 nav、≥1 命令按钮）；`e2e/m3.spec.ts`：图元计数、`cpu_percent` 阈值变色（断言 SVG 属性色值变化）、横幅显隐、容器内跳转。G-M3 勾选。commit ×2。
+
+**T14/T15 执行回填**：组态源 = `src/lib/demo-screen.ts` `buildDemoScreen()` 纯函数（任务书原定放 e2e/fixtures——**偏离**：vitest include 仅 src/**，且演示画面是长期资产应收正式层；fixtures.ts 仅留 `seedDemoScreens()` PUT 播种）。A 画面 18 图元（9 类自绘 10 件 + 文本 8 件），无重叠/出界有单测防漂移 + 全量快照；阈值链 = bind 直写 fill + 双触发互斥收口（>80 红/<=80 绿——直写原值是无效色但同 tick 被触发覆盖）；B 画面 4 图元互跳闭环。段2 选型**路 A（SSE mock）成功**，降级判据（结构层三元组冻结于 demo-screen.test.ts + 段5 doc 保真）作双保险保留；命令按钮不在演示画面（m2 段2 已验证命令桥，演示复用其机制）——G-M3 原文未含命令按钮判据，不为此加图元。
 
 ### T16-T18 M4 打磨与部署
 
