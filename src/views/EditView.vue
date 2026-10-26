@@ -16,7 +16,7 @@ import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
 import { fetchDeviceTree, type IDeviceInfo } from '../lib/device-tree'
 import { getAuthedUser, logout } from '../lib/auth'
 import { installBridge } from '../lib/bridge'
-import { registerSymbols, setNavTargetOptions, upgradeNavTargets } from '../symbols'
+import { registerSymbols, setNavTargetOptions, upgradeNavTargets, flattenNavSections } from '../symbols'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import BindPanel from '../components/BindPanel.vue'
 
@@ -73,7 +73,13 @@ const switchSections = computed(() => groupSections(screens.value))
 async function loadSwitcherScreens() {
   try {
     screens.value = await loadScreenCards(sApi)
-    setNavTargetOptions(screens.value.map((c) => ({ value: c.id, label: c.name ?? c.id })))
+    // 目标画面下拉：分组树形视觉（组头 ▼ + 子项缩进）——分区排序与切换器/列表页同源（groupSections）
+    setNavTargetOptions(flattenNavSections(
+      groupSections(screens.value).map((sec) => ({
+        group: sec.name || undefined,
+        cards: sec.cards.map((c) => ({ value: c.id, label: c.name ?? c.id })),
+      })),
+    ))
   } catch {
     // 切换器非关键路径：加载失败静默为空（主加载 loadScreen 已报错）
   }

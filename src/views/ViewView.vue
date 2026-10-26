@@ -135,6 +135,11 @@ const jump = async (target: string): Promise<boolean> => {
 
 const dispatcher = createDispatcher({
   onNav(target) {
+    // 组头哨兵（W9b：目标下拉树形视觉的组头条目被误选）——提示后忽略，不发起请求
+    if (target.startsWith('__group__:')) {
+      ElMessage.warning('请选择组内的具体画面')
+      return
+    }
     void jump(target).then((ok) => {
       if (!ok) return
       navStack.nav(target)

@@ -28,7 +28,22 @@ export const NAV_EVENT_CODE =
 /** 目标画面下拉项（W9 反馈：slug 手输不友好 → 属性面板 select 型，options=画面列表） */
 export interface ScreenOpt { value: string; label: string }
 
-/** 编辑器加载画面列表后注入（symbols/index.ts setScreenOptions 委托）；空数组=面板显示空但 val 保留 */
+/** 组头哨兵前缀：maotu select 分支为扁平 el-option（bundle 实证，无 option-group），
+ *  树形分组用「组头条目 + 子项缩进」视觉实现；哨兵值若被误选，运行时 nav 忽略 + 加载期清洗 */
+export const NAV_GROUP_PREFIX = '__group__:'
+
+/** 分区（group=undefined 即未分组，殿后）→ 扁平 options：组头 ▼ + 全角缩进子项 */
+export function flattenNavSections(sections: { group?: string; cards: ScreenOpt[] }[]): ScreenOpt[] {
+  const out: ScreenOpt[] = []
+  for (const sec of sections) {
+    const g = sec.group ?? '未分组'
+    out.push({ value: `${NAV_GROUP_PREFIX}${g}`, label: `▼ ${g}` })
+    for (const c of sec.cards) out.push({ value: c.value, label: `　　${c.label}` })
+  }
+  return out
+}
+
+/** 编辑器加载画面分区后注入（symbols/index.ts 委托）；空数组=面板显示空但 val 保留 */
 let targetOptions: ScreenOpt[] = []
 export function setNavTargetOptions(o: ScreenOpt[]): void {
   targetOptions = o
@@ -38,6 +53,7 @@ export function setNavTargetOptions(o: ScreenOpt[]): void {
 /**
  * 存量实例升级：拖入建元是注册项深拷贝（F6 实证），旧实例 target 仍是 input 型描述符——
  * 编辑器加载画面后对 done_json 内全部 nav-button 实例就地升级（val 保留，其余图元不动）。
+ * 哨兵值（误选组头）清洗为空串。
  */
 export function upgradeNavTargets(done: { json: Iterable<{ id?: unknown; props?: Record<string, unknown> }> }): void {
   for (const n of done.json) {
@@ -45,7 +61,8 @@ export function upgradeNavTargets(done: { json: Iterable<{ id?: unknown; props?:
     const props = n.props
     if (!props || typeof props.target !== 'object' || props.target === null) continue
     const t = props.target as { title?: string; type?: string; val?: unknown }
-    props.target = { title: t.title ?? '目标画面', type: 'select', val: t.val ?? '', options: targetOptions }
+    const val = typeof t.val === 'string' && t.val.startsWith(NAV_GROUP_PREFIX) ? '' : t.val
+    props.target = { title: t.title ?? '目标画面', type: 'select', val: val ?? '', options: targetOptions }
   }
 }
 

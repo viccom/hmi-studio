@@ -180,9 +180,11 @@ test.describe('W8 绑定面板与画面分组', () => {
       const panel = page.locator('.mt-edit-aside:has(#mt-right-aside)')
       const targetRow = panel.locator('.el-form-item', { hasText: '目标画面' })
       await expect(targetRow.locator('.el-select')).toBeVisible()
-      // 下拉选项 = 画面列表（名称主体）——选「取水泵房」
+      // 下拉 = 树形视觉：组头（▼ 组名，哨兵值）+ 缩进子项（W9b）——选「取水泵房」
       await targetRow.locator('.el-select').click()
-      await page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '取水泵房' }).click()
+      await expect(page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '▼ 水处理演示' })).toBeVisible()
+      await expect(page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '▼ 未分组' })).toBeVisible()
+      await page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '　　取水泵房' }).click()
       // 保存 → doc 落库断言 target 变更
       const putReq = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes(`/screens/${slugB}`))
       await page.locator('button .el-icon[title="保存"]').click()
