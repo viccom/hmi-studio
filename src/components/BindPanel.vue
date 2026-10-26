@@ -5,9 +5,11 @@
 // 已知代价（评估已交代，见面板底部注释）：不提供 bind_mapping 映射规则；绑定变更不进 maotu 撤销历史。
 // bind/trigger 形状唯一真相 = e2e/fixtures.ts 实证种子 + maotu IDoneJsonBindList（store/types.d.ts）。
 import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import type { CompareOperator, IDoneJson, IDoneJsonBindList } from 'maotu'
 import { fetchDeviceTreeRich, type RichDeviceNode, type RichTagNode } from '../lib/device-tree'
 import { uid } from '../lib/uid'
+import { normalizeTriggerValue } from '../lib/trigger-value'
 
 const props = defineProps<{ item: IDoneJson }>()
 
@@ -68,6 +70,10 @@ const binds = computed<IDoneJsonBindList[]>(() => props.item.binds ?? [])
 function addBind() {
   const pt = selectedPoint.value
   if (!pt || !attrPath.value) return
+  if (binds.value.some((b) => b.bind_id === pt.id && b.bind_attr === attrPath.value)) {
+    ElMessage.warning('该点位已绑定此属性')
+    return
+  }
   const nb: IDoneJsonBindList = {
     id: uid(),
     pel_id: props.item.id,
@@ -110,7 +116,8 @@ function addTrigger(b: IDoneJsonBindList) {
       id: uid(),
       target_id: props.item.id,
       target_attr: draft.target_attr,
-      target_value: draft.target_value,
+      // 按目标属性类型归一（switch→bool/number→num）：布尔写 'false' 串会恒真（审查 P1-3）
+      target_value: normalizeTriggerValue(draft.target_attr, draft.target_value, props.item.props as Record<string, { type?: string }>),
     }],
     custom_code: '',
   }

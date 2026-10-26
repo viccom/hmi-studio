@@ -35,15 +35,22 @@ const user = getAuthedUser()
 const bridge = installBridge({ mode: 'edit', router })
 onUnmounted(() => bridge.uninstall())
 
+const loadFailed = ref(false)
+
 async function loadScreen() {
+  const reqSlug = slug.value
   try {
-    const { doc } = await sApi.get(slug.value)
+    const { doc } = await sApi.get(reqSlug)
+    if (slug.value !== reqSlug) return // 竞态守卫：GET 在飞时已切换画面，迟到响应不得写入新画布（否则保存即跨画面覆盖）
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
     upgradeNavTargets(done) // 存量跳转按钮 input→select（拖入为注册项深拷贝，旧实例需就地升级）
     editRef.value?.setImportJson(done)
+    loadFailed.value = false
   } catch {
-    ElMessage.error('画面加载失败')
+    if (slug.value !== reqSlug) return
+    loadFailed.value = true // 加载失败置锁：空画布+陈旧 meta 下保存=用空 doc 覆盖画面
+    ElMessage.error('画面加载失败——已禁止保存，请刷新重试')
   }
 }
 
@@ -51,8 +58,8 @@ onMounted(async () => {
   registerSymbols()
   await loadSwitcherScreens() // 先于 loadScreen：nav-button options 注入后，存量实例升级才带得上列表
   await loadScreen()
-  // 在线设备树（失败静默为空——编辑器离线仍可组态，绑定列表面板为空）
-  deviceInfo.value = await fetchDeviceTree()
+  // 在线设备树（失败静默为空——离线仍可组态，绑定列表面板为空）；与主加载无依赖，并行不串行
+  void fetchDeviceTree().then((t) => { deviceInfo.value = t })
 })
 
 // W7 画面切换：/edit/a → /edit/b 组件被 vue-router 复用，onMounted 不再跑——
@@ -143,6 +150,10 @@ function doLogout() {
 }
 
 async function save(payload: IExportJson) {
+  if (loadFailed.value) {
+    ElMessage.error('画面未成功加载，已禁止保存（避免空画面覆盖）')
+    return
+  }
   try {
     await sApi.put(slug.value, wrapDoc(payload, { name: meta.value.name ?? slug.value, group: meta.value.group }))
     ElMessage.success('已保存')

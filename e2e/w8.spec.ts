@@ -20,8 +20,9 @@ async function openBindPanel(page: Page, pelId: string) {
 
 test.describe('W8 绑定面板与画面分组', () => {
   test('段1 绑定面板：搜索点位树 → 选点+选属性 → 添加绑定 → 保存 → binds 落库', async ({ page }) => {
-    const before = await rsiotGetScreen(DEMO) // 长期资产备份（测试尾回写还原）
+    const before = await rsiotGetScreen(DEMO) // 长期资产备份（finally 回写还原——中途断言失败也不残留）
     await loginAsAdmin(page)
+    try {
     await page.goto(`/edit/${DEMO}`)
     await expect(page.locator('#mtCanvasArea')).toBeVisible()
 
@@ -60,8 +61,9 @@ test.describe('W8 绑定面板与画面分组', () => {
     const val = page.locator(`[id="${LBL}"] .break-words`)
     await expect(val).not.toHaveText('运行时长(s)', { timeout: 15_000 })
     expect(Number.isFinite(Number(await val.textContent()))).toBe(true)
-
-    await rsiotPutScreen(DEMO, before.doc) // 还原长期资产
+    } finally {
+      await rsiotPutScreen(DEMO, before.doc) // 还原长期资产（审查 P2-4：原不在 finally，失败即残留）
+    }
   })
 
   test('段2 画面分组：新建带组画面 → 列表分区 → 切换器 option-group', async ({ page }) => {

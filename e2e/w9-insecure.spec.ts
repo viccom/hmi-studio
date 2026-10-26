@@ -1,11 +1,13 @@
 import { test, expect, type Page } from '@playwright/test'
 import os from 'node:os'
+import { buildDemoScreen } from '../src/lib/demo-screen'
 
 // W9 打回修复回归：crypto.randomUUID 仅安全上下文可用——用户经 LAN IP
 // （http://<ip>:18080/hmi/）访问是不安全上下文，原实现添加绑定直接抛
 // TypeError 静默失败（e2e 此前全跑 127.0.0.1 = 安全上下文，盲区）。
 // 本 spec 用 LAN IP 源复现用户环境，锁定绑定全流程。修复 = lib/uid 特性检测兜底。
-// 长期资产纪律：跑前还原基线（清残留），跑后回写备份（w8 同款，water-demo-m3-b）。
+// 长期资产纪律：基线 = buildDemoScreen().b 纯函数产物（固定基线，失败残留不跨轮累积——
+// 审查 P2-7：原"快照当前态"会把上一轮残留固化）；跑前还原基线，跑后回写同基线。
 const LAN = os.networkInterfaces()['eth0']?.find((i) => i.family === 'IPv4' && !i.internal)?.address
   ?? Object.values(os.networkInterfaces()).flat().find((i) => i!.family === 'IPv4' && !i.internal)!.address
 
@@ -53,16 +55,15 @@ test.describe('W9 不安全上下文（LAN IP）绑定流', () => {
     await page.addInitScript((t: string) => localStorage.setItem('hmi_token', t), login.token)
 
     const auth = { Authorization: `Bearer ${login.token}` }
-    const original = await fetch(`http://127.0.0.1:8790/api/v1/screens/${SLUG}`, { headers: auth })
-      .then((r) => r.json())
-    await restoreDoc(auth, original.doc) // 跑前还原基线（清此前运行残留，从 0 计数）
+    const baseline = buildDemoScreen().b
+    await restoreDoc(auth, baseline) // 跑前还原固定基线（清此前运行残留，从 0 计数）
     await page.goto(`http://${LAN}:5290/edit/${SLUG}`)
     await page.waitForSelector('#mtCanvasArea', { timeout: 15_000 })
 
     try {
       await runBindFlow(page, auth, pageErrors)
     } finally {
-      await restoreDoc(auth, original.doc)
+      await restoreDoc(auth, baseline)
     }
     await ctx.close()
   })

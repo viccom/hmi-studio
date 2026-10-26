@@ -29,18 +29,18 @@ const cycle = (): void => { emit('update:modelValue', (cur.value + 1) % 3) }
     class="ah-sel" role="switch"
     @click="cycle"
   >
-    <text x="40" y="12" text-anchor="middle" font-size="10" fill="#8b949e">{{ props.label }}</text>
-    <!-- 面板 + 档位刻度（-45/0/45 三档）+ 档位数字 -->
+    <!-- 面板 + 档位刻度（0/1/2 = -45°/0°/+45°，与指针同向上斜位——审查 P2-6：原刻度在下斜位，指针永指不到 0/2）+ 档位数字 -->
+    <text x="40" y="92" text-anchor="middle" font-size="10" fill="#8b949e">{{ props.label }}</text>
     <circle cx="40" cy="48" r="30" fill="#1c2128" stroke="#30363d" stroke-width="2" />
     <g stroke="#6e7681" stroke-width="2">
-      <line x1="14.8" y1="69.2" x2="20.2" y2="63.8" />
-      <line x1="40" y1="13" x2="40" y2="20" />
-      <line x1="65.2" y1="69.2" x2="59.8" y2="63.8" />
+      <line x1="16.7" y1="24.7" x2="21.6" y2="29.6" />
+      <line x1="40" y1="15" x2="40" y2="22" />
+      <line x1="63.3" y1="24.7" x2="58.4" y2="29.6" />
     </g>
     <g font-size="10" fill="#c9d1d9" text-anchor="middle">
-      <text x="12" y="82">0</text>
-      <text x="40" y="10">1</text>
-      <text x="68" y="82">2</text>
+      <text x="12" y="26">0</text>
+      <text x="40" y="12">1</text>
+      <text x="68" y="26">2</text>
     </g>
     <!-- 旋钮：指针随 value 旋转（bbox 中心=枢轴 (40,48)） -->
     <g :transform="`rotate(${deg} 40 48)`">
