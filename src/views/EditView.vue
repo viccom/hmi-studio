@@ -254,6 +254,12 @@ async function save(payload: IExportJson) {
    只藏内层 div 时 footer 空行仍占位）——整行隐藏，高度归还画布。
    :has 锚定 npm 外链特征，防止误伤未来可能的其它 el-footer */
 .edit-body :deep(footer.el-footer:has(> div > a[href*='npmjs.com/package/maotu'])) { display: none; }
+/* W12 反馈：头部 logo 区移除（MAOTU 图 + "Mt-Edit" 文本）——只藏两件视觉物，
+   同容器的折叠按钮（update:leftAside，功能件）保留；w-200px 容器收窄归还空区。
+   锚点 = 45px 尺寸工具类（header 内唯一，实测 DOM），防误伤其它 el-image */
+.edit-body :deep(.el-header .el-image.w-45px),
+.edit-body :deep(.el-header .el-image.w-45px + .el-text) { display: none; }
+.edit-body :deep(.el-header .w-200px) { width: auto; }
 /* W7 反馈3：右面板 tab 头常驻。滚动容器实测=el-aside 本体（.mt-edit-aside 基线
    overflow:auto，内层 #mt-right-aside overflow:visible）。**maotu 内置 element-plus
    把 el-tabs 渲染成 [content, header]（bundle 实证 return [p, m]，header 在 DOM 底部
