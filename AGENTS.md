@@ -33,5 +33,5 @@
 ## 纪律
 
 - TDD：src/lib 纯逻辑测试先行（红→绿→commit）；Vue 页面靠 typecheck + E2E 门
-- 登录形状：`POST /api/v1/user/login` `{user_id, pass}`；token 存 localStorage `hmi_token`
+- 登录形状：`POST /api/v1/user/login`（dev）/ `/api/gw/login`（gateway，endpoints.ts 单源）；会话 = HttpOnly cookie（login 下发，SSE 靠它）+ localStorage 镜像 `webhmi_token`/`webhmi_user`（与 rs-iot 控制台共享，一次登录两 SPA 互通）
 - rs-iot 寻址：`<devid>.<tag>` 是唯一 field 格式 = maotu bind_id = SSE 订阅键

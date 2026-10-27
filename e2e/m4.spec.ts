@@ -28,7 +28,7 @@ test.describe('M4 主题（T16-A）', () => {
 
     await page.reload()
     await expect(page.locator('html')).not.toHaveClass(/(^|\s)dark(\s|$)/)
-    expect(await page.evaluate(() => localStorage.getItem('hmi_theme'))).toBe('light')
+    expect(await page.evaluate(() => localStorage.getItem('webhmi_theme'))).toBe('light')
   })
 })
 
@@ -96,7 +96,7 @@ test.describe('M4 状态栏与命令历史（T16-B）', () => {
     await expect(page.locator('[data-testid="status-bar"]')).toBeVisible({ timeout: 10_000 })
     await page.getByRole('button', { name: '登出' }).click()
     await expect(page).toHaveURL(/\/login$/)
-    expect(await page.evaluate(() => localStorage.getItem('hmi_token'))).toBeNull()
+    expect(await page.evaluate(() => localStorage.getItem('webhmi_token'))).toBeNull()
   })
 
   test('断线 UX：subscribe 掐断 → 状态灯 offline + 状态条整条警示；解除 → 恢复', async ({ page }) => {
@@ -118,7 +118,7 @@ test.describe('M4 状态栏与命令历史（T16-B）', () => {
     await page.goto(`/view/${DEMO_A}`)
     // 连续失败 ≥3（退避 1s/2s/4s ≈ 7s）后 fetch 探测 401 → auth-failed → 登出链
     await expect(page).toHaveURL(/\/login$/, { timeout: 30_000 })
-    expect(await page.evaluate(() => localStorage.getItem('hmi_token'))).toBeNull()
+    expect(await page.evaluate(() => localStorage.getItem('webhmi_token'))).toBeNull()
   })
 })
 

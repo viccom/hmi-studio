@@ -82,7 +82,12 @@ async function create() {
 <template>
   <main class="list-page">
     <header class="list-head">
-      <h2>画面列表</h2>
+      <div class="head-left">
+        <!-- 跨 SPA 出口：rs-iot 控制台由 gateway 在 / 独立托管，同源整页跳转，
+             会话（HttpOnly cookie + webhmi_* 镜像键）与主题随跳转共享。 -->
+        <a class="back-console" href="/">‹ 控制台</a>
+        <h2>画面列表</h2>
+      </div>
       <span class="head-right">
         <ThemeToggle />
         <el-button type="primary" @click="openCreate">新建画面</el-button>
@@ -151,8 +156,14 @@ async function create() {
 <style scoped>
 .list-page { padding: 24px; }
 .list-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.head-left { display: inline-flex; align-items: baseline; gap: 12px; }
 .head-right { display: inline-flex; align-items: center; gap: 12px; }
 .list-head h2 { margin: 0; }
+.back-console {
+  color: var(--el-text-color-secondary); font-size: 12px; text-decoration: none;
+  white-space: nowrap;
+}
+.back-console:hover { color: var(--el-color-primary); }
 /* W8 分组分区：组头 = 组名 + 数量徽章 */
 .group-block { margin-bottom: 20px; }
 .group-head {

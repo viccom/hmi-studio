@@ -32,7 +32,7 @@ test.describe('M1 登录', () => {
     await loginAsAdmin(page)
     await page.goto('/')
     await expect(page).toHaveURL(/\/$/)
-    expect(await page.evaluate(() => localStorage.getItem('hmi_token'))).toBeTruthy()
+    expect(await page.evaluate(() => localStorage.getItem('webhmi_token'))).toBeTruthy()
   })
 })
 

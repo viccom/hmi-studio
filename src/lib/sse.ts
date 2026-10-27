@@ -3,8 +3,8 @@
  *   event: snapshot   data = {dev, points:{"dev.tag":[ts,localTime,"valueStr"]}}（连接即全量）
  *   event: datachange data = {changes:{"dev.tag":cell}, removed:[], ts}（值变才推，命名事件）
  * 值一律是字符串化 JSON——parseCell 归一化是客户端职责（rsiot-frame.ts 同款语义）。
- * 鉴权实测：rs-iot 只认 Authorization/Cookie/X-Access-Key，不认 ?token=（那是 agent-hmi
- * gateway 的约定）；EventSource 设不了 header → token 走同源 Cookie（连接前同步）。
+ * 鉴权实测：rs-iot 认 Authorization/Cookie/X-Access-Key，不认 ?token=；EventSource
+ * 设不了 header → 统一会话后走同源 HttpOnly cookie（login 下发，自动携带）。
  * 流层（EventSource）不进 jsdom 单测——纯函数在此覆盖，流由 E2E 真实验证。
  */
 
@@ -58,7 +58,7 @@ export function parseFrame(type: string, raw: string): RtPoint[] {
 
 // ---------- 流层（浏览器 EventSource，E2E 验证） ----------
 
-import { API_BASE, SSE_TOKEN_IN_QUERY } from './endpoints'
+import { API_BASE } from './endpoints'
 
 export type StreamState = 'online' | 'offline' | 'auth-failed'
 
@@ -100,24 +100,15 @@ export function createRtdataStream(opts: RtdataStreamOptions): { close(): void; 
   let gen = 0
   const bo = backoff()
 
-  const syncCookie = (): void => {
-    const t = opts.getToken?.()
-    if (t) document.cookie = `token=${encodeURIComponent(t)}; path=/`
-  }
-
-  /** 订阅 URL：query-token 形态（gateway）把 JWT 拼进 URL——网关层1 只认 Bearer/?token=
-   *  不认 Cookie，转发时注入 Authorization（endpoints.ts 文件头）；dev 形态走 Cookie。 */
-  const streamUrl = (): string => {
-    const url = buildSubscribeUrl({ devs, base: opts.base ?? API_BASE, interval: opts.interval })
-    if (!SSE_TOKEN_IN_QUERY) return url
-    const t = opts.getToken?.()
-    return t ? `${url}&token=${encodeURIComponent(t)}` : url
-  }
+  /** 订阅 URL：鉴权走同源 HttpOnly cookie（EventSource 自动携带，login 下发）——
+   *  gateway 层1 已认 Cookie（统一会话），dev 形态 rs-iot 本就认 Cookie，两形态统一，
+   *  token 无须进 URL（也避免其进上游日志）。 */
+  const streamUrl = (): string =>
+    buildSubscribeUrl({ devs, base: opts.base ?? API_BASE, interval: opts.interval })
 
   const open = (): void => {
     if (closed) return
     es?.close() // 重建前先关旧连接——任何路径二次进入 open 都不产生孤儿
-    syncCookie()
     es = new EventSource(streamUrl())
     es.addEventListener('open', () => { failures = 0; bo.reset(); opts.onState?.('online') })
     for (const type of ['snapshot', 'datachange'] as const) {

@@ -19,7 +19,18 @@ export function setOnUnauthorized(fn: (() => void) | undefined): void {
   defaultOnUnauthorized = fn
 }
 
-const TOKEN_KEY = 'hmi_token'
+// 统一会话键（与 rs-iot 控制台共享，同源两 SPA 一次登录互通）：webhmi_token 是
+// JWT 镜像——权威凭证是 login 下发的 HttpOnly cookie（fetch/EventSource 同源自动携带），
+// 镜像做守卫判据与 Bearer 注入。旧键一次性迁移（hmi_* / rsiot_* → webhmi_*）。
+const TOKEN_KEY = 'webhmi_token'
+;(function migrateLegacyTokenKey(): void {
+  if (!localStorage.getItem(TOKEN_KEY)) {
+    const legacy = localStorage.getItem('hmi_token') ?? localStorage.getItem('rsiot_token')
+    if (legacy) localStorage.setItem(TOKEN_KEY, legacy)
+  }
+  localStorage.removeItem('hmi_token')
+  localStorage.removeItem('rsiot_token')
+})()
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
   set: (t: string) => localStorage.setItem(TOKEN_KEY, t),

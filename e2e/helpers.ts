@@ -19,15 +19,19 @@ async function authedFetch(path: string, init?: RequestInit): Promise<Response> 
 }
 
 /**
- * 以 admin 真实登录 rs-iot 拿新 token，经 addInitScript 注入 localStorage——
- * 后续 E2E 段绕过登录页（每次导航前生效，context 生命周期内持久）。
+ * 以 admin 真实登录 rs-iot 拿新 token，注入统一会话态——后续 E2E 段绕过登录页：
+ * - localStorage webhmi_token/webhmi_user（守卫判据 + REST Bearer；addInitScript
+ *   每次导航前生效，context 生命周期内持久）。
+ * - cookie `token=<jwt>`（SSE 鉴权——EventSource 只能靠同源 cookie，localStorage
+ *   注入对它无效；cookie 与端口无关，domain 覆盖 webServer 任意端口）。
  */
 export async function loginAsAdmin(page: Page): Promise<void> {
   const { token, user } = await rsiotLogin()
   await page.addInitScript(([t, u]) => {
-    localStorage.setItem('hmi_token', t)
-    localStorage.setItem('hmi_user', u)
+    localStorage.setItem('webhmi_token', t)
+    localStorage.setItem('webhmi_user', u)
   }, [token, JSON.stringify(user)])
+  await page.context().addCookies([{ name: 'token', value: token, domain: '127.0.0.1', path: '/' }])
 }
 
 /** 直接打 rs-iot 删画面（测试自洁；DELETE 幂等，不存在也 ok） */

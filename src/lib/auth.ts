@@ -1,11 +1,20 @@
 /**
- * 登录态（F1 形状）：token 存 hmi_token（tokenStore），user 存 hmi_user。
- * login 失败不抛——返回 {ok:false,message} 交给登录页展示。
+ * 登录态（F1 形状）：token 存 webhmi_token（tokenStore，与 rs-iot 控制台共享的
+ * 统一会话键），user 存 webhmi_user。login 失败不抛——返回 {ok:false,message} 交登录页。
  */
 import { api, ApiError, tokenStore } from './api'
-import { LOGIN_PATH } from './endpoints'
+import { API_BASE, LOGIN_PATH } from './endpoints'
 
-const USER_KEY = 'hmi_user'
+const USER_KEY = 'webhmi_user'
+// 旧键一次性迁移（hmi_* / rsiot_* → webhmi_*）：控制台登录过的用户直接互通。
+;(function migrateLegacyUserKey(): void {
+  if (!localStorage.getItem(USER_KEY)) {
+    const legacy = localStorage.getItem('hmi_user') ?? localStorage.getItem('rsiot_user')
+    if (legacy) localStorage.setItem(USER_KEY, legacy)
+  }
+  localStorage.removeItem('hmi_user')
+  localStorage.removeItem('rsiot_user')
+})()
 
 export interface AuthedUser { user_id: string; [k: string]: unknown }
 export type LoginResult = { ok: true; user: AuthedUser } | { ok: false; message: string }
@@ -33,6 +42,15 @@ export async function login(userId: string, pass: string): Promise<LoginResult> 
 }
 
 export function logout(): void {
+  // 服务端登出尽力而为（清 HttpOnly cookie——统一会话的权威凭证）。用裸 fetch 不走
+  // api()：凭证已失效场景（onUnauthorized 触发的登出链）避免 401 回调再递归登出。
+  const t = tokenStore.get()
+  if (t) {
+    void fetch(`${API_BASE}/api/v1/user/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${t}` },
+    }).catch(() => {})
+  }
   tokenStore.clear()
   localStorage.removeItem(USER_KEY)
 }

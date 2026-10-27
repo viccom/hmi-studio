@@ -112,12 +112,12 @@ export class AlarmStore {
 // ---------- 事件流层（浏览器 EventSource，E2E 验证；鉴权形态随部署同 sse.ts） ----------
 
 import { backoff, probeUnauthorized } from './sse'
-import { API_BASE, SSE_TOKEN_IN_QUERY } from './endpoints'
+import { API_BASE } from './endpoints'
 
 export interface AlarmStreamOptions {
   /** 缺省 endpoints.API_BASE（gateway 部署 '/api/rsiot'——T18） */
   base?: string
-  /** 每次（重）连前取 token（dev=Cookie；gateway=?token= query——endpoints.ts） */
+  /** 失效探测用 Bearer（probeUnauthorized；SSE 本体走同源 cookie，统一会话） */
   getToken?: () => string | null
   onEvent: (e: AlarmEvent) => void
   /** auth-failed = 连续失败后探测 401（凭证失效——与 sse.ts 同款语义；画面无绑定点位时
@@ -135,16 +135,8 @@ export function createAlarmStream(opts: AlarmStreamOptions): { close(): void } {
   let gen = 0
   const bo = backoff()
 
-  const streamUrl = (): string => {
-    let url = `${opts.base ?? API_BASE}/api/v1/events?types=alarm`
-    const token = opts.getToken?.()
-    if (SSE_TOKEN_IN_QUERY) {
-      if (token) url += `&token=${encodeURIComponent(token)}`
-    } else if (token) {
-      document.cookie = `token=${encodeURIComponent(token)}; path=/`
-    }
-    return url
-  }
+  /** 告警事件流 URL：鉴权走同源 HttpOnly cookie（统一会话，两形态一致）。 */
+  const streamUrl = (): string => `${opts.base ?? API_BASE}/api/v1/events?types=alarm`
 
   const open = (): void => {
     if (closed) return

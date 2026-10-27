@@ -7,7 +7,7 @@
 
 ```
 浏览器 SPA（本仓库，dist 由 gateway 挂 /hmi）
-  │  REST（JWT）/ SSE（gateway: ?token= / dev: 同源 Cookie）
+  │  REST（Bearer 镜像）/ SSE（同源 HttpOnly cookie——统一会话，两形态一致）
   ▼
 rsiot-gateway :18080 ──反代──▶ rs-iot :8790（采集 + 实时数据 + 画面真相 /api/v1/screens）
 ```
@@ -45,9 +45,9 @@ L0 外部边界      maotu npm 包 / endpoints.ts（env 单源）/ 浏览器 API
 
 | 模块 | 职责 / 关键契约 |
 |------|----------------|
-| endpoints | 部署寻址单源：API_BASE / LOGIN_PATH / SSE_TOKEN_IN_QUERY（build 时 env 烘入） |
-| api | REST 客户端：JWT 头 + 非 2xx 抛 ApiError + 401 全局回调（main.ts 接线登出） |
-| auth | 登录形状 `{user_id,pass}` → token/user（localStorage `hmi_token`） |
+| endpoints | 部署寻址单源：API_BASE / LOGIN_PATH（build 时 env 烘入） |
+| api | REST 客户端：JWT 头（webhmi_token 镜像）+ 非 2xx 抛 ApiError + 401 全局回调（main.ts 接线登出） |
+| auth | 登录形状 `{user_id,pass}` → token/user（镜像 `webhmi_token`/`webhmi_user`，权威凭证是 HttpOnly cookie） |
 | screens | 画面 doc wrap/unwrap（meta 同体存储）+ screens CRUD 薄封装 |
 | screen-list / screen-create | 并发上限分批取列表（cap=4）/ 探测式创建（ok/exists/failed） |
 | device-tree / device-registry | rs-iot 设备+标签 → maotu 级联树（叶子 value=`<devid>.<tag>`）/ devid→owner_inst 解析 |
@@ -89,7 +89,7 @@ L0 外部边界      maotu npm 包 / endpoints.ts（env 单源）/ 浏览器 API
 ### 4.4 状态与数据流归属
 
 - 画面真相：rs-iot（PUT 全量 upsert；编辑器 onSaveClick 是唯一保存入口）。
-- 会话态：localStorage（token/user/theme），无 Pinia/全局 store——够用即不引入。
+- 会话态：HttpOnly cookie（权威，login 下发）+ localStorage 镜像 `webhmi_token`/`webhmi_user`/`webhmi_theme`（与 rs-iot 控制台共享），无 Pinia/全局 store——够用即不引入。
 - 实时数据：SSE 桥单向上行（collectBinds 订阅面 → onPoint → setDevicePointByID），画面组件不直接 fetch。
 - 命令：全部经 bridge（确认 → resolveInstance → POST → Tracker），组件不直发。
 
@@ -100,3 +100,4 @@ L0 外部边界      maotu npm 包 / endpoints.ts（env 单源）/ 浏览器 API
 - 2026-10-25 六决策锁定（D1 单 SPA … D6 编辑态命令显式确认）——docs/plans/2026-10-25-hmi-studio-design.md
 - 2026-10-26 W11 设备参数化：`@dev.` 前缀重映射发生在 ViewView 数据层，maotu/rs-iot 协议无感知
 - 2026-10-27 分层规范成文 + check-layers 机械化（本文）
+- 2026-10-28 统一会话：login 下发 HttpOnly cookie（gateway 透传 + 认 cookie），两 SPA 共享 `webhmi_*` 键一次登录互通；SSE 弃 ?token= query 改同源 cookie；主题默认工业深色且键共享（webhmi_theme）

@@ -4,13 +4,23 @@
  * （`.dark .el-*` / `.dark .dark\:bg-*` **祖先选择器**，bundle 实读）共消费，
  * 故 MtEdit/MtPreview 无需各自接线即跟随；maotu 自带 toggle（useDark selector:'#mt-edit'，
  * 独立事实源）传 :use-theme-toggle="false" 隐藏防双源分叉。
- * 持久化 localStorage hmi_theme；useTheme() 模块级单例（App 壳持有，视图层复用）。
+ * 持久化 localStorage webhmi_theme（与 rs-iot 控制台共享——同源两 SPA 一边切换
+ * 另一边跟随）；useTheme() 模块级单例（App 壳持有，视图层复用）。
  */
 import { ref } from 'vue'
 
 export type Theme = 'dark' | 'light'
 
-export const THEME_KEY = 'hmi_theme'
+export const THEME_KEY = 'webhmi_theme'
+// 旧键一次性迁移（hmi_theme / rsiot_theme → webhmi_theme）。
+;(function migrateLegacyThemeKey(): void {
+  if (!localStorage.getItem(THEME_KEY)) {
+    const legacy = localStorage.getItem('hmi_theme') ?? localStorage.getItem('rsiot_theme')
+    if (legacy) localStorage.setItem(THEME_KEY, legacy)
+  }
+  localStorage.removeItem('hmi_theme')
+  localStorage.removeItem('rsiot_theme')
+})()
 
 /** localStorage 原始串 → Theme；null/非法回落 dark（默认） */
 export function readTheme(raw: string | null): Theme {

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { THEME_KEY, readTheme, applyTheme } from './theme'
 
-// T16 主题契约：dark 默认（工业深色）；localStorage hmi_theme 持久化；
+// T16 主题契约：dark 默认（工业深色）；localStorage webhmi_theme 持久化（与控制台共享）；
 // 应用面 = html.dark class（element-plus dark css-vars 与 maotu .dark 祖先选择器共消费）。
 
 describe('readTheme：localStorage 原始串 → Theme（dark 默认）', () => {
