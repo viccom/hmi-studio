@@ -11,6 +11,7 @@
 | `pnpm e2e` | Playwright（webServer 自动起 5290，打真实 rs-iot，里程碑门禁） |
 | `pnpm run typecheck` | vue-tsc --noEmit（每任务必跑） |
 | `pnpm build` | 产物 dist/ → 交 gateway `hmi_dist` 挂 `/hmi`（T18） |
+| `just fe-quality` | 全套门禁：typecheck + eslint + 分层检查 + 单测 + e2e + build |
 
 ## 地图
 
@@ -18,10 +19,13 @@
 - `src/views/` 四业务页（Login/ScreenList/Edit/View）+ `src/components/` 骨架层组件
 - `src/symbols/` 手工重建图元（一图元一 ts，export ILeftAsideConfigItemPublic；全量目录见 registry.ts 头注释；约定 lint 见 lib/symbol-lint；开发宪法 docs/maotu-symbol-development-guide.md）
 - `src/dev/` 研究资产（spike/probe），不进导航不进守卫
-- `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7 / w8（G 门 + 图元轮 + 用户反馈轮，webServer 自动起 5290）
+- `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7-w11 / home-meters（G 门 + 图元轮 + 用户反馈轮，webServer 自动起 5290）
+- `scripts/check-layers.mjs` 分层依赖方向门禁（just layers）
 
 ## 文档
 
+- **架构与分层规范（依赖方向规则）**：docs/architecture.md
+- **工程规范（TS/Vue/测试/文档/提交）**：docs/standards.md
 - 设计（六决策锁定）：docs/plans/2026-10-25-hmi-studio-design.md
 - 实施方案 + 任务跟踪表：docs/plans/2026-10-25-hmi-studio-implementation-plan.md（§3 表格=任务状态真相源，完成任务即勾选回填 commit）
 - maotu 实证与概念映射：docs/maotu-rsiot-architecture.md

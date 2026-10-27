@@ -106,8 +106,6 @@ test.describe('M3 演示画面（T14 资产）', () => {
 
   test('段4: 互跳闭环 demo→B→demo（__navCount=2）+ $rsiot.back() 弹栈回 B', async ({ page }) => {
     await loginAsAdmin(page)
-    let subscribes = 0
-    page.on('response', (r) => { if (r.url().includes('/api/v1/rtdatas/subscribe')) subscribes += 1 })
 
     await page.goto(`/view/${DEMO_A}`)
     await expect(page.locator('.state.online')).toBeVisible({ timeout: 10_000 })
@@ -143,7 +141,7 @@ test.describe('M3 演示画面（T14 资产）', () => {
     await page.goto(`/view/${DEMO_A}`)
     await expect(page.locator('.state.online')).toBeVisible({ timeout: 10_000 })
     const { doc } = await rsiotGetScreen(DEMO_A)
-    const json = doc.json as Array<{ type: string; binds?: Array<{ triggers?: unknown[] }> }>
+    const json = doc.json as Array<{ id?: string; type: string; binds?: Array<{ triggers?: unknown[] }> }>
     expect(json).toHaveLength(18)
     // 触发链入库完整性（结构层判据与段2 行为层互补）
     const pump = json.find((i) => i.id === 'ah-pump-wdm3a-1')!

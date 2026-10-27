@@ -16,10 +16,10 @@
  * （20,100..780,580）。双面板**同位叠放**（页签语义即互斥显示，跨面板重叠是有意为之，
  * 与 home-screens.ts 概览屏的「两两不重叠」约定不同）；面板内部两两不重叠（伴生测试冻结）。
  */
-import type { IExportDoneJson, IExportJson, IDoneJsonEventList } from 'maotu'
+import type { IExportDoneJson, IDoneJsonEventList } from 'maotu'
 import type { ScreenDoc } from './screens'
 import {
-  canvas, textItem, svgItem, trendItem, bind, trig, switchChain, fillTriggers, balanceTriggers,
+  canvas, textItem, svgItem, trendItem, bind, switchChain, fillTriggers, balanceTriggers,
   panelBinds, HOME_GROUP,
 } from './home-screens'
 

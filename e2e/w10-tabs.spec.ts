@@ -52,7 +52,7 @@ test.describe('W10 页签屏 + 自适应', () => {
 
     // 期望值从真实布局量取（状态栏 32px+1px 边框，硬编码会漂）：
     // data-fit 应恒等于 min(视宽/800, 可视区高/600)
-    const expectFit = async (vw: number, vh: number): Promise<string> => {
+    const expectFit = async (vw: number, _vh: number): Promise<string> => {
       const box = page.locator('.fit-viewport')
       const h = await box.evaluate((el) => el.clientHeight)
       return (Math.min(vw / 800, h / 600)).toFixed(4)

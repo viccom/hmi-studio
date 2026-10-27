@@ -88,12 +88,17 @@ function addBind() {
     bind_mapping: [],
     triggers: [],
   }
+  // W8-A 落锤取舍：插槽 item = maotu store 的 done_json[n] 响应式对象，直改 binds
+  // 即驱动 onSaveClick 全量 PUT（无 bind_mapping、不进 undo——面板底部已注明）。eslint
+  // 按惯例禁改 props，此处为官方插槽协议的唯一写入通道，属有意豁免。
+  // eslint-disable-next-line vue/no-mutating-props
   props.item.binds = [...binds.value, nb] // 整组重赋值触发响应式（直改 store 对象）
   selectedPoint.value = null
 }
 function removeBind(i: number) {
   const arr = [...binds.value]
   arr.splice(i, 1)
+  // eslint-disable-next-line vue/no-mutating-props -- 同上：官方插槽直写通道
   props.item.binds = arr
 }
 

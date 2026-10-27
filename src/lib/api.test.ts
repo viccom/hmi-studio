@@ -6,7 +6,7 @@ describe('api client', () => {
 
   it('带 token 请求；401 抛 ApiError 并触发 onUnauthorized', async () => {
     localStorage.setItem('hmi_token', 'tok123')
-    const fetchMock = vi.fn(async (url: string, init?: RequestInit) =>
+    const fetchMock = vi.fn(async (url: string, _init?: RequestInit) =>
       url.includes('/ok')
         ? new Response('{"a":1}', { headers: { 'content-type': 'application/json' } })
         : new Response('unauthorized', { status: 401 }))

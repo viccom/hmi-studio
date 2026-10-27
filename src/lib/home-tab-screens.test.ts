@@ -79,7 +79,7 @@ describe('home-tab-screens 页签三屏结构', () => {
       const items = itemsOf(docs[k])
       const p1 = panelItems(items, 1).map((i) => String(i.id))
       const p2 = panelItems(items, 2).map((i) => String(i.id))
-      for (const [n, selfBtn, otherBtn, showIds, hideIds] of [
+        for (const [, selfBtn, otherBtn, showIds, hideIds] of [
         ['1', 'tab-btn-1', 'tab-btn-2', p1, p2],
         ['2', 'tab-btn-2', 'tab-btn-1', p2, p1],
       ] as const) {

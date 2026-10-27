@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { THEME_KEY, readTheme, applyTheme, useTheme } from './theme'
+import { THEME_KEY, readTheme, applyTheme } from './theme'
 
 // T16 主题契约：dark 默认（工业深色）；localStorage hmi_theme 持久化；
 // 应用面 = html.dark class（element-plus dark css-vars 与 maotu .dark 祖先选择器共消费）。

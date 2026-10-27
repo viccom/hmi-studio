@@ -63,7 +63,7 @@ test.describe('W7 编辑器可用性', () => {
     // 这正是用户痛点（长表单滚走 tab 头）的反例场景
     await page.evaluate(() => {
       const right = [...document.querySelectorAll('.mt-edit-aside')].find((a) => a.querySelector('#mt-right-aside'))
-      right.scrollTop = right.scrollHeight
+      if (right) right.scrollTop = right.scrollHeight
     })
     const pinnedOffset = await header.evaluate((el) => {
       const asideBox = (el.closest('.mt-edit-aside') as HTMLElement).getBoundingClientRect()
