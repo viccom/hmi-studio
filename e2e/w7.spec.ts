@@ -88,22 +88,34 @@ test.describe('W7 编辑器可用性', () => {
     expect(await footer.evaluate((el) => el.getBoundingClientRect().height)).toBe(0)
   })
 
-  test('头部 logo 区移除：MAOTU 图 + Mt-Edit 文本不可见，折叠按钮保留可用（W12 反馈）', async ({ page }) => {
+  test('头部 logo 换 rs-iot 文字标 + 工具栏垂直居中（W12.1 反馈）', async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto('/edit/water-demo-m3')
     await expect(page.locator('#mtCanvasArea')).toBeVisible()
 
+    // 原视觉物不可见：MAOTU 图 + "Mt-Edit" 文本（DOM 仍在，maotu 渲染，仅视觉替换）
     const logoImg = page.locator('.edit-body .el-header .el-image.w-45px')
-    await expect(logoImg).toHaveCount(1) // DOM 仍在（maotu 渲染），仅视觉移除
+    await expect(logoImg).toHaveCount(1)
     expect(await logoImg.evaluate((el) => getComputedStyle(el).display)).toBe('none')
     await expect(page.locator('.edit-body .el-header .el-text', { hasText: 'Mt-Edit' })).toBeHidden()
 
-    // 功能件不受伤：折叠按钮（leftAside 开关）仍可用——左面板宽度 200 → 收起（实测收起改宽度非 display）
-    const collapse = page.locator('.edit-body .el-header button').first()
-    await expect(collapse).toBeVisible()
+    // 新文字标：原容器 ::before 注入 rs-iot（意图判据 = 实际渲染内容与可见尺寸）
+    const brand = page.locator('.edit-body .el-header .w-200px > div').first()
+    expect(await brand.evaluate((el) => getComputedStyle(el, '::before').content)).toBe('"rs-iot"')
+    expect(await brand.evaluate((el) => getComputedStyle(el, '::before').width)).not.toBe('auto')
+
+    // 工具栏垂直居中：45px header 内内容行不再顶格（居中后上下留白对称）
+    const h = page.locator('.edit-body .el-header')
+    const hr = await h.evaluate((el) => { const r = el.getBoundingClientRect(); return { top: r.top, h: r.height } })
+    const btn = page.locator('.edit-body .el-header button').first()
+    const br = await btn.evaluate((el) => { const r = el.getBoundingClientRect(); return { top: r.top, h: r.height } })
+    const off = br.top + br.h / 2 - (hr.top + hr.h / 2)
+    expect(Math.abs(off)).toBeLessThan(6)
+
+    // 功能件不受伤：折叠按钮仍可用——左面板宽度 200 → 收起（实测收起改宽度非 display）
     const leftAside = page.locator('.edit-body .mt-edit-aside').first()
     const wBefore = await leftAside.evaluate((el) => el.getBoundingClientRect().width)
-    await collapse.click()
+    await btn.click()
     await page.waitForTimeout(500)
     const wAfter = await leftAside.evaluate((el) => el.getBoundingClientRect().width)
     expect(wBefore).toBeGreaterThan(100)
