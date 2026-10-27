@@ -228,6 +228,11 @@ describe('AhPowerGauge 组件（电表功率盘）', () => {
     expect(text(el, 'svg')).toContain('0.0 ~ 5.0 kW')
     unmount()
   })
+  it('越界读数显真值（6.74kW/量程 0-5 → 文本 6.74，指针钉满程）——现场表计语义', () => {
+    const { el, unmount } = mountComp(AhPowerGauge, { value: 6.74 })
+    expect(text(el, 'svg')).toContain('6.74')
+    unmount()
+  })
   it('>4.5kW 报警红弧静态常画（不依赖触发链，越线即入区）', () => {
     const { el, unmount } = mountComp(AhPowerGauge, { value: 0 })
     const alarmArc = el.querySelector('path[stroke="#f5222d"]')

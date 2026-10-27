@@ -7,7 +7,7 @@
  * 故 store 的「确认」= clear(key)（本地剔除+入历史），SSE Clear 再到时幂等。
  */
 import { describe, expect, it } from 'vitest'
-import { AlarmStore, parseAlarmEvent } from './alarms'
+import { AlarmStore, parseAlarmEvent, createAlarmStream } from './alarms'
 
 const item = (key: string, ts: string, level = 'warn'): { key: string; level: string; source: string; message: string; ts: string; count: number } =>
   ({ key, level, source: 'self', message: `msg-${key}`, ts, count: 1 })
@@ -78,5 +78,67 @@ describe('parseAlarmEvent（SSE data 帧 → 事件）', () => {
     expect(parseAlarmEvent('not-json')).toBeUndefined()
     expect(parseAlarmEvent('{"action":"fire"}')).toBeUndefined()
     expect(parseAlarmEvent('{"action":"ack","key":"x"}')).toBeUndefined()
+  })
+})
+
+// ---------- 事件流层重连状态机（FakeES 注入；对齐 sse.ts 的 P1 竞态回归锁） ----------
+
+class FakeES {
+  static instances: FakeES[] = []
+  url: string
+  closed = false
+  private ls = new Map<string, Set<() => void>>()
+  constructor(url: string) { this.url = url; FakeES.instances.push(this) }
+  addEventListener(type: string, fn: () => void): void {
+    const s = this.ls.get(type) ?? new Set(); s.add(fn); this.ls.set(type, s)
+  }
+  emit(type: string): void { for (const fn of this.ls.get(type) ?? []) fn() }
+  close(): void { this.closed = true }
+}
+const current = (): FakeES => FakeES.instances[FakeES.instances.length - 1]
+const liveCount = (): number => FakeES.instances.filter((i) => !i.closed).length
+
+import { afterEach, vi } from 'vitest'
+afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); FakeES.instances = [] })
+
+describe('createAlarmStream 重连状态机（凭证失效探测——与 sse.ts 同款语义）', () => {
+  it('三连错 + probe 401 → auth-failed 单次上报且永久停摆（画面无绑定时告警流是唯一失效信号源）', async () => {
+    vi.useFakeTimers()
+    vi.stubGlobal('EventSource', FakeES)
+    vi.stubGlobal('fetch', async () => ({ status: 401, body: undefined }))
+    const onState = vi.fn()
+    const stream = createAlarmStream({ getToken: () => 't', onEvent: vi.fn(), onState })
+
+    for (const ms of [1000, 2000]) {
+      current().emit('error')
+      await vi.advanceTimersByTimeAsync(ms)
+    }
+    current().emit('error')
+    await vi.advanceTimersByTimeAsync(10_000)
+
+    expect(onState).toHaveBeenCalledWith('auth-failed')
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(liveCount()).toBe(0) // 停摆后不再重建
+    stream.close()
+  })
+
+  it('probe 在飞期间 close → 旧探测结论作废，不产生孤儿连接', async () => {
+    vi.useFakeTimers()
+    vi.stubGlobal('EventSource', FakeES)
+    let probeGate!: (status: number) => void
+    const gate = new Promise<number>((r) => { probeGate = r })
+    vi.stubGlobal('fetch', async () => ({ status: await gate, body: undefined }))
+    const stream = createAlarmStream({ getToken: () => 't', onEvent: vi.fn(), onState: vi.fn() })
+
+    for (const ms of [1000, 2000]) {
+      current().emit('error')
+      await vi.advanceTimersByTimeAsync(ms)
+    }
+    current().emit('error') // failures=3 → probe 挂起
+    stream.close()          // 等待期间关闭——probe 返回后不得再排定任何 open
+    probeGate(200)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(liveCount()).toBe(0)
+    expect(FakeES.instances.length).toBe(3)
   })
 })

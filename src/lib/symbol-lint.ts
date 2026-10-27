@@ -30,6 +30,14 @@ export function lintSymbol(s: ILeftAsideConfigItemPublic): string[] {
   if (s.type === 'svg') {
     const svg = s.svg ?? ''
     if (!svg || !/viewBox\s*=/.test(svg) || whMissing) errs.add('SVG_VIEWBOX')
+    // VIEWBOX_DIMS：viewBox 数值须与注册宽高一致（kf 取 viewBox 建 symbol——不一致 = 拖入几何错位）
+    const vb = svg.match(/viewBox\s*=\s*"([^"]*)"/)
+    if (vb && typeof s.width === 'number' && typeof s.height === 'number') {
+      const n = vb[1].trim().split(/[\s,]+/).map(Number)
+      if (n.length === 4 && n.slice(2).every(Number.isFinite) && (n[2] !== s.width || n[3] !== s.height)) errs.add('VIEWBOX_DIMS')
+    }
+    // SVG_XMLNS：dataURI 按 XML 解析，缺命名空间不保证跨浏览器渲染
+    if (svg && !/xmlns\s*=/.test(svg)) errs.add('SVG_XMLNS')
     for (const c of svg.match(/<!--[\s\S]*?-->/g) ?? []) {
       // XML 注释体内不允许 "--"（定界符 <!-- 与 --> 除外）
       if (c.slice(4, -3).includes('--')) errs.add('SVG_COMMENT')
@@ -39,6 +47,13 @@ export function lintSymbol(s: ILeftAsideConfigItemPublic): string[] {
     }
   } else if (whMissing) {
     errs.add('SVG_VIEWBOX') // 宽高数字（拖入初值）对全类型必要，沿用同码保持断言面稳定
+  }
+  // THUMB_ANCHOR：缩略图 dataURI 内 data-ah-id 与 id 同步（svgThumbnail 第二参手抄易漏——
+  // E2E 定位锚 img[src*="ah-xxx"] 的前提）；非 dataURI/空 thumbnail 不覆盖
+  if (typeof s.thumbnail === 'string' && s.thumbnail.startsWith('data:image/svg+xml')) {
+    try {
+      if (!decodeURIComponent(s.thumbnail).includes(`data-ah-id="${s.id}"`)) errs.add('THUMB_ANCHOR')
+    } catch { errs.add('THUMB_ANCHOR') }
   }
   if (s.type === 'vue' || s.type === 'custom-svg') {
     for (const d of Object.values(s.props ?? {})) {

@@ -33,6 +33,11 @@ async function parseBody(res: Response): Promise<unknown> {
 
 async function request(opts: ApiOptions, method: string, path: string, body?: unknown): Promise<unknown> {
   const token = tokenStore.get()
+  // REST 15s 上限：登录/保存等 UI 路径不因后端僵死无限挂起（超时抛 AbortError，按既有
+  // 网络错误路径被调用方 catch）；SSE 探测有自身 5s 超时（sse.ts），不走此通道
+  const signal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+    ? AbortSignal.timeout(15_000)
+    : undefined
   const res = await fetch((opts.base ?? API_BASE) + path, {
     method,
     headers: {
@@ -40,6 +45,7 @@ async function request(opts: ApiOptions, method: string, path: string, body?: un
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: body !== undefined ? JSON.stringify(body) : undefined,
+    signal,
   })
   if (res.status === 401) { (opts.onUnauthorized ?? defaultOnUnauthorized)?.(); throw new ApiError(401, await parseBody(res), 'unauthorized') }
   if (!res.ok) throw new ApiError(res.status, await parseBody(res))

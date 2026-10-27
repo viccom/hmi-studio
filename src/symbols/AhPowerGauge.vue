@@ -5,7 +5,7 @@
      触发链入口：value(连续直写) / pulse(离散 change_attr)。 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { gaugeAngle, gaugeArcBetween, gaugeArcPath, polarPt, clampNum } from './gauge-math'
+import { gaugeAngle, gaugeArcBetween, gaugeArcPath, polarPt } from './gauge-math'
 
 const props = withDefaults(defineProps<{
   value?: number | string
@@ -36,10 +36,11 @@ const majors = computed(() => Array.from({ length: 6 }, (_, k) => {
 }))
 const minors = computed(() => Array.from({ length: 21 }, (_, k) => {
   const deg = gaugeAngle(k / 4, 0, MAX_KW)
-  return { out: polarPt(CX, CY, 68, deg), inn: polarPt(CX, CY, 60, deg), major: k % 4 === 0 }
-}))
+  return { out: polarPt(CX, CY, 68, deg), inn: polarPt(CX, CY, 60, deg) }
+}).filter((_, k) => k % 4 !== 0)) // major 位由 majors 另画——生成即滤，不进热路径
+// 读数显真值（现场表计语义）：越界值文本不失真（6.74 显 6.74），指针/弧几何另行钳位
 const shown = computed(() => {
-  const n = clampNum(props.value, 0, MAX_KW, NaN)
+  const n = Number(props.value)
   return Number.isFinite(n) ? n.toFixed(2) : '--'
 })
 const lamp = computed(() => (props.pulse ? '#ff4d4f' : '#262d36'))
@@ -52,7 +53,7 @@ const lamp = computed(() => (props.pulse ? '#ff4d4f' : '#262d36'))
     <path :d="alarmD" fill="none" stroke="#f5222d" stroke-width="8" stroke-linecap="round" opacity="0.9" />
     <path :d="progressD" fill="none" :stroke="accent" stroke-width="8" stroke-linecap="round" />
     <g v-for="(t, i) in minors" :key="'m' + i" stroke="#6e7681" stroke-width="1">
-      <line v-if="!t.major" :x1="t.out.x" :y1="t.out.y" :x2="t.inn.x" :y2="t.inn.y" />
+      <line :x1="t.out.x" :y1="t.out.y" :x2="t.inn.x" :y2="t.inn.y" />
     </g>
     <g v-for="(t, i) in majors" :key="'M' + i" stroke="#c9d1d9" stroke-width="2">
       <line :x1="t.out.x" :y1="t.out.y" :x2="t.inn.x" :y2="t.inn.y" />

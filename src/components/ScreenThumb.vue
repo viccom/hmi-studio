@@ -9,7 +9,7 @@
 //   mounted hook 对其抛 TypeError 且**中断同批兄弟挂载**（实测），降级占位块+计数徽章。
 // - pointer-events:none：缩略图只读——防 nav-button 等默认事件模板被点发（F19）。
 // - 自绘图元注册由父页 registerSymbols() 保证（幂等）。
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useIntersectionObserver } from '@vueuse/core'
 import { MtPreview } from 'maotu'
 import type { IExportJson } from 'maotu'
@@ -30,9 +30,19 @@ const { stop } = useIntersectionObserver(wrapRef, ([entry]) => {
   if (entry?.isIntersecting) { visible.value = true; stop() }
 }, { rootMargin: '120px' })
 
+// 卡片栅格 el-col 随窗口宽度换列（xs/sm/md/lg 断点）——scale 须跟随容器宽变化
+// （原只在 mounted 量一次：跨断点后缩略图裁切/留白）。jsdom 无 RO 时降级一次量宽。
+let ro: ResizeObserver | undefined
 onMounted(() => {
-  if (wrapRef.value) scale.value = wrapRef.value.clientWidth / w
+  const el = wrapRef.value
+  if (!el) return
+  scale.value = el.clientWidth / w
+  if (typeof ResizeObserver !== 'undefined') {
+    ro = new ResizeObserver(() => { scale.value = el.clientWidth / w })
+    ro.observe(el)
+  }
 })
+onBeforeUnmount(() => { ro?.disconnect(); ro = undefined })
 </script>
 
 <template>

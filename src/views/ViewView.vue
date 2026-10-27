@@ -288,6 +288,8 @@ onMounted(async () => {
   alarmStream = createAlarmStream({
     getToken: tokenStore.get,
     onEvent: (e) => { alarmStore.applyEvent(e); refreshAlarms() },
+    // 凭证失效链与数据流同款（T16 relogin 选型）：画面无绑定点位时告警流是唯一失效信号源
+    onState: (st) => { if (st === 'auth-failed') doLogout() },
   })
 
   let done: IExportJson

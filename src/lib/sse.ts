@@ -76,8 +76,9 @@ export interface RtdataStreamOptions {
 /** 探测凭证是否失效：EventSource error 不带 HTTP 状态码，fetch 可读——
  *  对订阅 URL 发一次性 GET（带 Bearer），仅 401 判失效；网络错误视为非鉴权问题（false）。
  *  5s 超时：对宕机服务器 fetch 可无限挂起，收窄重连状态机的 await 窗口。
+ *  导出供 alarms.ts 事件流同款复用（凭证失效链语义单源）。
  *  流层 fetch 不进 jsdom 单测——E2E 验证（m4 恒 401 段）。 */
-async function probeUnauthorized(url: string, token: string | null): Promise<boolean> {
+export async function probeUnauthorized(url: string, token: string | null): Promise<boolean> {
   try {
     const signal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
       ? AbortSignal.timeout(5000)

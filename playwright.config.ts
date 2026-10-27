@@ -10,7 +10,8 @@ export default defineConfig({
   webServer: {
     command: 'pnpm exec vite --port 5290 --strictPort',
     url: 'http://127.0.0.1:5290',
-    reuseExistingServer: true,
+    // CI 下不复用残留 server（worktree 并行时 5290 残留会静默测到 worktree 代码）；本地保留复用提速
+    reuseExistingServer: !process.env.CI,
     timeout: 30_000,
   },
 })

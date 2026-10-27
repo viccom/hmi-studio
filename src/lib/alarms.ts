@@ -7,7 +7,6 @@
  * ——无法复用同一条连接，告警走第二条 EventSource（routes_rtdata_subscribe.rs SubQuery 实证）。
  * rs-iot 无 confirm 语义：人工清除 = DELETE /api/v1/alarms?key=（后端发 Clear 事件收敛）。
  */
-import { backoff } from './sse'
 
 export interface AlarmItem {
   key: string
@@ -112,6 +111,7 @@ export class AlarmStore {
 
 // ---------- 事件流层（浏览器 EventSource，E2E 验证；鉴权形态随部署同 sse.ts） ----------
 
+import { backoff, probeUnauthorized } from './sse'
 import { API_BASE, SSE_TOKEN_IN_QUERY } from './endpoints'
 
 export interface AlarmStreamOptions {
@@ -120,26 +120,36 @@ export interface AlarmStreamOptions {
   /** 每次（重）连前取 token（dev=Cookie；gateway=?token= query——endpoints.ts） */
   getToken?: () => string | null
   onEvent: (e: AlarmEvent) => void
-  onState?: (s: 'online' | 'offline') => void
+  /** auth-failed = 连续失败后探测 401（凭证失效——与 sse.ts 同款语义；画面无绑定点位时
+   *  本流是唯一的失效信号源，ViewView 据此走全局登出） */
+  onState?: (s: 'online' | 'offline' | 'auth-failed') => void
 }
 
-/** /api/v1/events?types=alarm —— 命名事件 `alarm`；错误自管重连（同 sse.ts 退避策略） */
+/** /api/v1/events?types=alarm —— 命名事件 `alarm`；错误自管重连（同 sse.ts 退避 +
+ *  代际守卫 + 3 连错 probe 401 —— 竞态语义与 sse.test.ts 的回归锁同款） */
 export function createAlarmStream(opts: AlarmStreamOptions): { close(): void } {
   let es: EventSource | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
   let closed = false
+  let failures = 0
+  let gen = 0
   const bo = backoff()
 
-  const open = (): void => {
-    if (closed) return
-    const token = opts.getToken?.()
+  const streamUrl = (): string => {
     let url = `${opts.base ?? API_BASE}/api/v1/events?types=alarm`
+    const token = opts.getToken?.()
     if (SSE_TOKEN_IN_QUERY) {
       if (token) url += `&token=${encodeURIComponent(token)}`
     } else if (token) {
       document.cookie = `token=${encodeURIComponent(token)}; path=/`
     }
-    es = new EventSource(url)
+    return url
+  }
+
+  const open = (): void => {
+    if (closed) return
+    es?.close() // 重建前先关旧连接——任何路径二次进入 open 都不产生孤儿
+    es = new EventSource(streamUrl())
     es.addEventListener('open', () => { bo.reset(); opts.onState?.('online') })
     es.addEventListener('alarm', (ev) => {
       const e = parseAlarmEvent((ev as MessageEvent).data)
@@ -149,14 +159,27 @@ export function createAlarmStream(opts: AlarmStreamOptions): { close(): void } {
       es?.close()
       es = undefined
       opts.onState?.('offline')
-      if (!closed) timer = setTimeout(open, bo.next())
+      failures += 1
+      void reconnect()
     })
+  }
+
+  const reconnect = async (): Promise<void> => {
+    if (closed) return
+    if (failures >= 3) {
+      const g = gen
+      const unauthorized = await probeUnauthorized(streamUrl(), opts.getToken?.() ?? null)
+      if (unauthorized) { closed = true; opts.onState?.('auth-failed'); return }
+      if (closed || g !== gen) return // 等待期间已 close——旧探测结论作废
+    }
+    timer = setTimeout(open, bo.next())
   }
 
   open()
   return {
     close() {
       closed = true
+      gen += 1
       clearTimeout(timer)
       es?.close()
       es = undefined

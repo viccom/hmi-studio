@@ -105,6 +105,11 @@ describe('AhDigitalDisplay 组件', () => {
 })
 
 describe('AhGaugePressure 组件', () => {
+  it('越界读数显真值（150/量程 0-100 → 文本 150，指针钉满程）——现场表计语义：读数不因量程失真', () => {
+    const { el, unmount } = mountComp(AhGaugePressure, { value: 150, min: 0, max: 100 })
+    expect(text(el, 'svg')).toContain('150')
+    unmount()
+  })
   it('指针几何随 value 变化（角度=f(value,min,max) 落到线段端点）', () => {
     const tip = (v: number) => {
       const { el, unmount } = mountComp(AhGaugePressure, { value: v, min: 0, max: 100 })
@@ -130,6 +135,11 @@ describe('AhGaugePressure 组件', () => {
 })
 
 describe('AhThermometer 组件', () => {
+  it('越界读数显真值（200℃/量程 -40~160 → 文本 200，液柱限幅在管内）', () => {
+    const { el, unmount } = mountComp(AhThermometer, { value: 200, min: -40, max: 160 })
+    expect(text(el, 'svg')).toContain('200')
+    unmount()
+  })
   it('液柱几何随 value 变化：值越大液面 y 越小（自底生长）', () => {
     const topY = (v: number) => {
       const { el, unmount } = mountComp(AhThermometer, { value: v, min: -40, max: 160 })

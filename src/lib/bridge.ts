@@ -78,7 +78,15 @@ export function installBridge(opts: BridgeOptions): BridgeHandle {
       let inst: string
       try {
         registry ??= await fetchDeviceRegistry()
-        inst = resolveInstance(registry, devid)
+        try {
+          inst = resolveInstance(registry, devid)
+        } catch (e) {
+          if (!(e instanceof CommandError)) throw e
+          // 注册表是安装时的快照——运行期接入的新设备未命中时强制刷新一次再试
+          // （长时运行的操作页不因缓存拒发）；仍未命中则按原语义落错误提示
+          registry = await fetchDeviceRegistry()
+          inst = resolveInstance(registry, devid)
+        }
       } catch (e) {
         ElMessage.error(e instanceof Error ? e.message : '命令失败')
         return

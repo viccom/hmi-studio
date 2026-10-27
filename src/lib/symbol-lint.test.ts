@@ -68,7 +68,7 @@ describe('lintSymbol 五规则', () => {
     expect(lintSymbol(badComment)).toContain('SVG_COMMENT')
     // style 文本内的 "--x" 合法（泵/罐的 CSS 自定义属性写法），不误报
     const cssVar = broken({
-      svg: '<svg viewBox="0 0 8 8" xmlns="http://www.w3.org/2000/svg"><style>.x{transform:scaleY(var(--ah-lvl,0))}</style><rect/></svg>',
+      svg: '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><style>.x{transform:scaleY(var(--ah-lvl,0))}</style><rect/></svg>',
     })
     expect(lintSymbol(cssVar)).toEqual([])
   })
@@ -91,6 +91,30 @@ describe('lintSymbol 五规则', () => {
     expect(lintSymbol(okAnim)).not.toContain('ANIM_CLASS')
     // 无 animation prop 的 svg 型不受此规则（静态阀族）
     expect(lintSymbol(OK)).not.toContain('ANIM_CLASS')
+  })
+
+  it('VIEWBOX_DIMS：svg 型 viewBox 数值与注册 width/height 不一致 → 拖入几何错位（kf 取 viewBox 建 symbol）', () => {
+    const mis = broken({ svg: '<svg viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg"><rect/></svg>' })
+    expect(lintSymbol(mis)).toContain('VIEWBOX_DIMS')
+    expect(lintSymbol(OK)).not.toContain('VIEWBOX_DIMS') // 0 0 64 64 ↔ 64×64 一致
+  })
+
+  it('SVG_XMLNS：svg 缺 xmlns → dataURI 按 XML 解析不保证（部分浏览器整图空白）', () => {
+    const noNs = broken({ svg: '<svg viewBox="0 0 64 64"><rect/></svg>' })
+    expect(lintSymbol(noNs)).toContain('SVG_XMLNS')
+  })
+
+  it('THUMB_ANCHOR：缩略图 dataURI 内 data-ah-id 与注册 id 不一致 → E2E 定位锚 img[src*="ah-xxx"] 失效', () => {
+    const mis = broken({
+      thumbnail: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg data-ah-id="ah-other" xmlns="http://www.w3.org/2000/svg"><rect/></svg>'),
+    })
+    expect(lintSymbol(mis)).toContain('THUMB_ANCHOR')
+    const okThumb = broken({
+      thumbnail: 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg data-ah-id="ah-x" xmlns="http://www.w3.org/2000/svg"><rect/></svg>'),
+    })
+    expect(lintSymbol(okThumb)).not.toContain('THUMB_ANCHOR')
+    // 空 thumbnail（非 dataURI）不在此规则覆盖（旧占位路径）
+    expect(lintSymbol(OK)).not.toContain('THUMB_ANCHOR')
   })
 
   it('VUE_EMPTY_STR：vue/custom-svg 型 input prop 默认值空串 → jT 替换为 #mt_slot 占位（bundle 960697）', () => {

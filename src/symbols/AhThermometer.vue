@@ -4,7 +4,7 @@
      深色主题自包含配色、props 契约对齐 §2.2（fill=液色）、几何收敛到 gauge-math。 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { thermoY, clampNum } from './gauge-math'
+import { thermoY } from './gauge-math'
 
 const props = withDefaults(defineProps<{
   value?: number | string
@@ -19,8 +19,9 @@ const TUBE_TOP = 18
 const TUBE_BOTTOM = 118
 const liquidColor = computed(() => props.fill ?? '#f5222d')
 const yTop = computed(() => thermoY(props.value, props.min, props.max, TUBE_TOP, TUBE_BOTTOM))
+// 读数显真值（现场表计语义）：越界值文本不失真（200 显 200），液柱 yTop 仍 clampNum 限幅管内
 const shown = computed(() => {
-  const n = clampNum(props.value, props.min, props.max, NaN)
+  const n = Number(props.value)
   return Number.isFinite(n) ? n : '--'
 })
 const majors = computed(() => Array.from({ length: 5 }, (_, k) => {

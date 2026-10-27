@@ -116,9 +116,11 @@ test.describe('W7 编辑器可用性', () => {
     const leftAside = page.locator('.edit-body .mt-edit-aside').first()
     const wBefore = await leftAside.evaluate((el) => el.getBoundingClientRect().width)
     await btn.click()
-    await page.waitForTimeout(500)
-    const wAfter = await leftAside.evaluate((el) => el.getBoundingClientRect().width)
     expect(wBefore).toBeGreaterThan(100)
-    expect(wAfter).toBeLessThan(20)
+    // 收起是宽度过渡动画——轮询宽度收敛（原固定 sleep 500ms 慢机上可能读到中间态）
+    await expect.poll(
+      () => leftAside.evaluate((el) => el.getBoundingClientRect().width),
+      { timeout: 3000 },
+    ).toBeLessThan(20)
   })
 })

@@ -88,6 +88,30 @@ describe('bridge.send 状态收敛', () => {
     expect(ep.error).toHaveBeenCalledOnce()
   })
 
+  it('注册表缓存未命中（运行期新增设备）→ 强制刷新一次重试成功（长时运行页不因缓存拒发）', async () => {
+    // devices 首查仅 pump1；send(pump2) 未命中缓存 → 刷新注册表（此时已含 pump2）→ 下发成功
+    let devices: Record<string, unknown> = { pump1: { owner_inst: 'inst-1' } }
+    let devicesFetches = 0
+    vi.stubGlobal('fetch', vi.fn(async (url: string, _init?: RequestInit) => {
+      if (url.includes('/api/v1/devices')) {
+        devicesFetches += 1
+        return json(devices)
+      }
+      if (url.includes('/api/v1/command/send')) return json({ status: 'ok' })
+      return json({})
+    }) as unknown as typeof fetch)
+    ep.confirm.mockResolvedValue(undefined)
+    handle = installBridge({ mode: 'view', router: fakeRouter() })
+    const face = (window as { $rsiot?: { send: (d: string, t: string, v: unknown) => Promise<void> } }).$rsiot!
+    await face.send('pump1', 'spd', 1) // 首次 send 建立缓存（fetches=1）
+    devices = { pump1: { owner_inst: 'inst-1' }, pump2: { owner_inst: 'inst-2' } }
+    await face.send('pump2', 'spd', 2) // 缓存未命中 → 刷新 → 命中下发
+    expect(devicesFetches).toBe(2) // 首建 1 + 失效强刷 1
+    expect(handle.history.value).toHaveLength(2)
+    expect(handle.history.value[0]).toMatchObject({ devid: 'pump2', state: 'confirmed' })
+    expect(ep.error).not.toHaveBeenCalled()
+  })
+
   it('用户取消 → 静默：无请求、无历史、无提示', async () => {
     const calls = stubFetch(async () => json({ status: 'ok' }))
     ep.confirm.mockRejectedValue(new Error('cancel'))

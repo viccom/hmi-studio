@@ -5,7 +5,7 @@
      刻度数值 = min + k·(max-min)/4（k=0..4 主刻度），几何来自 gauge-math 纯函数（有单测）。 -->
 <script setup lang="ts">
 import { computed } from 'vue'
-import { gaugeAngle, gaugeArcPath, polarPt, fracOf, clampNum } from './gauge-math'
+import { gaugeAngle, gaugeArcPath, polarPt, fracOf } from './gauge-math'
 
 const props = withDefaults(defineProps<{
   value?: number | string
@@ -43,12 +43,12 @@ const minorTicks = computed(() => Array.from({ length: 21 }, (_, k) => {
   return {
     out: polarPt(CX, CY, R_TICK_OUT, deg),
     inn: polarPt(CX, CY, R_TICK_MAJOR + 4, deg),
-    major: k % 5 === 0,
   }
-}))
+}).filter((_, k) => k % 5 !== 0)) // major 位由 majors 另画——生成即滤，不进热路径
 const pct = computed(() => Math.round(fracOf(props.value, props.min, props.max) * 100))
+// 读数显真值（现场表计语义）：越界值文本不失真（150 显 150），指针/弧几何另行钳位钉满程
 const shown = computed(() => {
-  const n = clampNum(props.value, props.min, props.max, NaN)
+  const n = Number(props.value)
   return Number.isFinite(n) ? n : '--'
 })
 </script>
@@ -59,7 +59,7 @@ const shown = computed(() => {
     <path class="ah-gp-baseline" :d="baselineD" fill="none" stroke="#30363d" stroke-width="7" stroke-linecap="round" />
     <path class="ah-gp-arc" :d="arcD" fill="none" :stroke="needleColor" stroke-width="7" stroke-linecap="round" />
     <g v-for="(t, i) in minorTicks" :key="'m' + i" stroke="#6e7681" stroke-width="1">
-      <line v-if="!t.major" :x1="t.out.x" :y1="t.out.y" :x2="t.inn.x" :y2="t.inn.y" />
+      <line :x1="t.out.x" :y1="t.out.y" :x2="t.inn.x" :y2="t.inn.y" />
     </g>
     <g v-for="(t, i) in majors" :key="'M' + i" stroke="#c9d1d9" stroke-width="2">
       <line :x1="t.out.x" :y1="t.out.y" :x2="t.inn.x" :y2="t.inn.y" />

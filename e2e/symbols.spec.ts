@@ -13,7 +13,7 @@ import { DEMO_CATALOG } from '../src/lib/demo-screen'
 // SSE mock 沿用 F20 page.route fulfill 法：整帧 snapshot 后断流 → 客户端 ~1s 退避重连，
 // 服务变量切换后二次断言（变色-恢复全链经真实 maotu 管线）。
 
-// 26 类注册图元（registry 全量）：13 svg + 7 custom-svg/vue 仪表 + 4 操作（dis-switch/nav 为 svg 型）
+// 27 类注册图元（registry 全量，W11 +ah-dev-selector）：13 svg + 8 custom-svg/vue + 操作类（dis-switch/nav 为 svg 型）
 // P2 表计轮（+5）：ah-trend-chart/ah-meter-panel（vue）、ah-power-gauge/ah-water-meter/ah-gas-meter（custom-svg）
 // W11（+1）：ah-dev-selector（vue，参数化画面设备上下文切换）
 const SVG_TYPES = [

@@ -31,7 +31,7 @@ const progressD = computed(() => gaugeArcPath(48, 100, 26, props.flow, 0, 1))
 const needleTip = computed(() => polarPt(48, 100, 19, gaugeAngle(props.flow, 0, 1)))
 const ticks = computed(() => [0, 0.5, 1].map((v) => {
   const deg = gaugeAngle(v, 0, 1)
-  return { out: polarPt(48, 100, 28, deg), inn: polarPt(48, 100, 22, deg), lbl: polarPt(48, 100, 15, deg), v }
+  return { out: polarPt(48, 100, 28, deg), inn: polarPt(48, 100, 22, deg) }
 }))
 const flowShown = computed(() => clampNum(props.flow, 0, 1, 0).toFixed(2))
 </script>
