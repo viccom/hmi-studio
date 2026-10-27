@@ -36,6 +36,10 @@ const bridge = installBridge({ mode: 'edit', router })
 onUnmounted(() => bridge.uninstall())
 
 const loadFailed = ref(false)
+/** 保存三态锁（P1）：加载成功才放开保存。loadFailed 只覆盖"加载失败"，
+ *  "加载在飞"（首载 loadSwitcherScreens 期间 / 切换器换画面 GET 未返）同样必须拦——
+ *  否则空白画布 + 陈旧 meta 下的保存 = 全量 PUT 覆盖目标画面（唯一数据丢失路径）。 */
+const loaded = ref(false)
 
 async function loadScreen() {
   const reqSlug = slug.value
@@ -46,10 +50,12 @@ async function loadScreen() {
     meta.value = m
     upgradeNavTargets(done) // 存量跳转按钮 input→select（拖入为注册项深拷贝，旧实例需就地升级）
     editRef.value?.setImportJson(done)
+    loaded.value = true
     loadFailed.value = false
   } catch {
     if (slug.value !== reqSlug) return
     loadFailed.value = true // 加载失败置锁：空画布+陈旧 meta 下保存=用空 doc 覆盖画面
+    loaded.value = false
     ElMessage.error('画面加载失败——已禁止保存，请刷新重试')
   }
 }
@@ -68,6 +74,7 @@ onMounted(async () => {
 watch(() => route.params.id, async (id) => {
   if (!id || id === slug.value) return
   slug.value = id as string
+  loaded.value = false // :key 重挂后画布为空白——保存锁回到"加载中"，直至新画面 GET 成功
   await nextTick() // 等 :key 重挂完成，setImportJson 落在新实例
   await loadScreen()
 })
@@ -152,6 +159,10 @@ function doLogout() {
 async function save(payload: IExportJson) {
   if (loadFailed.value) {
     ElMessage.error('画面未成功加载，已禁止保存（避免空画面覆盖）')
+    return
+  }
+  if (!loaded.value) {
+    ElMessage.error('画面加载中，已禁止保存（加载完成前保存会覆盖目标画面）')
     return
   }
   try {

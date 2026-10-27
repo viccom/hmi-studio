@@ -11,7 +11,7 @@ import { useIntervalFn } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import { MtPreview } from 'maotu'
 import type { IExportJson } from 'maotu'
-import { screensApi, unwrapDoc } from '../lib/screens'
+import { screensApi, unwrapDoc, type ScreenMeta } from '../lib/screens'
 import { collectBinds } from '../lib/binds'
 import { createRtdataStream, type RtPoint, type StreamState } from '../lib/sse'
 import { api, tokenStore } from '../lib/api'
@@ -32,7 +32,7 @@ const slug = route.params.id as string
 const sApi = screensApi()
 
 const previewRef = ref<InstanceType<typeof MtPreview>>()
-const meta = ref<{ name?: string; group?: string }>({})
+const meta = ref<ScreenMeta>({})
 const state = ref<StreamState>('offline')
 const deadFields = ref<string[]>([])
 /** 订阅面（去重点位）——状态栏展示用，故 reactive */
@@ -42,6 +42,10 @@ const currentSlug = ref(slug)
 
 let stream: ReturnType<typeof createRtdataStream> | undefined
 const received = new Set<string>()
+/** 卸载标记（P1 竞态）：初始加载/jump 的 GET 在飞期间卸载组件时，onUnmounted 的
+ *  stream?.close() 落空（stream 尚为 undefined）——mountScreen 入口拦截，杜绝
+ *  卸载后新建永不关闭的 SSE + 迟到的 ?dev 写回 URL 把用户拽回运行页。 */
+let disposed = false
 
 const userName = getAuthedUser()?.user_id ?? ''
 const stateLabel = (): string =>
@@ -137,10 +141,15 @@ function faceplateDevs(done: IExportJson): Array<{ id: string; label?: string }>
   return []
 }
 
-async function mountScreen(done: IExportJson): Promise<void> {
+/** 画面装载（挂载/跳转/切设备共用管线）。
+ *  devOverride：显式设备上下文——jump 传 ''（新画面不继承旧画面 ?dev=，P2 竞态：
+ *  replace 是异步导航，紧跟其后的同步代码读 route.query 拿到的是旧画面 query，
+ *  旧设备 id 重写到新画面会产生整屏 deadFields）；缺省（深链路径）读 route.query.dev。 */
+async function mountScreen(done: IExportJson, devOverride?: string): Promise<void> {
+  if (disposed) return
   templateDone.value = done
   const param = isDevParamScreen(done)
-  const qdev = typeof route.query.dev === 'string' ? route.query.dev : ''
+  const qdev = devOverride ?? (typeof route.query.dev === 'string' ? route.query.dev : '')
   activeDev.value = param ? (qdev || faceplateDevs(done)[0]?.id || '') : ''
   const inst = param && activeDev.value ? applyDevContext(done, activeDev.value) : done
   previewRef.value?.setImportJson(inst)
@@ -191,18 +200,25 @@ function onStreamState(s: StreamState): void {
 }
 
 /** 容器内跳转：GET 目标 doc → mountScreen（W11 参数化重映射同管线）→ URL 同步（replace，
- * path 形式丢弃旧 query.dev）→ SSE 重订；404 报错停留当前画面 */
+ *  path 形式丢弃旧 query.dev）→ SSE 重订；404 报错停留当前画面。
+ *  在飞互斥（P2 竞态）：连点不同目标时响应乱序会"后返回者被先返回者覆盖"（画面/URL/历史栈
+ *  三者错乱）——序号守卫丢弃过期响应；mount 失败回退 currentSlug，避免同目标重跳被拦成死锁。 */
+let jumpSeq = 0
 const jump = async (target: string): Promise<boolean> => {
   if (target === currentSlug.value) return false
+  const seq = ++jumpSeq
+  const prev = currentSlug.value
   try {
     const { doc } = await sApi.get(target)
+    if (disposed || seq !== jumpSeq) return false
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
     currentSlug.value = target
     void router.replace(`/view/${target}`)
-    await mountScreen(done)
+    await mountScreen(done, '')
     return true
   } catch {
+    if (currentSlug.value === target) currentSlug.value = prev
     ElMessage.error(`画面 ${target} 加载失败`)
     return false
   }
@@ -289,6 +305,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  disposed = true
   resizeObs?.disconnect()
   stream?.close()
   alarmStream?.close()

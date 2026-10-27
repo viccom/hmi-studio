@@ -1,7 +1,9 @@
-import { describe, it, expect } from 'vitest'
-import { parseCell, toPoint, backoff, buildSubscribeUrl, parseFrame } from './sse'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { parseCell, toPoint, backoff, buildSubscribeUrl, parseFrame, createRtdataStream } from './sse'
 
 // T5 纯函数契约（流层 EventSource 不进 jsdom——E2E 真实验证）。
+// 例外：createRtdataStream 的**重连状态机**以 FakeES + 可控 fetch + 假时钟注入单测
+// （竞态是时序逻辑，E2E 无法确定性复现）；真浏览器行为仍由 E2E 验证。
 // 帧形状来自 2026-10-25 curl 实测（见 docs/plans 实施方案 T5 与 F 表）：
 //   event: snapshot   data = {dev, points:{"dev.tag":[ts,localTime,"valueStr"]}}
 //   event: datachange data = {changes:{"dev.tag":cell}, removed:[], ts}
@@ -77,5 +79,97 @@ describe('parseFrame：snapshot/datachange 帧 → 点位数组（实测形状�
     expect(parseFrame('snapshot', '{"dev":"d"}')).toEqual([])
     expect(parseFrame('datachange', '{"changes":{"ok":[1,"t","1"],"bad":"x"}}')).toEqual([{ field: 'ok', value: 1 }])
     expect(parseFrame('whatever', '{}')).toEqual([])
+  })
+})
+
+// ---------- 流层重连状态机（FakeES 注入；P1 竞态回归锁） ----------
+
+class FakeES {
+  static instances: FakeES[] = []
+  url: string
+  closed = false
+  private ls = new Map<string, Set<() => void>>()
+  constructor(url: string) { this.url = url; FakeES.instances.push(this) }
+  addEventListener(type: string, fn: () => void): void {
+    const s = this.ls.get(type) ?? new Set(); s.add(fn); this.ls.set(type, s)
+  }
+  emit(type: string): void { for (const fn of this.ls.get(type) ?? []) fn() }
+  close(): void { this.closed = true }
+}
+const liveCount = (): number => FakeES.instances.filter((i) => !i.closed).length
+const current = (): FakeES => FakeES.instances[FakeES.instances.length - 1]
+
+afterEach(() => {
+  vi.useRealTimers()
+  vi.unstubAllGlobals()
+  FakeES.instances = []
+})
+
+describe('createRtdataStream 重连状态机', () => {
+  it('P1 竞态：probe 在飞期间 resubscribe → 旧探测结论作废，不得产生孤儿连接（双订阅）', async () => {
+    vi.useFakeTimers()
+    vi.stubGlobal('EventSource', FakeES)
+    // probe fetch 受控挂起：三连错后 reconnect await 在此，resubscribe 打进去再放行
+    let probeGate!: (status: number) => void
+    const gate = new Promise<number>((r) => { probeGate = r })
+    vi.stubGlobal('fetch', async () => ({ status: await gate, body: undefined }))
+
+    const stream = createRtdataStream({ devs: ['a'], getToken: () => 't', onPoint: vi.fn(), onState: vi.fn() })
+
+    // 三连错：每错一次退避重建（1s/2s），第三次进入 probe 等待
+    for (const ms of [1000, 2000]) {
+      current().emit('error')
+      await vi.advanceTimersByTimeAsync(ms)
+    }
+    current().emit('error')
+    await vi.advanceTimersByTimeAsync(10_000) // probe 未放行——不得有任何重建
+    expect(FakeES.instances.length).toBe(3)
+
+    // 竞态注入：probe 在飞期间用户切设备/跳画面（resubscribe 重建新流）
+    stream.resubscribe(['b'])
+    expect(liveCount()).toBe(1)
+    current().emit('error') // 新流一次错（failures=1）→ 正常排定一次退避重连
+    await vi.advanceTimersByTimeAsync(0)
+
+    probeGate(200) // 旧 probe 现在才返回"非鉴权问题"
+    await vi.advanceTimersByTimeAsync(30_000)
+
+    // 修复前：旧 reconnect 继续排第二个 open → 两次重建 → 孤儿连接（live=2）
+    expect(liveCount()).toBe(1)
+    stream.close()
+  })
+
+  it('probe 401 → auth-failed 单次上报且流永久关闭（resubscribe 不复活）', async () => {
+    vi.useFakeTimers()
+    vi.stubGlobal('EventSource', FakeES)
+    vi.stubGlobal('fetch', async () => ({ status: 401, body: undefined }))
+    const onState = vi.fn()
+    const stream = createRtdataStream({ devs: ['a'], getToken: () => 't', onPoint: vi.fn(), onState })
+
+    for (const ms of [1000, 2000]) {
+      current().emit('error')
+      await vi.advanceTimersByTimeAsync(ms)
+    }
+    current().emit('error')
+    await vi.advanceTimersByTimeAsync(10_000)
+
+    expect(onState).toHaveBeenCalledWith('auth-failed')
+    stream.resubscribe(['b'])
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(liveCount()).toBe(0) // closed=true 后 resubscribe 的 open() 直接返回
+  })
+
+  it('resubscribe 立即重建且旧连接被关闭（订阅面切换无泄漏）', async () => {
+    vi.useFakeTimers()
+    vi.stubGlobal('EventSource', FakeES)
+    vi.stubGlobal('fetch', async () => ({ status: 200, body: undefined }))
+    const stream = createRtdataStream({ devs: ['a'], getToken: () => 't', onPoint: vi.fn(), onState: vi.fn() })
+    const es1 = current()
+    stream.resubscribe(['b'])
+    expect(es1.closed).toBe(true)
+    expect(current()).not.toBe(es1)
+    expect(liveCount()).toBe(1)
+    stream.close()
+    expect(liveCount()).toBe(0)
   })
 })

@@ -137,6 +137,14 @@ watch(() => props.windowSecs, () => {
   syncCounters()
   scheduleDraw()
 })
+// 曲线配置变更（编辑器右面板 textArea）：曲线 k ↔ 通道 k ↔ points[k] 一一对应是本图元
+// 核心契约——旧通道缓冲的数据属旧 field，换配后必须清空（否则时间窗内的旧曲线段会画在
+// 新 label 名下，张冠李戴的伪趋势）；计数/图例/画布三者同步重置。P2 回归锁见 meters-batch。
+watch(() => props.points, () => {
+  bufs = []
+  syncCounters()
+  scheduleDraw()
+})
 
 onMounted(() => {
   const el = chartEl.value

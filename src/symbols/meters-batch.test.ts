@@ -144,6 +144,36 @@ describe('AhTrendChart 组件（数据通道机制组件侧背书）', () => {
     unmount()
   })
 
+  it('P2 回归：points 配置变更 → 旧通道缓冲清空（图例/计数/画布三同步，不残留旧曲线）', async () => {
+    const TWO_SERIES = JSON.stringify([
+      { field: 'home-meter-e2.power', label: 'E2 功率', unit: 'kW', color: '#409eff' },
+    ])
+    const { el, set, unmount } = mountReactive(AhTrendChart, { points: ONE_SERIES, tick0: 0, windowSecs: 600 })
+    set('tick0', 1.5)
+    await nextTick()
+    expect(text(el, '.ah-trc-n')).toBe('1 点')
+    echartsMock.chart.setOption.mockClear()
+    // 编辑器右面板改 points：旧缓冲的数据属旧 field，必须随配置变更清空
+    set('points', TWO_SERIES)
+    await nextTick()
+    expect(text(el, '.ah-trc-n')).toBe('0 点')          // 计数即时归零（修复前残留 1 点）
+    expect(text(el, '.ah-trc-label')).toBe('E2 功率')    // 图例跟随新配置
+    await sleep(1100)                                    // 尾随重绘（节流 ≥1s 同数据路径）
+    expect(echartsMock.chart.setOption).toHaveBeenCalledTimes(1)
+    const series = echartsMock.chart.setOption.mock.calls[0][0].series
+    expect(series).toHaveLength(1)
+    expect(series[0].name).toBe('E2 功率')
+    expect(series[0].data).toHaveLength(0)              // 旧曲线数据不画进新 label 名下
+    // 新通道数据到来 → 正常入队新曲线
+    set('tick0', 2.5)
+    await nextTick()
+    await sleep(1100)
+    const data2 = echartsMock.chart.setOption.mock.calls.at(-1)![0].series[0].data
+    expect(data2).toHaveLength(1)
+    expect(data2[0][1]).toBe(2.5)
+    unmount()
+  })
+
   it('卸载 dispose（防 echarts 实例泄漏）', () => {
     const { unmount } = mountReactive(AhTrendChart, { points: ONE_SERIES, tick0: 0, windowSecs: 600 })
     expect(echartsMock.chart.dispose).not.toHaveBeenCalled()

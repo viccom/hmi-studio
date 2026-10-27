@@ -75,10 +75,14 @@ export interface RtdataStreamOptions {
 
 /** 探测凭证是否失效：EventSource error 不带 HTTP 状态码，fetch 可读——
  *  对订阅 URL 发一次性 GET（带 Bearer），仅 401 判失效；网络错误视为非鉴权问题（false）。
+ *  5s 超时：对宕机服务器 fetch 可无限挂起，收窄重连状态机的 await 窗口。
  *  流层 fetch 不进 jsdom 单测——E2E 验证（m4 恒 401 段）。 */
 async function probeUnauthorized(url: string, token: string | null): Promise<boolean> {
   try {
-    const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    const signal = typeof AbortSignal !== 'undefined' && 'timeout' in AbortSignal
+      ? AbortSignal.timeout(5000)
+      : undefined
+    const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {}, signal })
     void res.body?.cancel().catch(() => { /* 中断流式响应体，状态码已读到 */ })
     return res.status === 401
   } catch { return false }
@@ -90,6 +94,9 @@ export function createRtdataStream(opts: RtdataStreamOptions): { close(): void; 
   let timer: ReturnType<typeof setTimeout> | undefined
   let closed = false
   let failures = 0
+  // 代际计数：resubscribe/close 自增——在飞 reconnect 的 probe 返回后比对，不一致即作废
+  // （P1 竞态回归锁见 sse.test.ts：否则旧探测结论会二次排定 open，产生孤儿连接双订阅）
+  let gen = 0
   const bo = backoff()
 
   const syncCookie = (): void => {
@@ -108,6 +115,7 @@ export function createRtdataStream(opts: RtdataStreamOptions): { close(): void; 
 
   const open = (): void => {
     if (closed) return
+    es?.close() // 重建前先关旧连接——任何路径二次进入 open 都不产生孤儿
     syncCookie()
     es = new EventSource(streamUrl())
     es.addEventListener('open', () => { failures = 0; bo.reset(); opts.onState?.('online') })
@@ -130,8 +138,11 @@ export function createRtdataStream(opts: RtdataStreamOptions): { close(): void; 
   const reconnect = async (): Promise<void> => {
     if (closed) return
     if (failures >= 3) {
+      const g = gen
       const unauthorized = await probeUnauthorized(streamUrl(), opts.getToken?.() ?? null)
       if (unauthorized) { closed = true; opts.onState?.('auth-failed'); return }
+      // 等待期间世界已变（resubscribe/close）——旧探测结论作废，不得再排定 open
+      if (closed || g !== gen) return
     }
     timer = setTimeout(open, bo.next())
   }
@@ -144,7 +155,7 @@ export function createRtdataStream(opts: RtdataStreamOptions): { close(): void; 
 
   open()
   return {
-    close() { closed = true; stop() },
-    resubscribe(next: string[]) { devs = next; failures = 0; bo.reset(); stop(); open() },
+    close() { closed = true; gen += 1; stop() },
+    resubscribe(next: string[]) { devs = next; failures = 0; bo.reset(); gen += 1; stop(); open() },
   }
 }
