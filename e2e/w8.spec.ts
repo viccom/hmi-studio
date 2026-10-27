@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { loginAsAdmin, rsiotPutScreen, rsiotGetScreen, rsiotDeleteScreen, rsiotSweepScreens } from './helpers'
+import { buildDemoScreen } from '../src/lib/demo-screen'
 
 // W8 用户反馈轮三段：绑定面板（deviceBind 官方插槽替换 + 直改 store item 驱动保存链——
 // 本轮最大技术假设，此处落锤）/ 画面分组（列表分区 + 切换器两层）/ 触发器（结构落库）。
@@ -163,17 +164,11 @@ test.describe('W8 绑定面板与画面分组', () => {
   test('段4 跳转按钮目标画面下拉：select 面板化 → 下拉选画面 → 保存落库（W9 反馈）', async ({ page }) => {
     await loginAsAdmin(page)
     const slugB = 'water-demo-m3-b'
-    // 长期资产纪律：备份 → 断言 → 回写（water-demo-m3-b 自带 nav-button 实例）
-    const token = await fetch('http://127.0.0.1:8790/api/v1/user/login', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ user_id: 'admin', pass: 'admin' }),
-    }).then((r) => r.json()).then((d) => d.token)
-    const auth = { Authorization: `Bearer ${token}` }
-    const original = await fetch(`http://127.0.0.1:8790/api/v1/screens/${slugB}`, { headers: auth }).then((r) => r.json())
-    const restore = () => fetch(`http://127.0.0.1:8790/api/v1/screens/${slugB}`, {
-      method: 'PUT', headers: { ...auth, 'content-type': 'application/json' },
-      body: JSON.stringify(original.doc),
-    })
+    // 长期资产纪律：基线 = buildDemoScreen().b 纯函数产物（固定基线，失败残留不跨轮累积——
+    // 与 w9-insecure 同款；原"快照当前态"备份会把并行轮次的中间态固化回写，P2 竞态）。
+    // 寻址经 helpers（RSIOT_BASE 可覆盖——原 7 处硬编码 127.0.0.1:8790 绕过了环境约定）。
+    const baseline = buildDemoScreen().b
+    const restore = () => rsiotPutScreen(slugB, baseline)
     await restore()
     try {
       await page.goto(`/edit/${slugB}`)
@@ -192,10 +187,11 @@ test.describe('W8 绑定面板与画面分组', () => {
       const putReq = page.waitForResponse((r) => r.request().method() === 'PUT' && r.url().includes(`/screens/${slugB}`))
       await page.locator('button .el-icon[title="保存"]').click()
       await putReq
-      const doc = await fetch(`http://127.0.0.1:8790/api/v1/screens/${slugB}`, { headers: auth }).then((r) => r.json())
-      const nav = doc.doc.json.find((n: { id?: string }) => String(n.id).startsWith('ah-nav-button-'))
+      const saved = await rsiotGetScreen(slugB)
+      const nav = (saved.doc.json as Array<{ id?: string; props?: { target?: string } }>)
+        .find((n) => String(n.id).startsWith('ah-nav-button-'))
       // maotu 保存态 props 为平面值（F12：保存扁平、导入 Jr 归一化回描述符）——select 落库即字符串
-      expect(nav.props.target).toBe('water-demo-m3')
+      expect(nav?.props?.target).toBe('water-demo-m3')
     } finally {
       await restore()
     }
