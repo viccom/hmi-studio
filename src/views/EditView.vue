@@ -273,6 +273,14 @@ async function save(payload: IExportJson) {
 }
 .edit-body :deep(.el-header) { display: flex; align-items: center; }
 .edit-body :deep(.el-header > div) { width: 100%; }
+/* W12.2 反馈：官方原版 = 两层 space-between 把 13 个工具钮撒满整行（东一个西一个）。
+   重排：左簇（品牌+折叠）与中簇（编辑工具）相邻收拢、统一小间距；右侧视图簇
+   margin-left:auto 靠右——标准编辑器形制（左工具右动作） */
+.edit-body :deep(.el-header > div) { justify-content: flex-start; gap: 12px; }
+.edit-body :deep(.el-header > div > div:not(.w-200px)) { justify-content: flex-start; gap: 4px; flex: 0 1 auto; width: auto; }
+.edit-body :deep(.el-header > div > .w-200px:nth-child(3)) { margin-left: auto; }
+/* 品牌 rs-iot 与折叠按钮间距（width:auto 后 justify-between 无余量，两钮贴死） */
+.edit-body :deep(.el-header .w-200px:nth-child(1)) { gap: 10px; }
 /* W7 反馈3：右面板 tab 头常驻。滚动容器实测=el-aside 本体（.mt-edit-aside 基线
    overflow:auto，内层 #mt-right-aside overflow:visible）。**maotu 内置 element-plus
    把 el-tabs 渲染成 [content, header]（bundle 实证 return [p, m]，header 在 DOM 底部
