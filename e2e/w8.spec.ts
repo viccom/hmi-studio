@@ -71,13 +71,15 @@ test.describe('W8 绑定面板与画面分组', () => {
     const slug = `w8-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
     await loginAsAdmin(page)
 
-    // 列表页新建（分组=测试组）
+    // 列表页新建（分组=测试组，el-select allow-create：输入 + Enter 创建项）
     await page.goto('/')
     await page.getByRole('button', { name: '新建画面' }).click()
     const dlg = page.locator('.el-dialog')
     await dlg.locator('.el-form-item', { hasText: '画面 ID' }).locator('input').fill(slug)
     await dlg.locator('.el-form-item', { hasText: '名称' }).locator('input').fill('W8 分组验证')
-    await dlg.locator('.el-form-item', { hasText: '分组' }).locator('input').fill('测试组')
+    const groupInput = dlg.locator('.el-form-item', { hasText: '分组' }).locator('input')
+    await groupInput.fill('测试组')
+    await groupInput.press('Enter')
     await dlg.locator('button', { hasText: '创建' }).click()
 
     // 列表出现「测试组」区头（组名+数量徽章），卡片在该区内
@@ -97,6 +99,61 @@ test.describe('W8 绑定面板与画面分组', () => {
     await expect(wrap.locator('.el-select-dropdown__item', { hasText: 'W8 分组验证' })).toBeVisible()
 
     await rsiotDeleteScreen(slug) // 清扫
+  })
+
+  test('段5 组管理：编辑信息改组 → 组重命名（批量改写）→ 解散（画面归未分组）', async ({ page }) => {
+    const base = `w8gm-${Date.now().toString(36)}`
+    const idA = `${base}-a`, idB = `${base}-b`
+    const blank = {
+      canvasCfg: {
+        width: 800, height: 600, scale: 1, color: '#141414', img: '',
+        guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
+      },
+      gridCfg: { enabled: true, align: true, size: 10 },
+      json: [], eventList: [], eventFlow: [],
+    }
+    await rsiotPutScreen(idA, { ...blank, name: '组管理甲', group: 'W8管理组' })
+    await rsiotPutScreen(idB, { ...blank, name: '组管理乙', group: 'W8管理组' })
+    try {
+      await loginAsAdmin(page)
+      await page.goto('/')
+      const section = page.locator('.group-block', { hasText: 'W8管理组' })
+      await expect(section.locator('.group-head .el-tag')).toHaveText('2')
+
+      // ① 卡片「编辑信息」：乙 改归已有组「家庭三表演示」→ 卡片跨区迁移
+      const cardB = section.locator('.screen-card', { hasText: '组管理乙' })
+      await cardB.locator('button[title^="编辑信息"]').click()
+      const dlg = page.locator('.el-dialog')
+      await expect(dlg).toContainText(idB) // 标题带画面 id；slug 只读
+      await expect(dlg.locator('.el-form-item', { hasText: '画面 ID' }).locator('input')).toBeDisabled()
+      const groupInput = dlg.locator('.el-form-item', { hasText: '分组' }).locator('input')
+      await groupInput.fill('家庭三表演示') // 下拉已有组（filterable）
+      await groupInput.press('Enter')
+      await dlg.locator('button', { hasText: '保存' }).click()
+      const famSection = page.locator('.group-block', { hasText: '家庭三表演示' })
+      await expect(famSection.locator('.card-name', { hasText: '组管理乙' })).toBeVisible()
+      await expect(section.locator('.group-head .el-tag')).toHaveText('1')
+
+      // ② 组头「重命名」：W8管理组 → W8改名组（甲 随组迁移）
+      await section.hover()
+      await section.locator('button[title="重命名分组"]').click()
+      const box = page.locator('.el-message-box')
+      await box.locator('input').fill('W8改名组')
+      await box.locator('button', { hasText: '重命名' }).click()
+      const renamed = page.locator('.group-block', { hasText: 'W8改名组' })
+      await expect(renamed.locator('.group-name')).toHaveText('W8改名组')
+      await expect(renamed.locator('.card-name', { hasText: '组管理甲' })).toBeVisible()
+
+      // ③ 组头「解散」：确认后画面归未分组（画面本身保留）
+      await renamed.hover()
+      await renamed.locator('button[title^="解散分组"]').click()
+      await page.locator('.el-message-box').locator('button', { hasText: '解散' }).click()
+      const ungrouped = page.locator('.group-block', { hasText: '未分组' })
+      await expect(ungrouped.locator('.card-name', { hasText: '组管理甲' })).toBeVisible()
+    } finally {
+      await rsiotDeleteScreen(idA)
+      await rsiotDeleteScreen(idB)
+    }
   })
 
   test('段3 触发器：绑定加触发器（>50 → fill=#ff4d4f）→ 保存 → triggers[0] 结构落库', async ({ page }) => {

@@ -6,11 +6,12 @@
 // 卡片 hover 抬升主色描边、网格尾虚线新建卡、入场 staggered。
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { screensApi } from '../lib/screens'
 import { loadScreenCards, groupSections, type ScreenCard } from '../lib/screen-list'
 import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
+import { updateScreenMeta, renameGroup, disbandGroup } from '../lib/screen-group'
 import { registerSymbols } from '../symbols'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import ScreenThumb from '../components/ScreenThumb.vue'
@@ -22,6 +23,8 @@ const loading = ref(false)
 
 const sections = computed(() => groupSections(cards.value))
 const groupCount = computed(() => sections.value.filter(g => g.name).length)
+// 已有组名清单：新建/编辑对话框下拉（可选可新建，allow-create）
+const groupOptions = computed(() => sections.value.filter(g => g.name).map(g => g.name))
 
 // 入场 stagger：全列表顺序编号，封顶防长列表迟滞
 const appearDelay = (sIdx: number, i: number) =>
@@ -52,8 +55,11 @@ async function remove(id: string) {
   }
 }
 
-// 新建画面：slug 即 rs-iot 画面 id；PUT 是 upsert，先探测防误覆盖既有画面
+// 新建/编辑信息共用对话框：create = slug+name+group（PUT blankScreen，探测防覆盖）；
+// edit = slug 只读，name/group 可改（GET→合并→PUT 元数据补丁）。group 清空 = 移出组。
 const dlgVisible = ref(false)
+const dlgMode = ref<'create' | 'edit'>('create')
+const editId = ref('')
 const formRef = ref<FormInstance>()
 const form = ref({ slug: '', name: '', group: '' })
 const rules: FormRules = {
@@ -65,7 +71,15 @@ const rules: FormRules = {
 }
 
 function openCreate() {
+  dlgMode.value = 'create'
   form.value = { slug: '', name: '', group: '' }
+  dlgVisible.value = true
+}
+
+function openEdit(c: ScreenCard) {
+  dlgMode.value = 'edit'
+  editId.value = c.id
+  form.value = { slug: c.id, name: c.name ?? '', group: c.group ?? '' }
   dlgVisible.value = true
 }
 
@@ -83,6 +97,61 @@ async function create() {
     return
   }
   dlgVisible.value = false
+  await refresh()
+}
+
+async function saveMeta() {
+  const valid = await formRef.value?.validate().then(() => true).catch(() => false)
+  if (!valid) return
+  try {
+    await updateScreenMeta(sApi, editId.value, {
+      name: form.value.name,
+      group: form.value.group, // '' = 移出组
+    })
+    dlgVisible.value = false
+    await refresh()
+  } catch {
+    ElMessage.error('保存失败')
+  }
+}
+
+const submitDlg = () => (dlgMode.value === 'create' ? create() : saveMeta())
+
+// 组管理（组 = doc.group 字段投影，操作即批量改写）：重命名（同名目标 = 合并）、解散（画面归未分组不删除）
+const groupOps = computed(() =>
+  new Set(sections.value.filter(g => g.name).map(g => g.name)),
+)
+
+async function doRenameGroup(g: string) {
+  const r = await ElMessageBox.prompt('输入新的分组名称（与已有组同名将合并）', `重命名分组「${g}」`, {
+    inputValue: g,
+    inputPattern: /\S+/,
+    inputErrorMessage: '组名不能为空',
+    confirmButtonText: '重命名',
+    cancelButtonText: '取消',
+  }).catch(() => null)
+  const to = r?.value.trim()
+  if (!to || to === g) return
+  const res = await renameGroup(sApi, cards.value, g, to)
+  ElMessage[res.fail ? 'warning' : 'success'](
+    res.fail ? `已更新 ${res.ok} 幅，${res.fail} 幅失败` : `已更新 ${res.ok} 幅画面`,
+  )
+  await refresh()
+}
+
+async function doDisbandGroup(g: string) {
+  const n = cards.value.filter(c => c.group === g).length
+  try {
+    await ElMessageBox.confirm(
+      `组内 ${n} 幅画面将移至「未分组」，画面不会被删除。`,
+      `解散分组「${g}」`,
+      { confirmButtonText: '解散', cancelButtonText: '取消', type: 'warning' },
+    )
+  } catch { return }
+  const res = await disbandGroup(sApi, cards.value, g)
+  ElMessage[res.fail ? 'warning' : 'success'](
+    res.fail ? `已移出 ${res.ok} 幅，${res.fail} 幅失败` : `已解散，${res.ok} 幅画面移至未分组`,
+  )
   await refresh()
 }
 </script>
@@ -132,6 +201,19 @@ async function create() {
             <span class="group-no" aria-hidden="true">{{ String(sIdx + 1).padStart(2, '0') }}</span>
             <span class="group-name">{{ g.name || '未分组' }}</span>
             <span class="group-head-el"><el-tag size="small" type="info" round>{{ g.cards.length }}</el-tag></span>
+            <!-- 组管理（真组才有）：重命名 / 解散 -->
+            <span v-if="g.name && groupOps.has(g.name)" class="group-ops" @click.stop>
+              <button class="icon-btn" title="重命名分组" @click="doRenameGroup(g.name)">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                </svg>
+              </button>
+              <button class="icon-btn danger" title="解散分组（画面移至未分组）" @click="doDisbandGroup(g.name)">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V6" />
+                </svg>
+              </button>
+            </span>
             <span class="group-rule" aria-hidden="true"></span>
           </div>
 
@@ -152,6 +234,11 @@ async function create() {
                   <span class="card-no" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
                   <span class="card-name" :title="c.name ?? c.id">{{ c.name ?? c.id }}</span>
                   <span class="card-ops" @click.stop>
+                    <button class="icon-btn" title="编辑信息（名称/分组）" @click="openEdit(c)">
+                      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                      </svg>
+                    </button>
                     <button class="icon-btn" title="在浏览器打开" @click="router.push(`/view/${c.id}`)">
                       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 3h7v7M21 3l-9 9M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" />
@@ -182,21 +269,29 @@ async function create() {
       </div>
     </div>
 
-    <el-dialog v-model="dlgVisible" title="新建画面" width="420px">
+    <el-dialog v-model="dlgVisible" :title="dlgMode === 'create' ? '新建画面' : `编辑画面信息 — ${editId}`" width="420px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="72px">
         <el-form-item label="画面 ID" prop="slug">
-          <el-input v-model="form.slug" placeholder="screen-id" autocomplete="off" />
+          <el-input v-model="form.slug" placeholder="screen-id" autocomplete="off" :disabled="dlgMode === 'edit'" />
         </el-form-item>
         <el-form-item label="名称" prop="name">
           <el-input v-model="form.name" placeholder="画面名称" />
         </el-form-item>
         <el-form-item label="分组">
-          <el-input v-model="form.group" placeholder="分组（可选）" />
+          <!-- 可下拉选已有组 / 直接输入新组名（allow-create）；清空 = 未分组 -->
+          <el-select
+            v-model="form.group"
+            class="group-select"
+            placeholder="不选即归入未分组"
+            clearable filterable allow-create default-first-option
+          >
+            <el-option v-for="g in groupOptions" :key="g" :label="g" :value="g" />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dlgVisible = false">取消</el-button>
-        <el-button type="primary" @click="create">创建</el-button>
+        <el-button type="primary" @click="submitDlg">{{ dlgMode === 'create' ? '创建' : '保存' }}</el-button>
       </template>
     </el-dialog>
   </main>
@@ -281,7 +376,11 @@ async function create() {
 }
 .group-name { font-weight: 700; font-size: 15px; color: var(--el-text-color-primary); }
 .group-head-el { display: inline-flex; }
+/* 组管理操作：hover 组头渐显（常驻显挤，操作低频） */
+.group-ops { display: inline-flex; gap: 2px; opacity: 0; transition: opacity 0.15s ease; }
+.group-head:hover .group-ops { opacity: 1; }
 .group-rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--el-border-color-lighter), transparent); }
+.group-select { width: 100%; }
 
 /* 卡片网格 */
 .grid {

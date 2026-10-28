@@ -50,6 +50,7 @@ L0 外部边界      maotu npm 包 / endpoints.ts（env 单源）/ 浏览器 API
 | auth | 登录形状 `{user_id,pass}` → token/user（镜像 `webhmi_token`/`webhmi_user`，权威凭证是 HttpOnly cookie） |
 | screens | 画面 doc wrap/unwrap（meta 同体存储）+ screens CRUD 薄封装 |
 | screen-list / screen-create | 并发上限分批取列表（cap=4）/ 探测式创建（ok/exists/failed） |
+| screen-group | 画面 meta/组操作：组 = doc.group 字段投影（无实体），重命名/解散 = 批量 GET→合并→PUT；'' 删字段语义 |
 | device-tree / device-registry | rs-iot 设备+标签 → maotu 级联树（叶子 value=`<devid>.<tag>`）/ devid→owner_inst 解析 |
 | binds | collectBinds(doneJson)：递归收集 bind_id → 去重 `{fields, devs}`（订阅面） |
 | sse | SSE 客户端：帧解析纯函数 + EventSource 流层（退避重连 + 401 探测 auth-failed） |
@@ -101,3 +102,4 @@ L0 外部边界      maotu npm 包 / endpoints.ts（env 单源）/ 浏览器 API
 - 2026-10-26 W11 设备参数化：`@dev.` 前缀重映射发生在 ViewView 数据层，maotu/rs-iot 协议无感知
 - 2026-10-27 分层规范成文 + check-layers 机械化（本文）
 - 2026-10-28 统一会话：login 下发 HttpOnly cookie（gateway 透传 + 认 cookie），两 SPA 共享 `webhmi_*` 键一次登录互通；SSE 弃 ?token= query 改同源 cookie；主题默认工业深色且键共享（webhmi_theme）
+- 2026-10-28 组管理落地：组保持无实体（doc.group 字段投影）——新建/编辑对话框下拉可选已有组或输入新建（allow-create），卡片编辑信息改名称/组，组头重命名（同名合并）/解散（画面归未分组不删除）
