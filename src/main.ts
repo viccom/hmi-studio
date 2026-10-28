@@ -10,6 +10,8 @@ import 'element-plus/dist/index.css'
 // element-plus 深色变量（html.dark 挂载生效；T16 工业深色默认）
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'maotu/dist/style.css'
+// 主题桥（最后加载保证覆盖优先级）：--el-* 色板对齐控制台 main.css——两前端视觉单点统一
+import './styles/theme-bridge.css'
 
 // 主题先于挂载应用（防首帧闪白）：读 webhmi_theme（默认 dark，与控制台共享）→ html.dark
 initTheme()

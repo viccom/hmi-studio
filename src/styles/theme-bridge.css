@@ -1,0 +1,123 @@
+/**
+ * 主题桥（theme-bridge）：把 rs-iot 控制台的色板（frontend/src/styles/main.css，
+ * 2026-10-28 时点）映射到 element-plus 的 --el-* 变量——两套前端同源部署，
+ * 主色/底色/文字/边框由此单点对齐，组件自动跟随（element-plus + maotu 内核
+ * 全部消费 --el-*）。
+ *
+ * 规则（低风险边界）：
+ * - 只覆盖颜色变量，不动圆角/字号/组件形态；
+ * - 梯度用 color-mix() 从主色派生（与 element-plus 官方生成算法同式：light-N =
+ *   mix(white N/10)，dark-2 = mix(black 20%)），不手算色值；
+ * - 控制台色板变更时同步本文件即可；整体回退 = main.ts 删掉这一行 import。
+ */
+
+:root {
+  /* 主色：控制台 --color-primary 浅色 #146a9a（深青蓝） */
+  --el-color-primary: #146a9a;
+  --el-color-primary-dark-2: color-mix(in srgb, #146a9a 80%, #000);
+  --el-color-primary-light-3: color-mix(in srgb, #146a9a 70%, #fff);
+  --el-color-primary-light-5: color-mix(in srgb, #146a9a 50%, #fff);
+  --el-color-primary-light-7: color-mix(in srgb, #146a9a 30%, #fff);
+  --el-color-primary-light-8: color-mix(in srgb, #146a9a 20%, #fff);
+  --el-color-primary-light-9: color-mix(in srgb, #146a9a 10%, #fff);
+
+  /* 功能色：控制台 success/warning/danger 浅色组 */
+  --el-color-success: #1d8a4b;
+  --el-color-success-dark-2: color-mix(in srgb, #1d8a4b 80%, #000);
+  --el-color-success-light-3: color-mix(in srgb, #1d8a4b 70%, #fff);
+  --el-color-success-light-5: color-mix(in srgb, #1d8a4b 50%, #fff);
+  --el-color-success-light-7: color-mix(in srgb, #1d8a4b 30%, #fff);
+  --el-color-success-light-8: color-mix(in srgb, #1d8a4b 20%, #fff);
+  --el-color-success-light-9: color-mix(in srgb, #1d8a4b 10%, #fff);
+  --el-color-warning: #ba7a14;
+  --el-color-warning-dark-2: color-mix(in srgb, #ba7a14 80%, #000);
+  --el-color-warning-light-3: color-mix(in srgb, #ba7a14 70%, #fff);
+  --el-color-warning-light-5: color-mix(in srgb, #ba7a14 50%, #fff);
+  --el-color-warning-light-7: color-mix(in srgb, #ba7a14 30%, #fff);
+  --el-color-warning-light-8: color-mix(in srgb, #ba7a14 20%, #fff);
+  --el-color-warning-light-9: color-mix(in srgb, #ba7a14 10%, #fff);
+  --el-color-danger: #c25353;
+  --el-color-error: #c25353;
+  --el-color-danger-dark-2: color-mix(in srgb, #c25353 80%, #000);
+  --el-color-danger-light-3: color-mix(in srgb, #c25353 70%, #fff);
+  --el-color-danger-light-5: color-mix(in srgb, #c25353 50%, #fff);
+  --el-color-danger-light-7: color-mix(in srgb, #c25353 30%, #fff);
+  --el-color-danger-light-8: color-mix(in srgb, #c25353 20%, #fff);
+  --el-color-danger-light-9: color-mix(in srgb, #c25353 10%, #fff);
+
+  /* 中性面：冷灰蓝底/填充（控制台 --color-surface 与 divider 色系） */
+  --el-bg-color-page: #eef3f8;
+  --el-fill-color: rgba(104, 129, 155, 0.09);
+  --el-fill-color-light: rgba(104, 129, 155, 0.07);
+  --el-fill-color-lighter: rgba(104, 129, 155, 0.05);
+  --el-fill-color-dark: rgba(104, 129, 155, 0.12);
+  --el-fill-color-darker: rgba(104, 129, 155, 0.16);
+
+  /* 文字四级：控制台 ink 组 */
+  --el-text-color-primary: #132235;
+  --el-text-color-regular: #20324a;
+  --el-text-color-secondary: #50657d;
+  --el-text-color-placeholder: #6f8297;
+  --el-text-color-disabled: #6f8297;
+
+  /* 边框：divider 色系（rgba 直接沿用控制台透明度语言） */
+  --el-border-color: rgba(104, 129, 155, 0.25);
+  --el-border-color-light: rgba(104, 129, 155, 0.2);
+  --el-border-color-lighter: rgba(104, 129, 155, 0.14);
+  --el-border-color-extra-light: rgba(104, 129, 155, 0.1);
+}
+
+html.dark {
+  /* 主色：控制台 --color-primary 暗色 #72ddff（亮青）；梯度 mix 黑 */
+  --el-color-primary: #72ddff;
+  --el-color-primary-dark-2: color-mix(in srgb, #72ddff 80%, #fff);
+  --el-color-primary-light-3: color-mix(in srgb, #72ddff 70%, #000);
+  --el-color-primary-light-5: color-mix(in srgb, #72ddff 50%, #000);
+  --el-color-primary-light-7: color-mix(in srgb, #72ddff 30%, #000);
+  --el-color-primary-light-8: color-mix(in srgb, #72ddff 20%, #000);
+  --el-color-primary-light-9: color-mix(in srgb, #72ddff 10%, #000);
+
+  --el-color-success: #34d399;
+  --el-color-success-dark-2: color-mix(in srgb, #34d399 80%, #fff);
+  --el-color-success-light-3: color-mix(in srgb, #34d399 70%, #000);
+  --el-color-success-light-5: color-mix(in srgb, #34d399 50%, #000);
+  --el-color-success-light-7: color-mix(in srgb, #34d399 30%, #000);
+  --el-color-success-light-8: color-mix(in srgb, #34d399 20%, #000);
+  --el-color-success-light-9: color-mix(in srgb, #34d399 10%, #000);
+  --el-color-warning: #ffb84d;
+  --el-color-warning-dark-2: color-mix(in srgb, #ffb84d 80%, #fff);
+  --el-color-warning-light-3: color-mix(in srgb, #ffb84d 70%, #000);
+  --el-color-warning-light-5: color-mix(in srgb, #ffb84d 50%, #000);
+  --el-color-warning-light-7: color-mix(in srgb, #ffb84d 30%, #000);
+  --el-color-warning-light-8: color-mix(in srgb, #ffb84d 20%, #000);
+  --el-color-warning-light-9: color-mix(in srgb, #ffb84d 10%, #000);
+  --el-color-danger: #ff7f7f;
+  --el-color-error: #ff7f7f;
+  --el-color-danger-dark-2: color-mix(in srgb, #ff7f7f 80%, #fff);
+  --el-color-danger-light-3: color-mix(in srgb, #ff7f7f 70%, #000);
+  --el-color-danger-light-5: color-mix(in srgb, #ff7f7f 50%, #000);
+  --el-color-danger-light-7: color-mix(in srgb, #ff7f7f 30%, #000);
+  --el-color-danger-light-8: color-mix(in srgb, #ff7f7f 20%, #000);
+  --el-color-danger-light-9: color-mix(in srgb, #ff7f7f 10%, #000);
+
+  /* 中性面：控制台暗色 surface（深海蓝黑，非 element-plus 出厂纯黑灰） */
+  --el-bg-color: #0e1a2b;
+  --el-bg-color-overlay: #101d30;
+  --el-bg-color-page: #040b16;
+  --el-fill-color: rgba(146, 176, 218, 0.1);
+  --el-fill-color-light: rgba(146, 176, 218, 0.08);
+  --el-fill-color-lighter: rgba(146, 176, 218, 0.06);
+  --el-fill-color-dark: rgba(146, 176, 218, 0.14);
+  --el-fill-color-darker: rgba(146, 176, 218, 0.2);
+
+  --el-text-color-primary: #edf6ff;
+  --el-text-color-regular: #d5e3f3;
+  --el-text-color-secondary: #97aac4;
+  --el-text-color-placeholder: #7389a7;
+  --el-text-color-disabled: #7389a7;
+
+  --el-border-color: rgba(146, 176, 218, 0.24);
+  --el-border-color-light: rgba(146, 176, 218, 0.18);
+  --el-border-color-lighter: rgba(146, 176, 218, 0.12);
+  --el-border-color-extra-light: rgba(146, 176, 218, 0.08);
+}
