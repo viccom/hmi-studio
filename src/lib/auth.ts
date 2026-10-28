@@ -55,6 +55,18 @@ export function logout(): void {
   localStorage.removeItem(USER_KEY)
 }
 
+/** 旧会话自愈：镜像 token 在而 cookie 缺失（旧 gateway 时代登录、Set-Cookie 被
+ * 丢弃的会话）——凭 Bearer 换发 cookie（POST /user/session）。SSE（EventSource
+ * 只能靠同源 cookie）缺它会 401 重连循环；异步尽力而为，重连数秒内自愈。 */
+export function bootstrapCookieSession(): void {
+  const t = tokenStore.get()
+  if (!t) return
+  void fetch(`${API_BASE}/api/v1/user/session`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${t}` },
+  }).catch(() => {})
+}
+
 export const isAuthed = () => tokenStore.get() !== null
 
 export function getAuthedUser(): AuthedUser | null {
