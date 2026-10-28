@@ -52,13 +52,13 @@ test.describe('M1 画面列表', () => {
     await page.getByPlaceholder('画面名称').fill('E2E-T3 验证画面')
     await page.getByRole('button', { name: '创建', exact: true }).click()
 
-    const card = page.locator('.el-card', { hasText: slug })
+    const card = page.locator('.screen-card', { hasText: slug })
     await expect(card).toBeVisible()
     await expect(card).toContainText('E2E-T3 验证画面')
 
     await card.getByTitle('删除画面').click()
     await page.getByRole('button', { name: '删除', exact: true }).click()
-    await expect(page.locator('.el-card', { hasText: slug })).toHaveCount(0)
+    await expect(page.locator('.screen-card', { hasText: slug })).toHaveCount(0)
   })
 
   test('slug 非法输入被表单校验拦截（不弹错误、不发 PUT）', async ({ page }) => {

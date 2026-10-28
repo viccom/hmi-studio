@@ -21,7 +21,7 @@ test('LAN 冒烟：/hmi/ → 登录 → 列表见 demo → 运行页 ≥12 图�
   await expect(page).toHaveURL(/\/hmi\/$/, { timeout: 10_000 })
 
   // 3) 列表（REST 经 /api/rsiot Bearer）：demo 卡片 + 缩略真渲染（T17 部署形态）
-  const demoCard = page.locator('.el-card', { hasText: 'water-demo-m3' }).first()
+  const demoCard = page.locator('.screen-card', { hasText: 'water-demo-m3' }).first()
   await demoCard.scrollIntoViewIfNeeded()
   await expect(demoCard).toBeVisible()
   await expect(demoCard.locator('.thumb-scale img').first()).toBeVisible({ timeout: 10_000 })

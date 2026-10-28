@@ -135,7 +135,7 @@ test.describe('M4 缩略图（T17）', () => {
   test('卡片缩略区：maotu 画面挂 MtPreview 真渲染（svg 图元 dataURI img 可见）', async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto('/')
-    const demoCard = page.locator('.el-card', { hasText: 'water-demo-m3' }).first()
+    const demoCard = page.locator('.screen-card', { hasText: 'water-demo-m3' }).first()
     await demoCard.scrollIntoViewIfNeeded()
     const thumb = demoCard.locator('[data-testid="card-thumb"]')
     await expect(thumb).toBeVisible()
@@ -153,11 +153,11 @@ test.describe('M4 缩略图（T17）', () => {
     } as unknown as Parameters<typeof rsiotPutScreen>[1])
     await loginAsAdmin(page)
     await page.goto('/')
-    const card = page.locator('.el-card', { hasText: legacySlug })
+    const card = page.locator('.screen-card', { hasText: legacySlug })
     await card.scrollIntoViewIfNeeded()
     await expect(card.locator('.thumb-fallback')).toBeVisible({ timeout: 10_000 })
     // 其余卡片不受波及（守卫前：一卡抛错中断同批挂载）
-    const demoCard = page.locator('.el-card', { hasText: 'water-demo-m3' }).first()
+    const demoCard = page.locator('.screen-card', { hasText: 'water-demo-m3' }).first()
     await demoCard.scrollIntoViewIfNeeded()
     await expect(demoCard.locator('.thumb-scale img').first()).toBeVisible({ timeout: 10_000 })
   })
