@@ -1,0 +1,115 @@
+/**
+ * 宿主聚合收集器（通道 B 执行端）——把画面里所有 BI 图元的历史分析需求合并成
+ * 少量 /history/batch 往返，取回后按面板组装信封并写回各图元。
+ *
+ * 为何在宿主而不在图元（架构裁定，AhTrendChart 头注释同款）：
+ * - 图元不自开 EventSource、不轮询（采集器是唯一数据出口）
+ * - **跨面板合并**是本层的核心价值：一屏 12 张图元若各自取数 = 12 次往返，
+ *   合并后 1~2 次（后端单批 ≤32 条，本设计 6 设备规模远未触顶）
+ * - 累计量 delta、前窗补齐等口径计算收在一处，图元只负责画
+ *
+ * 依赖注入（fetchBatch / write / now）→ 流层不进 jsdom 也不碰 maotu：
+ * - fetchBatch：POST /history/batch 的实现由宿主注入（api.ts 客户端）
+ * - write：写回实现由宿主注入（maotu preview.setItemAttrByID）
+ * - now：时间源（测试可控）
+ */
+import {
+  buildEnvelopes,
+  chunkQueries,
+  collectBiPanels,
+  planQueries,
+  type BiPanelSpec,
+  type BiQueryPlan,
+  type BiRawResult,
+  type BiWireQuery,
+} from './bi-contract'
+
+/** 收集器依赖（全部注入，便于单测与宿主装配）。 */
+export interface BiCollectorDeps {
+  /** POST /history/batch：入参 {queries:[...]}，返回 {results:[...]}。 */
+  fetchBatch: (body: { queries: BiWireQuery[] }) => Promise<{ results?: BiRawResult[] }>
+  /** 写回：写回目标 id、JSON 串、props 路径。 */
+  write: (itemId: string, payload: string, attr: string) => void
+  /** 时间源（秒级 Unix 时间戳）。 */
+  now: () => number
+}
+
+/** 收集器可选覆盖（时间源可单独覆盖，便于测试固定窗口）。 */
+export interface BiCollectorOptions {
+  now?: () => number
+}
+
+/** 一次采集的结果。 */
+export interface BiCollectResult {
+  /** 是否成功（false = batch 整体失败，画面未写回）。 */
+  ok: boolean
+  /** 本次覆盖的面板数。 */
+  panels: number
+  /** 整体失败原因（ok=true 时为 undefined）。 */
+  error?: string
+}
+
+/** 写回用的 props 路径（maotu 直写约定：props.<name>.val）。 */
+export const BI_DATA_ATTR = 'props.data.val'
+
+/**
+ * 创建收集器。
+ *
+ * @param deps  依赖注入（fetchBatch / write / now）
+ * @param opts  可选覆盖（now）
+ */
+export function createBiCollector(deps: BiCollectorDeps, opts: BiCollectorOptions = {}) {
+  const now = opts.now ?? deps.now
+
+  /**
+   * 采集一轮：扫描画面 → 合并查询 → 分批取数 → 结果按序配对 → 组装信封 → 写回。
+   *
+   * 失败语义：
+   * - 无 BI 图元 → ok=true、零请求零写回（普通 HMI 画面走这条，不产生任何开销）
+   * - batch 整体失败（网络/503）→ ok=false、**零写回**（保留图元上一次的旧信封，
+   *   总比写空白强）
+   * - 单条查询失败 → 字段化进该 series 的 error，其余面板照常写回（单图失败不拖全屏）
+   */
+  async function collect(done: unknown): Promise<BiCollectResult> {
+    const panels: BiPanelSpec[] = collectBiPanels(done)
+    if (!panels.length) return { ok: true, panels: 0 }
+
+    const t = now()
+    const queries = planQueries(panels, t)
+    if (!queries.length) return { ok: true, panels: panels.length }
+
+    // 分批取数，结果按「批内顺序」拼接——后端保证 results 与 queries 同序，
+    // 故跨批拼接后仍与全局 queries 顺序一致（配对靠下标，不靠 dev_id 猜）。
+    const raw: BiRawResult[] = []
+    try {
+      for (const chunk of chunkQueries(queries)) {
+        const body = { queries: chunk.map(toWireQuery) }
+        const res = await deps.fetchBatch(body)
+        const list = res.results ?? []
+        for (let i = 0; i < chunk.length; i++) {
+          raw.push(list[i] ?? { error: '未返回结果' })
+        }
+      }
+    } catch (e) {
+      return { ok: false, panels: panels.length, error: e instanceof Error ? e.message : String(e) }
+    }
+
+    const envelopes = buildEnvelopes(panels, queries, raw, t)
+    for (const panel of panels) {
+      const env = envelopes.get(panel.id)
+      if (!env) continue
+      deps.write(panel.id, JSON.stringify(env), BI_DATA_ATTR)
+    }
+    return { ok: true, panels: panels.length }
+  }
+
+  return { collect }
+}
+
+/** 查询计划 → 后端 wire 形状（后端只要这几个字段，秒级时间窗）。
+ *  raw 查询（agg=null）省略 agg/interval——后端两者必须同时给或都不给。 */
+function toWireQuery(q: BiQueryPlan): BiWireQuery {
+  const base = { dev_id: q.dev_id, tag: q.tag, start: q.start, end: q.end }
+  if (q.agg === null) return base
+  return { ...base, agg: q.agg, interval: q.interval }
+}

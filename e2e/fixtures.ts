@@ -1,8 +1,9 @@
 import { rsiotPutScreen } from './helpers'
-import { buildDemoScreen, buildCatalogScreen, DEMO_CATALOG } from '../src/lib/demo-screen'
-import { buildHomeScreens, HOME_E, HOME_W, HOME_G } from '../src/lib/home-screens'
-import { buildHomeTabScreens, HOME_E_TABS, HOME_W_TABS, HOME_G_TABS } from '../src/lib/home-tab-screens'
-import { buildHomeFaceplateScreen, HOME_E_FACEPLATE } from '../src/lib/home-faceplate-screen'
+import { buildDemoScreen, buildCatalogScreen, DEMO_CATALOG } from '../src/screen-assets/demo-screen'
+import { buildHomeScreens, HOME_E, HOME_W, HOME_G } from '../src/screen-assets/home-screens'
+import { buildHomeTabScreens, HOME_E_TABS, HOME_W_TABS, HOME_G_TABS } from '../src/screen-assets/home-tab-screens'
+import { buildHomeFaceplateScreen, HOME_E_FACEPLATE } from '../src/screen-assets/home-faceplate-screen'
+import { buildBiStationScreen, BI_STATION } from '../src/screen-assets/bi-screen'
 
 /**
  * M2 数据段种子画面（T6）——形状全部来自 2026-10-25 编辑器/BindProbe 实测：
@@ -119,7 +120,7 @@ export async function seedValueTag(slug: string, name = 'E2E 值牌'): Promise<v
 /**
  * T14 水处理演示画面（长期 LAN 演示资产）：slug 恒定 water-demo-m3 / water-demo-m3-b，
  * PUT 全量 upsert 幂等——与 e2e-t* 清扫语义相反，**任何测试不得删除这两个画面**。
- * 组态源 = src/lib/demo-screen.ts buildDemoScreen()（纯函数，结构防漂移快照在彼处单测）。
+ * 组态源 = src/screen-assets/demo-screen.ts buildDemoScreen()（纯函数，结构防漂移快照在彼处单测）。
  */
 export async function seedDemoScreens(): Promise<void> {
   const { a, b } = buildDemoScreen()
@@ -138,7 +139,7 @@ export async function seedCatalogDemo(): Promise<void> {
 /**
  * P3 家庭三表三屏（长期资产）：slug 恒定 home-meter-power/water/gas，PUT 全量 upsert 幂等——
  * 与 e2e-t* 清扫语义相反，**任何测试不得删除这三张画面**（同 water-demo-m3 约定）。
- * 组态源 = src/lib/home-screens.ts buildHomeScreens()（纯函数，结构防漂移快照在彼处单测）；
+ * 组态源 = src/screen-assets/home-screens.ts buildHomeScreens()（纯函数，结构防漂移快照在彼处单测）；
  * 数据面 = 真实活数据 home-meter-e/w/g 系列（周期 2s）。
  */
 export async function seedHomeScreens(): Promise<void> {
@@ -207,4 +208,16 @@ export async function seedNavScreens(slugA: string, slugB: string): Promise<void
     json: [pel(NAV_B_PEL_ID, 'B-待机')],
     eventList: [], eventFlow: [],
   })
+}
+
+/**
+ * P2 监控站 BI 大屏（长期资产）：slug 恒定 bi-station，PUT 全量 upsert 幂等——
+ * **任何测试不得删除**（同 water-demo-m3 约定）。组态源 = src/screen-assets/bi-screen.ts
+ * buildBiStationScreen()（纯函数，结构防漂移快照在彼处单测）。
+ *
+ * 数据面 = 真实活数据：宿主聚合收集器（ViewView）在运行页扫出画面里的 ah-bi- 图元，
+ * 向 rs-iot /api/v1/history/batch 取历史数据后写回图元 props.data.val。
+ */
+export async function seedBiStationScreen(): Promise<void> {
+  await rsiotPutScreen(BI_STATION, buildBiStationScreen())
 }

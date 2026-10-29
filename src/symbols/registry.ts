@@ -57,6 +57,13 @@ import { meterPanel } from './meter-panel'
 import { waterMeter } from './water-meter'
 import { gasMeter } from './gas-meter'
 import { devSelector } from './dev-selector'
+import { biKpi } from './bi-kpi'
+import { biRank } from './bi-rank'
+import { biPie } from './bi-pie'
+import { biStack } from './bi-stack'
+import { biTrend } from './bi-trend'
+import { biHeat } from './bi-heat'
+import { biTable } from './bi-table'
 
 const SYMBOLS: HmiSymbol[] = [
   pumpCentrifugal,
@@ -86,6 +93,13 @@ const SYMBOLS: HmiSymbol[] = [
   waterMeter,
   gasMeter,
   devSelector,
+  biKpi,
+  biRank,
+  biPie,
+  biStack,
+  biTrend,
+  biHeat,
+  biTable,
 ]
 
 export function allSymbols(): HmiSymbol[] {

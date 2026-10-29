@@ -16,10 +16,13 @@
 ## 地图
 
 - `src/lib/` 纯逻辑层（api/screens/binds/sse/command/alarms/nav…，同名 .test.ts 伴生）
+  - **BI 契约层**：`bi-contract.ts`（载荷形状单点事实源）+ `bi-collector.ts`（宿主聚合收集器）+ `bi-sanitize.ts`（保存态复位）——见 docs/plans/2026-10-29-bi-monitoring-dashboard-design.md
 - `src/views/` 四业务页（Login/ScreenList/Edit/View）+ `src/components/` 骨架层组件
-- `src/symbols/` 手工重建图元（一图元一 ts，export ILeftAsideConfigItemPublic；全量目录见 registry.ts 头注释；约定 lint 见 lib/symbol-lint；开发宪法 docs/maotu-symbol-development-guide.md）
+- `src/symbols/` 手工重建图元（一图元一 ts，export ILeftAsideConfigItemPublic；全量目录见 registry.ts 头注释；约定 lint 见 symbols/symbol-lint；开发宪法 docs/maotu-symbol-development-guide.md）
+  - **BI 图元族**（`ah-bi-*`，7 个：kpi/trend/rank/pie/stack/heat/table）走**通道 B**（宿主聚合写 props.data.val），底座 `bi-chart-kit.ts`
+- `src/screen-assets/` 画面资产层（预组态画面生成器：demo/home-*/bi-screen）
 - `src/dev/` 研究资产（spike/probe），不进导航不进守卫
-- `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7-w11 / home-meters（G 门 + 图元轮 + 用户反馈轮，webServer 自动起 5290）
+- `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7-w11 / home-meters / bi-dashboard（G 门 + 图元轮 + 用户反馈轮 + BI 通道 B 门，webServer 自动起 5290）
 - `scripts/check-layers.mjs` 分层依赖方向门禁（just layers）
 
 ## 文档
@@ -28,6 +31,7 @@
 - **工程规范（TS/Vue/测试/文档/提交）**：docs/standards.md
 - 设计（六决策锁定）：docs/plans/2026-10-25-hmi-studio-design.md
 - 实施方案 + 任务跟踪表：docs/plans/2026-10-25-hmi-studio-implementation-plan.md（§3 表格=任务状态真相源，完成任务即勾选回填 commit）
+- **BI 大屏内容体系与图元清单（P2）**：docs/plans/2026-10-29-bi-monitoring-dashboard-design.md（内容分区/数据映射/累计量口径三态/23 图元全表）
 - maotu 实证与概念映射：docs/maotu-rsiot-architecture.md
 
 ## 纪律

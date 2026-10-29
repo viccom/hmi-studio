@@ -19,6 +19,7 @@ import { logout, getAuthedUser } from '../lib/auth'
 import { installBridge } from '../lib/bridge'
 import { createDispatcher, createNavStack } from '../lib/nav'
 import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
+import { createBiCollector } from '../lib/bi-collector'
 import { registerSymbols } from '../symbols'
 import { computeFitScale } from '../lib/fit-scale'
 import { applyDevContext, isDevParamScreen, META_DEV_FIELD } from '../lib/dev-context'
@@ -160,6 +161,51 @@ async function mountScreen(done: IExportJson, devOverride?: string): Promise<voi
   }
   await adoptDesign(done)
   resubscribe(inst)
+  // BI 聚合采集（通道 B）：画面含 ah-bi- 图元时才启动——普通 HMI 画面零开销。
+  // 必须在 setImportJson 之后（写回按画布元素 id 定位，元素需已装载）。
+  startBiCollect(inst)
+}
+
+/**
+ * BI 聚合采集（通道 B，P2）：宿主扫描画面里的 ah-bi- 图元 → 合并查询 →
+ * /history/batch → 结果按面板组装信封 → 写回图元 props.data.val。
+ *
+ * 拉模式刷新（30s）：历史分析对实时性不敏感；SSE 通道（A）继续承担实时刷新。
+ * 图元不自发请求（架构裁定），故本方法是 BI 数据的唯一出口。
+ */
+const BI_REFRESH_MS = 30_000
+let biTimer: ReturnType<typeof setInterval> | undefined
+let biRunning = false
+
+function stopBiCollect(): void {
+  if (biTimer !== undefined) { clearInterval(biTimer); biTimer = undefined }
+}
+
+/** 启动采集：无 BI 图元则 collect 内部判空返回，普通 HMI 画面零开销。 */
+function startBiCollect(done: IExportJson): void {
+  stopBiCollect()
+  const collector = createBiCollector({
+    fetchBatch: async (body) => {
+      const res = await api().post('/api/v1/history/batch', body)
+      return (res ?? {}) as { results?: never[] }
+    },
+    // 写回 maotu 画布元素：props.data.val 是 props 直写路径（jT 平面化喂给图元）
+    write: (itemId, payload, attr) => { previewRef.value?.setItemAttrByID(itemId, attr, payload) },
+    now: () => Math.floor(Date.now() / 1000),
+  })
+  const tick = async (): Promise<void> => {
+    if (biRunning) return // 上一轮未完不叠加（慢后端下防堆积）
+    biRunning = true
+    try {
+      await collector.collect(done)
+    } catch {
+      /* 采集失败不打断画面——图元保留上一轮信封 */
+    } finally {
+      biRunning = false
+    }
+  }
+  void tick()
+  biTimer = setInterval(() => { void tick() }, BI_REFRESH_MS)
 }
 
 function setDev(dev: string): void {
@@ -311,6 +357,7 @@ onUnmounted(() => {
   resizeObs?.disconnect()
   stream?.close()
   alarmStream?.close()
+  stopBiCollect()
   bridge.uninstall()
 })
 </script>

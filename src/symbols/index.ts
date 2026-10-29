@@ -27,6 +27,13 @@ import AhMeterPanel from './AhMeterPanel.vue'
 import AhWaterMeter from './AhWaterMeter.vue'
 import AhGasMeter from './AhGasMeter.vue'
 import AhDevSelector from './AhDevSelector.vue'
+import AhBiKpi from './AhBiKpi.vue'
+import AhBiRank from './AhBiRank.vue'
+import AhBiPie from './AhBiPie.vue'
+import AhBiStack from './AhBiStack.vue'
+import AhBiTrend from './AhBiTrend.vue'
+import AhBiHeat from './AhBiHeat.vue'
+import AhBiTable from './AhBiTable.vue'
 
 export const SYMBOL_GROUP = 'HMI 图元'
 
@@ -50,6 +57,13 @@ export const VUE_SYMBOL_COMPONENTS: Record<string, Component> = {
   [vueTagFor('ah-water-meter')]: AhWaterMeter,
   [vueTagFor('ah-gas-meter')]: AhGasMeter,
   [vueTagFor('ah-dev-selector')]: AhDevSelector,
+  [vueTagFor('ah-bi-kpi')]: AhBiKpi,
+  [vueTagFor('ah-bi-rank')]: AhBiRank,
+  [vueTagFor('ah-bi-pie')]: AhBiPie,
+  [vueTagFor('ah-bi-stack')]: AhBiStack,
+  [vueTagFor('ah-bi-trend')]: AhBiTrend,
+  [vueTagFor('ah-bi-heat')]: AhBiHeat,
+  [vueTagFor('ah-bi-table')]: AhBiTable,
 }
 
 /** 全局组件注册（main.ts createApp 后调用一次；app.component 幂等覆盖） */

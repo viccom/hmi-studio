@@ -11,6 +11,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { MtEdit } from 'maotu'
 import type { IExportJson } from 'maotu'
 import { screensApi, unwrapDoc, wrapDoc } from '../lib/screens'
+import { sanitizeBiProps } from '../lib/bi-sanitize'
 import { loadScreenCards, groupSections, type ScreenCard } from '../lib/screen-list'
 import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
 import { fetchDeviceTree, type IDeviceInfo } from '../lib/device-tree'
@@ -166,7 +167,11 @@ async function save(payload: IExportJson) {
     return
   }
   try {
-    await sApi.put(slug.value, wrapDoc(payload, { name: meta.value.name ?? slug.value, group: meta.value.group }))
+    // BI 图元的 props.data 是**运行态聚合数据**（通道 B 由宿主写回）：maotu 保存时
+    // 把 props 拍平（bundle ud），这坨 JSON 会被原样 PUT 进 rs-iot——既撑大文档
+    // （≤128 KiB 上限），又让下次加载读到陈旧数据。落库前复位（纯函数，lib/bi-sanitize.ts）。
+    const clean = sanitizeBiProps(payload) as IExportJson
+    await sApi.put(slug.value, wrapDoc(clean, { name: meta.value.name ?? slug.value, group: meta.value.group }))
     ElMessage.success('已保存')
   } catch {
     ElMessage.error('保存失败')
