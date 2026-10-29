@@ -22,7 +22,22 @@ import { biTable } from './bi-table'
 import { biSpike, spikeThreshold } from './bi-spike'
 import { biAlarms } from './bi-alarms'
 import { biWindow } from './bi-window'
+import { biGauge } from './bi-gauge'
+import { biScatter, pairByTs } from './bi-scatter'
+import { biRadar, niceMax as radarNiceMax } from './bi-radar'
+import { biBoxplot, boxplotStats, quantile } from './bi-boxplot'
+import { biCalendar, dayKey } from './bi-calendar'
+import { biProgress } from './bi-progress'
+import { biWaterfall, waterfallBars } from './bi-waterfall'
+import { niceMax } from './bi-chart-kit'
 import AhBiKpi from './AhBiKpi.vue'
+import AhBiGauge from './AhBiGauge.vue'
+import AhBiScatter from './AhBiScatter.vue'
+import AhBiRadar from './AhBiRadar.vue'
+import AhBiBoxplot from './AhBiBoxplot.vue'
+import AhBiCalendar from './AhBiCalendar.vue'
+import AhBiProgress from './AhBiProgress.vue'
+import AhBiWaterfall from './AhBiWaterfall.vue'
 import AhBiSpike from './AhBiSpike.vue'
 import AhBiAlarms from './AhBiAlarms.vue'
 import AhBiWindow from './AhBiWindow.vue'
@@ -42,10 +57,11 @@ const echartsMock = vi.hoisted(() => {
 vi.mock('echarts/core', () => echartsMock.core)
 vi.mock('echarts/charts', () => ({
   LineChart: {}, BarChart: {}, PieChart: {}, HeatmapChart: {},
+  GaugeChart: {}, ScatterChart: {}, RadarChart: {}, BoxplotChart: {},
 }))
 vi.mock('echarts/components', () => ({
   GridComponent: {}, LegendComponent: {}, TooltipComponent: {}, VisualMapComponent: {},
-  MarkLineComponent: {},
+  MarkLineComponent: {}, CalendarComponent: {},
 }))
 vi.mock('echarts/renderers', () => ({ CanvasRenderer: {} }))
 
@@ -97,6 +113,13 @@ const FAMILY: Array<[string, HmiSymbol, unknown]> = [
   ['时段热力图', biHeat, AhBiHeat],
   ['明细数据表', biTable, AhBiTable],
   ['尖峰柱图', biSpike, AhBiSpike],
+  ['仪表盘', biGauge, AhBiGauge],
+  ['相关性散点', biScatter, AhBiScatter],
+  ['多指标雷达', biRadar, AhBiRadar],
+  ['分布箱线', biBoxplot, AhBiBoxplot],
+  ['日历热力', biCalendar, AhBiCalendar],
+  ['利用率进度条', biProgress, AhBiProgress],
+  ['增量贡献瀑布', biWaterfall, AhBiWaterfall],
 ]
 
 describe.each(FAMILY)('BI 图元：%s', (_name, s, comp) => {
@@ -575,5 +598,274 @@ describe('BI 图元：窗口切换器', () => {
     const labels = Array.from(el.querySelectorAll('button')).map((b) => b.textContent)
     expect(labels).toEqual(['默认', '1时', '24时', '7天'])
     unmount()
+  })
+})
+
+// ---- P3 扩容（2026-10-29）：7 个新图元的行为 + 纯函数 ----
+
+const SERIES_POINTS = envelope([
+  {
+    key: 'd1.p', label: 'A 表', unit: 'kW', color: '#f5a623',
+    mode: 'instant', metric: 'avg', value: null,
+    points: [{ ts: 100, value: 2 }, { ts: 200, value: 4 }, { ts: 300, value: 6 }],
+    error: null,
+  },
+])
+
+describe('BI 图元：仪表盘（有值序列成表盘）', () => {
+  beforeEach(() => { echartsMock.chart.setOption.mockClear() })
+
+  it('单值序列 → gauge series（值与量程进 setOption）', async () => {
+    const data = envelope([
+      { key: 'a', label: 'A 表', unit: 'kW', color: '#f5a623', mode: 'instant', metric: 'avg', value: 3.2, points: [], error: null },
+      { key: 'b', label: 'B 表', unit: 'kW', color: '#58a6ff', mode: 'instant', metric: 'avg', value: null, points: [], error: null },
+    ])
+    const { unmount } = mountReactive(AhBiGauge, { data, maxVal: 10 })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as { series: Array<{ data: Array<{ value: number }>; max: number }> }
+    expect(opt.series).toHaveLength(1) // 无值的 B 表不成表盘
+    expect(opt.series[0].data[0].value).toBe(3.2)
+    expect(opt.series[0].max).toBe(10) // 手工量程优先
+    unmount()
+  })
+
+  it('maxVal=0 → 自动量程（峰值 ×1.2 nice 化）', async () => {
+    const data = envelope([{ key: 'a', label: 'A', value: 40, points: [], error: null }])
+    const { unmount } = mountReactive(AhBiGauge, { data, maxVal: 0 })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as { series: Array<{ max: number }> }
+    expect(opt.series[0].max).toBe(50) // 40×1.2=48 → nice 50（f=4.8→5）
+    unmount()
+  })
+
+  it('全无值 → 空态', async () => {
+    const { el, unmount } = mountReactive(AhBiGauge, { data: '[]' })
+    await nextTick()
+    expect(el.textContent).toContain('暂无历史数据')
+    unmount()
+  })
+})
+
+describe('BI 图元：相关性散点（ts 精确配对）', () => {
+  beforeEach(() => { echartsMock.chart.setOption.mockClear() })
+
+  it('两条序列按桶 ts 配对 → (x,y) 点云', async () => {
+    const data = envelope([
+      { key: 'x', label: '功率', unit: 'kW', color: '#f5a623', mode: 'instant', metric: 'avg', value: null,
+        points: [{ ts: 100, value: 1 }, { ts: 200, value: 2 }, { ts: 300, value: 3 }], error: null },
+      { key: 'y', label: '电流', unit: 'A', color: '#58a6ff', mode: 'instant', metric: 'avg', value: null,
+        points: [{ ts: 100, value: 10 }, { ts: 200, value: 20 }, { ts: 400, value: 40 }], error: null },
+    ])
+    const { unmount } = mountReactive(AhBiScatter, { data })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as { series: Array<{ data: Array<[number, number]> }> }
+    expect(opt.series[0].data).toEqual([[1, 10], [2, 20]]) // ts=300 单边、ts=400 单边 → 丢弃
+    unmount()
+  })
+
+  it('不足两条序列 → 空态提示（不是空图）', async () => {
+    const { el, unmount } = mountReactive(AhBiScatter, { data: SERIES_POINTS })
+    await nextTick()
+    expect(el.textContent).toContain('需要两条')
+    unmount()
+  })
+})
+
+describe('BI 图元：多指标雷达（一轴一序列）', () => {
+  beforeEach(() => { echartsMock.chart.setOption.mockClear() })
+
+  it('≥3 个有值序列 → 多边形（indicator 数 = 序列数）', async () => {
+    const data = envelope([
+      { key: 'a', label: 'A', value: 3, points: [], error: null },
+      { key: 'b', label: 'B', value: 6, points: [], error: null },
+      { key: 'c', label: 'C', value: 9, points: [], error: null },
+    ])
+    const { unmount } = mountReactive(AhBiRadar, { data })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as {
+      radar: { indicator: Array<{ name: string; max: number }> }
+      series: Array<{ data: Array<{ value: number[] }> }>
+    }
+    expect(opt.radar.indicator).toHaveLength(3)
+    expect(opt.radar.indicator.every((i) => i.max === 20)).toBe(true) // 9×1.2=10.8 → nice 20（f=1.08→2）
+    expect(opt.series[0].data[0].value).toEqual([3, 6, 9])
+    unmount()
+  })
+
+  it('轴 <3 → 退化为读数列表（两轴画不出多边形）', async () => {
+    const data = envelope([
+      { key: 'a', label: 'A', value: 1, points: [], error: null },
+      { key: 'b', label: 'B', value: 2, points: [], error: null },
+    ])
+    const { el, unmount } = mountReactive(AhBiRadar, { data })
+    await nextTick()
+    expect(el.textContent).toContain('A')
+    expect(el.textContent).toContain('2')
+    unmount()
+  })
+})
+
+describe('BI 图元：分布箱线（五数统计）', () => {
+  beforeEach(() => { echartsMock.chart.setOption.mockClear() })
+
+  it('逐桶点 → 每序列一箱（五数进 setOption）', async () => {
+    const { unmount } = mountReactive(AhBiBoxplot, { data: SERIES_POINTS })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as {
+      series: Array<{ data: Array<{ value: number[] }> }>
+      xAxis: { data: string[] }
+    }
+    expect(opt.series[0].data[0].value).toEqual([2, 3, 4, 5, 6]) // [2,4,6] 的插值五数
+    expect(opt.xAxis.data).toEqual(['A 表'])
+    unmount()
+  })
+
+  it('无逐桶点的序列不成箱', async () => {
+    const { el, unmount } = mountReactive(AhBiBoxplot, { data: '[]' })
+    await nextTick()
+    expect(el.textContent).toContain('暂无历史数据')
+    unmount()
+  })
+})
+
+describe('BI 图元：日历热力（按日归格）', () => {
+  beforeEach(() => { echartsMock.chart.setOption.mockClear() })
+
+  it('点按日归并 → 日历格（YYYY-MM-DD 字符串进 setOption）', async () => {
+    const data = envelope([
+      { key: 'd', label: '电量', unit: 'kWh', color: '#f5a623', mode: 'daily', metric: 'current', value: null,
+        points: [
+          { ts: 1_795_000_000, value: 3 },
+          { ts: 1_795_864_00, value: 5 }, // 同日另一时刻（防御归并）
+          { ts: 1_796_000_000, value: 8 },
+        ], error: null },
+    ])
+    const { unmount } = mountReactive(AhBiCalendar, { data })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as {
+      series: Array<{ data: Array<[string, number]> }>
+    }
+    expect(opt.series[0].data.length).toBeGreaterThanOrEqual(2)
+    expect(opt.series[0].data.every(([d]) => /^\d{4}-\d{2}-\d{2}$/.test(d))).toBe(true)
+    unmount()
+  })
+
+  it('无点 → 空态', async () => {
+    const { el, unmount } = mountReactive(AhBiCalendar, { data: '[]' })
+    await nextTick()
+    expect(el.textContent).toContain('暂无历史数据')
+    unmount()
+  })
+})
+
+describe('BI 图元：利用率进度条（自绘 DOM）', () => {
+  it('固定满量程：百分比 = value/max，超限红标', async () => {
+    const data = envelope([
+      { key: 'a', label: 'A', value: 55, points: [], error: null },
+      { key: 'b', label: 'B', value: 120, points: [], error: null },
+    ])
+    const { el, unmount } = mountReactive(AhBiProgress, { data, maxVal: 100 })
+    await nextTick()
+    const t = el.textContent ?? ''
+    expect(t).toContain('55.0%')
+    expect(t).toContain('100.0%') // 超 100% 截断
+    expect(t).toContain('120') // 但读数保留真实值
+    expect(el.innerHTML).toContain('over')
+    unmount()
+  })
+
+  it('maxVal=0 → 相对条（最大值为分母）', async () => {
+    const data = envelope([
+      { key: 'a', label: 'A', value: 25, points: [], error: null },
+      { key: 'b', label: 'B', value: 75, points: [], error: null },
+    ])
+    const { el, unmount } = mountReactive(AhBiProgress, { data, maxVal: 0 })
+    await nextTick()
+    expect(el.textContent).toContain('33.3%')
+    expect(el.textContent).toContain('100.0%')
+    unmount()
+  })
+
+  it('全无值 → 空态', async () => {
+    const { el, unmount } = mountReactive(AhBiProgress, { data: '[]' })
+    await nextTick()
+    expect(el.textContent).toContain('暂无历史数据')
+    unmount()
+  })
+})
+
+describe('BI 图元：增量贡献瀑布（浮柱几何 + 合计列）', () => {
+  beforeEach(() => { echartsMock.chart.setOption.mockClear() })
+
+  it('有值序列按序累叠 + 末列合计（基座透明列归零）', async () => {
+    const data = envelope([
+      { key: 'a', label: 'A', value: 10, points: [], error: null },
+      { key: 'b', label: 'B', value: 25, points: [], error: null },
+    ])
+    const { unmount } = mountReactive(AhBiWaterfall, { data })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as {
+      xAxis: { data: string[] }
+      series: Array<{ data: number[] | Array<{ value: number }> }>
+    }
+    expect(opt.xAxis.data).toEqual(['A', 'B', '合计'])
+    expect(opt.series[0].data).toEqual([0, 10, 0]) // 透明基座；合计列落底
+    unmount()
+  })
+
+  it('单序列不加合计列（一根柱无构成可言）', async () => {
+    const data = envelope([{ key: 'a', label: 'A', value: 10, points: [], error: null }])
+    const { unmount } = mountReactive(AhBiWaterfall, { data })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as { xAxis: { data: string[] } }
+    expect(opt.xAxis.data).toEqual(['A'])
+    unmount()
+  })
+
+  it('全无值 → 空态', async () => {
+    const { el, unmount } = mountReactive(AhBiWaterfall, { data: '[]' })
+    await nextTick()
+    expect(el.textContent).toContain('暂无历史数据')
+    unmount()
+  })
+})
+
+describe('P3 纯函数', () => {
+  it('pairByTs：精确 ts 匹配，单边缺桶丢弃', () => {
+    expect(pairByTs(
+      [{ ts: 1, value: 1 }, { ts: 2, value: 2 }, { ts: 3, value: 3 }],
+      [{ ts: 1, value: 10 }, { ts: 2, value: 20 }, { ts: 4, value: 40 }],
+    )).toEqual([[1, 10], [2, 20]])
+    expect(pairByTs([], [])).toEqual([])
+  })
+
+  it('quantile：线性插值（与尖峰阈值同口径）', () => {
+    expect(quantile([1, 2, 3, 4], 0.5)).toBe(2.5)
+    expect(quantile([1, 2, 3, 4], 0)).toBe(1)
+    expect(quantile([5], 0.75)).toBe(5)
+  })
+
+  it('boxplotStats：五数 = [min, Q1, 中位, Q3, max]', () => {
+    expect(boxplotStats([2, 4, 6])).toEqual([2, 3, 4, 5, 6])
+    expect(boxplotStats([])).toBeNull()
+  })
+
+  it('niceMax：向上取 1/2/5×10^n', () => {
+    expect(niceMax(10.8)).toBe(20)
+    expect(niceMax(48)).toBe(50)
+    expect(niceMax(0)).toBe(1)
+    expect(radarNiceMax(2)).toBe(2)
+  })
+
+  it('waterfallBars：按序累叠；负值反向贡献基座取低点', () => {
+    expect(waterfallBars([10, 25])).toEqual([{ start: 0, delta: 10 }, { start: 10, delta: 25 }])
+    expect(waterfallBars([30, -10])).toEqual([{ start: 0, delta: 30 }, { start: 20, delta: 10 }])
+    expect(waterfallBars([])).toEqual([])
+  })
+
+  it('dayKey：秒级 ts → 本地时区 YYYY-MM-DD', () => {
+    const d = dayKey(0)
+    expect(d).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(dayKey(dayKey.length ? 1_800_000_000 : 0)).toMatch(/^\d{4}/)
   })
 })

@@ -45,7 +45,8 @@ export const SYMBOL_GROUP_DEFS: SymbolGroupDef[] = [
     ids: [
       'ah-bi-kpi', 'ah-bi-trend', 'ah-bi-rank', 'ah-bi-pie', 'ah-bi-stack', 'ah-bi-heat',
       'ah-bi-table', 'ah-bi-matrix', 'ah-bi-stack-area', 'ah-bi-bars', 'ah-bi-spike',
-      'ah-bi-alarms', 'ah-bi-window',
+      'ah-bi-alarms', 'ah-bi-window', 'ah-bi-gauge', 'ah-bi-scatter', 'ah-bi-radar',
+      'ah-bi-boxplot', 'ah-bi-calendar', 'ah-bi-progress', 'ah-bi-waterfall',
     ],
   },
 ]

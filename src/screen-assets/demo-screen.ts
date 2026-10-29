@@ -182,13 +182,13 @@ const boolBinds = (pelId: string, attr: string, bindId = 'rsiot.alarm_active'): 
   ])]
 
 /** 纯函数组态：图元陈列室（registry 全量覆盖判据的承载画面）。无随机、无副作用。
- * 画布 800×2380（P2 三表与趋势节自 y596 起，P2-BI 图表节自 y950 起，补三件节自 y2050——
+ * 画布 800×3360（P2 三表与趋势节自 y596 起，P2-BI 图表节自 y950 起，补三件节自 y2050，P3 扩容节自 y2380——
  * 出界/重叠判据由布局测试按 canvasCfg 推导）。 */
 export function buildCatalogScreen(): ScreenDoc {
   const c: ScreenDoc = {
     name: '图元陈列室', group: '水处理演示',
     canvasCfg: {
-      width: 800, height: 2380, scale: 1, color: '#141414', img: '',
+      width: 800, height: 3360, scale: 1, color: '#141414', img: '',
       guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
     },
     gridCfg: { enabled: true, align: true, size: 10 },
@@ -414,6 +414,79 @@ export function buildCatalogScreen(): ScreenDoc {
       // 无 series 面板：告警统计（宿主拉活动告警快照）/ 窗口切换器（上行控制）
       svgItem('ah-bi-alarms', cid('bi-alarms'), { left: 404, top: 2050 }),
       svgItem('ah-bi-window', cid('bi-window'), { left: 24, top: 2300, props: { title: '' } }),
+      // ---- P3 扩容七件（2026-10-29）：双列四行自 y2380 起 ----
+      svgItem('ah-bi-gauge', cid('bi-gauge'), {
+        left: 24, top: 2380,
+        props: {
+          title: '实时表盘',
+          series: JSON.stringify([{ dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' }]),
+          agg: 'avg', windowSecs: 3600, shape: 'aggregate', maxVal: 6,
+        },
+      }),
+      svgItem('ah-bi-scatter', cid('bi-scatter'), {
+        left: 404, top: 2380,
+        props: {
+          title: '功率 × 电流',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '功率', unit: 'kW' },
+            { dev_id: 'home-meter-e1', tag: 'current', label: '电流', unit: 'A' },
+          ]),
+          agg: 'avg', interval: 60, windowSecs: 3600, shape: 'series',
+        },
+      }),
+      svgItem('ah-bi-radar', cid('bi-radar'), {
+        left: 24, top: 2620,
+        props: {
+          title: '两表负荷对比',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表', unit: 'kW' },
+            { dev_id: 'home-meter-w1', tag: 'flow_instant', label: '1#水表', unit: 'm³/h' },
+          ]),
+          agg: 'avg', windowSecs: 3600, shape: 'aggregate',
+        },
+      }),
+      svgItem('ah-bi-boxplot', cid('bi-boxplot'), {
+        left: 404, top: 2620,
+        props: {
+          title: '负荷分布',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表', unit: 'kW' },
+          ]),
+          agg: 'avg', interval: 60, windowSecs: 3600, shape: 'series',
+        },
+      }),
+      svgItem('ah-bi-calendar', cid('bi-calendar'), {
+        left: 24, top: 2880,
+        props: {
+          title: '每日用电热力（30 天）',
+          series: JSON.stringify([{ dev_id: 'home-meter-e1', tag: 'energy_today', label: '1#电表', unit: 'kWh', mode: 'daily' }]),
+          agg: 'last', interval: 86400, windowSecs: 2592000, shape: 'series',
+        },
+      }),
+      svgItem('ah-bi-progress', cid('bi-progress'), {
+        left: 404, top: 2880,
+        props: {
+          title: '相对负荷条',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表', unit: 'kW' },
+          ]),
+          agg: 'avg', windowSecs: 3600, shape: 'aggregate', maxVal: 0,
+        },
+      }),
+      svgItem('ah-bi-waterfall', cid('bi-waterfall'), {
+        left: 24, top: 3120,
+        props: {
+          title: '两表用电构成',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'energy_today', label: '1#电表', unit: 'kWh', mode: 'daily' },
+            { dev_id: 'home-meter-e2', tag: 'energy_today', label: '2#电表', unit: 'kWh', mode: 'daily' },
+          ]),
+          agg: 'last', windowSecs: 86400, shape: 'aggregate',
+        },
+      }),
     ],
     eventList: [], eventFlow: [],
   }

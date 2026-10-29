@@ -70,6 +70,13 @@ import { biBars } from './bi-bars'
 import { biSpike } from './bi-spike'
 import { biAlarms } from './bi-alarms'
 import { biWindow } from './bi-window'
+import { biGauge } from './bi-gauge'
+import { biScatter } from './bi-scatter'
+import { biRadar } from './bi-radar'
+import { biBoxplot } from './bi-boxplot'
+import { biCalendar } from './bi-calendar'
+import { biProgress } from './bi-progress'
+import { biWaterfall } from './bi-waterfall'
 
 const SYMBOLS: HmiSymbol[] = [
   pumpCentrifugal,
@@ -112,6 +119,13 @@ const SYMBOLS: HmiSymbol[] = [
   biSpike,
   biAlarms,
   biWindow,
+  biGauge,
+  biScatter,
+  biRadar,
+  biBoxplot,
+  biCalendar,
+  biProgress,
+  biWaterfall,
 ]
 
 export function allSymbols(): HmiSymbol[] {

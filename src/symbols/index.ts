@@ -40,6 +40,13 @@ import AhBiBars from './AhBiBars.vue'
 import AhBiSpike from './AhBiSpike.vue'
 import AhBiAlarms from './AhBiAlarms.vue'
 import AhBiWindow from './AhBiWindow.vue'
+import AhBiGauge from './AhBiGauge.vue'
+import AhBiScatter from './AhBiScatter.vue'
+import AhBiRadar from './AhBiRadar.vue'
+import AhBiBoxplot from './AhBiBoxplot.vue'
+import AhBiCalendar from './AhBiCalendar.vue'
+import AhBiProgress from './AhBiProgress.vue'
+import AhBiWaterfall from './AhBiWaterfall.vue'
 
 /**
  * 图元目录分组（定义在 groups.ts——纯 ts 无 .vue 依赖，e2e 可直接 import；
@@ -81,6 +88,13 @@ export const VUE_SYMBOL_COMPONENTS: Record<string, Component> = {
   [vueTagFor('ah-bi-spike')]: AhBiSpike,
   [vueTagFor('ah-bi-alarms')]: AhBiAlarms,
   [vueTagFor('ah-bi-window')]: AhBiWindow,
+  [vueTagFor('ah-bi-gauge')]: AhBiGauge,
+  [vueTagFor('ah-bi-scatter')]: AhBiScatter,
+  [vueTagFor('ah-bi-radar')]: AhBiRadar,
+  [vueTagFor('ah-bi-boxplot')]: AhBiBoxplot,
+  [vueTagFor('ah-bi-calendar')]: AhBiCalendar,
+  [vueTagFor('ah-bi-progress')]: AhBiProgress,
+  [vueTagFor('ah-bi-waterfall')]: AhBiWaterfall,
 }
 
 /** 全局组件注册（main.ts createApp 后调用一次；app.component 幂等覆盖） */

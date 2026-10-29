@@ -315,3 +315,13 @@ export function alarmLevelLabel(level: string): string {
   if (level === 'info') return '提示'
   return level || '未知'
 }
+
+/** 量程 nice 化：向上取到 1/2/5×10^n（表盘/雷达轴上限不出现难看的碎数）。 */
+export function niceMax(v: number): number {
+  if (!(v > 0)) return 1
+  const exp = Math.floor(Math.log10(v))
+  const base = Math.pow(10, exp)
+  const f = v / base
+  const nice = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10
+  return nice * base
+}
