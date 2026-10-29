@@ -232,10 +232,16 @@ DOM 布局，svg 型承载不了图表）。
 | `ah-bi-heat` | 时段热力图 | 热力 | HeatmapChart | 是 |
 | `ah-bi-table` | 明细表格 | 自绘表格 | — | 是 |
 
-**P3 扩展（10 个）——图元族扩容**
+**补三件（2026-10-29 第二轮，用户点名）——已交付**
+| id | 名称 | 说明 |
+|----|------|------|
+| `ah-bi-spike` | 尖峰柱图 | 桶柱 + P90/均值倍数/固定阈值三档尖峰着色 + 阈值虚线（对标 Grafana Power Spikes） |
+| `ah-bi-alarms` | 告警统计 | **无 series**：宿主 fetchAlarms 拉活动告警快照写告警信封（总数/分级/来源 Top/最新列表）。后端无告警历史 → 不做趋势/发生率 |
+| `ah-bi-window` | 时间窗口切换器 | **无 series，上行控制**：点击发 DOM 事件 `ah-bi-window-change` → 宿主收集器 windowOverride 覆盖整屏窗口；宿主写回 `{activeSecs}` 回显 |
+
+**P3 扩展（10 个）——图元族扩容**（`ah-bi-bar` 已于 Grafana 视觉轮以 `ah-bi-bars` 交付）
 | id | 名称 | echarts 依赖 |
 |----|------|-------------|
-| `ah-bi-bar` | 分组柱状对比 | BarChart |
 | `ah-bi-gauge` | 仪表盘 | GaugeChart |
 | `ah-bi-scatter` | 相关性散点 | ScatterChart |
 | `ah-bi-radar` | 多指标雷达 | RadarChart |

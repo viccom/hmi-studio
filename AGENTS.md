@@ -19,7 +19,7 @@
   - **BI 契约层**：`bi-contract.ts`（载荷形状单点事实源）+ `bi-collector.ts`（宿主聚合收集器）+ `bi-sanitize.ts`（保存态复位）——见 docs/plans/2026-10-29-bi-monitoring-dashboard-design.md
 - `src/views/` 四业务页（Login/ScreenList/Edit/View）+ `src/components/` 骨架层组件
 - `src/symbols/` 手工重建图元（一图元一 ts，export ILeftAsideConfigItemPublic；全量目录见 registry.ts 头注释；约定 lint 见 symbols/symbol-lint；开发宪法 docs/maotu-symbol-development-guide.md）
-  - **BI 图元族**（`ah-bi-*`，7 个：kpi/trend/rank/pie/stack/heat/table）走**通道 B**（宿主聚合写 props.data.val），底座 `bi-chart-kit.ts`
+  - **BI 图元族**（`ah-bi-*`，13 个：kpi/trend/rank/pie/stack/heat/table/matrix/stack-area/bars/spike/alarms/window）走**通道 B**（宿主聚合写 props.data.val），底座 `bi-chart-kit.ts`；window/alarms 无 series（上行控制/告警信封，不吃历史查询）
 - `src/screen-assets/` 画面资产层（预组态画面生成器：demo/home-*/bi-screen）
 - `src/dev/` 研究资产（spike/probe），不进导航不进守卫
 - `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7-w11 / home-meters / bi-dashboard（G 门 + 图元轮 + 用户反馈轮 + BI 通道 B 门，webServer 自动起 5290）
