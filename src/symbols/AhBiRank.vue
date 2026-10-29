@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="ah-bir"
-    :style="{ border: `1px solid ${props.fill ?? '#f5a623'}` }"
+    :style="{ '--ah-accent': props.fill ?? '#f5a623' }"
   >
     <div class="ah-bir-head">{{ props.title }}</div>
     <div class="ah-bir-body">
@@ -187,19 +187,20 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .ah-bir {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  border-radius: 6px;
+  border-radius: 4px;
   overflow: hidden;
-  background: #0d1117;
+  background: #161b22;
   color: #c9d1d9;
   font-family: Consolas, Menlo, monospace;
   display: flex;
   flex-direction: column;
 }
 .ah-bir-head {
-  font-size: 10px;
+  font-size: 11px;
   color: #8b949e;
   padding: 4px 8px 0;
   white-space: nowrap;
@@ -223,6 +224,6 @@ onBeforeUnmount(() => {
   justify-content: center;
   font-size: 11px;
   color: #8b949e;
-  background: #0d1117;
+  background: #161b22;
 }
 </style>

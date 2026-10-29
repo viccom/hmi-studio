@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import {
+  metricLabel,
   BI_THEME,
   formatValue,
   parseEnvelope,
@@ -47,7 +48,7 @@ const rows = computed<Array<{
     label: s.label || s.key,
     value: formatValue(s.value),
     unit: s.unit,
-    metric: s.metric,
+    metric: metricLabel(s.metric),
     // 状态列：报错给错误文案（红字），无值给「无数据」，其余「正常」
     status: s.error !== null ? s.error : s.value === null ? '无数据' : '正常',
     err: s.error !== null,
@@ -59,8 +60,8 @@ const rows = computed<Array<{
   <div
     class="ah-bitbl"
     :style="{
-      background: '#0d1117',
-      border: `1px solid ${props.fill ?? '#f5a623'}`,
+      background: '#161b22',
+      border: '1px solid #21262d',
       '--ah-axis': BI_THEME.axisLine,
       '--ah-text': BI_THEME.text,
       '--ah-label': BI_THEME.axisLabel,
@@ -95,11 +96,12 @@ const rows = computed<Array<{
 
 <style scoped>
 .ah-bitbl {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-radius: 6px;
+  border-radius: 4px;
   box-sizing: border-box;
   overflow: hidden;
   font-family: Consolas, Menlo, monospace;
@@ -136,7 +138,7 @@ const rows = computed<Array<{
   border-bottom: 1px solid var(--ah-axis);
   position: sticky;
   top: 0;
-  background: #0d1117;
+  background: #161b22;
 }
 .ah-bitbl-table td {
   padding: 3px 6px;

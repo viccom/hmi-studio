@@ -163,7 +163,7 @@ watch(() => props.data, () => draw())
 </script>
 
 <template>
-  <div class="ah-bit" :style="{ background: '#0d1117', border: `1px solid ${props.fill ?? '#f5a623'}` }">
+  <div class="ah-bit" :style="{ '--ah-accent': props.fill ?? '#f5a623' }">
     <div v-if="props.title" class="ah-bit-title">{{ props.title }}</div>
     <!-- 局部失败提示：有线可画时只提示，不遮图 -->
     <div v-if="errText && lines.length" class="ah-bit-err">{{ errText }}</div>
@@ -180,11 +180,12 @@ watch(() => props.data, () => draw())
 
 <style scoped>
 .ah-bit {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-radius: 6px;
+  border-radius: 4px;
   box-sizing: border-box;
   overflow: hidden;
   font-family: Consolas, Menlo, monospace;
@@ -214,7 +215,7 @@ watch(() => props.data, () => draw())
   color: #8b949e;
   padding: 0 8px;
   text-align: center;
-  background: #0d1117;
+  background: #161b22;
 }
 .ah-bit-hint.err {
   color: #f85149;

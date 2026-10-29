@@ -47,8 +47,8 @@ test.describe('P2 监控站 BI 大屏（通道 B 闭环）', () => {
     await loginAsAdmin(page)
     await page.goto(`/view/${BI_STATION}`)
 
-    // ① 图元装载：画面含 9 个 BI 图元（4 KPI + rank/pie/stack + trend/table）
-    await expect(page.locator('[id^="ah-bi-"]')).toHaveCount(9, { timeout: 20_000 })
+    // ① 图元装载：画面含 11 个 BI 图元（6 KPI + stack-area/pie/rank + matrix/table）
+    await expect(page.locator('[id^="ah-bi-"]')).toHaveCount(11, { timeout: 20_000 })
 
     // ② KPI 卡拿到真实读数（不是 '--' 占位）——宿主写回 props.data.val 的直接证据
     const kpi = page.locator('#ah-bi-kpi-bist-1')
@@ -61,11 +61,16 @@ test.describe('P2 监控站 BI 大屏（通道 B 闭环）', () => {
     // ③ 图表类图元渲染出 canvas（echarts 实例已初始化）
     await expect(page.locator('#ah-bi-rank-bist-1 canvas')).toHaveCount(1, { timeout: 20_000 })
     await expect(page.locator('#ah-bi-pie-bist-1 canvas')).toHaveCount(1)
-    await expect(page.locator('#ah-bi-trend-bist-1 canvas')).toHaveCount(1)
+    await expect(page.locator('#ah-bi-stack-area-bist-1 canvas')).toHaveCount(1)
+    // 矩阵图元：echarts 多层渲染（canvas 数 >1），故断言「至少 1 个」
+    await expect(page.locator('#ah-bi-matrix-bist-1 canvas').first()).toBeVisible()
 
     // ④ 明细表有真实行（每条序列一行）
     const rows = page.locator('#ah-bi-table-bist-1 tbody tr')
-    await expect(rows).toHaveCount(4, { timeout: 20_000 })
+    await expect(rows).toHaveCount(8, { timeout: 20_000 })
+
+    // ⑤ KPI 卡带迷你趋势（sparkline）：通道 B 的 both 形态同取单值 + 时序
+    await expect(page.locator('#ah-bi-kpi-bist-1 polyline')).toHaveCount(1, { timeout: 20_000 })
   })
 
   test('画面真相存 rs-iot 且 BI 图元的 data 通道未落库（保存态 sanitize）', async ({ page }) => {
@@ -81,7 +86,7 @@ test.describe('P2 监控站 BI 大屏（通道 B 闭环）', () => {
     const body = await rsiotGetScreen(BI_STATION)
     const doc = body.doc as { json: Array<{ id: string; props: Record<string, unknown> }> }
     const biItems = doc.json.filter((i) => i.id.startsWith('ah-bi-'))
-    expect(biItems.length).toBe(9)
+    expect(biItems.length).toBe(11)
     for (const it of biItems) {
       expect(it.props.data, `${it.id} 的 data 通道`).toBe('[]')
     }

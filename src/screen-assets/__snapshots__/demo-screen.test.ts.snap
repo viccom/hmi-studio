@@ -6,7 +6,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
   "group": "水处理演示",
   "canvasCfg": {
     "width": 800,
-    "height": 1800,
+    "height": 2060,
     "scale": 1,
     "color": "#141414",
     "img": "",
@@ -2374,6 +2374,117 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
       "lock": false,
       "resize": true,
       "rotate": true,
+      "id": "ah-bi-matrix-cat-1",
+      "title": "BI 设备×时间矩阵热力图",
+      "type": "vue",
+      "tag": "ah-bi-matrix",
+      "binfo": {
+        "angle": 0,
+        "width": 360,
+        "height": 220,
+        "left": 24,
+        "top": 1570
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#58a6ff",
+        "title": "设备 × 时间 矩阵热力",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
+        "interval": 600,
+        "windowSecs": 86400,
+        "shape": "series",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-stack-area-cat-1",
+      "title": "BI 多设备堆叠面积图",
+      "type": "vue",
+      "tag": "ah-bi-stack-area",
+      "binfo": {
+        "angle": 0,
+        "width": 360,
+        "height": 220,
+        "left": 404,
+        "top": 1570
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#58a6ff",
+        "title": "多设备堆叠负荷",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
+        "interval": 300,
+        "windowSecs": 3600,
+        "shape": "series",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-bars-cat-1",
+      "title": "BI 时间段柱状图",
+      "type": "vue",
+      "tag": "ah-bi-bars",
+      "binfo": {
+        "angle": 0,
+        "width": 360,
+        "height": 220,
+        "left": 24,
+        "top": 1810
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#58a6ff",
+        "title": "时段用量柱状",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
+        "interval": 600,
+        "windowSecs": 86400,
+        "shape": "series",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
       "id": "ah-bi-table-cat-1",
       "title": "BI 明细数据表",
       "type": "vue",
@@ -2382,8 +2493,8 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
         "angle": 0,
         "width": 320,
         "height": 200,
-        "left": 24,
-        "top": 1570
+        "left": 404,
+        "top": 1810
       },
       "common_animations": {
         "val": "",

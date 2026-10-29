@@ -182,13 +182,13 @@ const boolBinds = (pelId: string, attr: string, bindId = 'rsiot.alarm_active'): 
   ])]
 
 /** 纯函数组态：图元陈列室（registry 全量覆盖判据的承载画面）。无随机、无副作用。
- * 画布 800×1800（P2 三表与趋势节自 y596 起，P2-BI 图表节自 y950 起——
+ * 画布 800×2060（P2 三表与趋势节自 y596 起，P2-BI 图表节自 y950 起——
  * 出界/重叠判据由布局测试按 canvasCfg 推导）。 */
 export function buildCatalogScreen(): ScreenDoc {
   const c: ScreenDoc = {
     name: '图元陈列室', group: '水处理演示',
     canvasCfg: {
-      width: 800, height: 1800, scale: 1, color: '#141414', img: '',
+      width: 800, height: 2060, scale: 1, color: '#141414', img: '',
       guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
     },
     gridCfg: { enabled: true, align: true, size: 10 },
@@ -360,8 +360,40 @@ export function buildCatalogScreen(): ScreenDoc {
           agg: 'avg', interval: 300, windowSecs: 86400, shape: 'series',
         },
       }),
-      svgItem('ah-bi-table', cid('bi-table'), {
+      svgItem('ah-bi-matrix', cid('bi-matrix'), {
         left: 24, top: 1570,
+        props: {
+          title: '设备 × 时间 矩阵热力',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表', unit: 'kW' },
+          ]),
+          agg: 'avg', interval: 600, windowSecs: 86400, shape: 'series',
+        },
+      }),
+      svgItem('ah-bi-stack-area', cid('bi-stack-area'), {
+        left: 404, top: 1570,
+        props: {
+          title: '多设备堆叠负荷',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表', unit: 'kW' },
+          ]),
+          agg: 'avg', interval: 300, windowSecs: 3600, shape: 'series',
+        },
+      }),
+      svgItem('ah-bi-bars', cid('bi-bars'), {
+        left: 24, top: 1810,
+        props: {
+          title: '时段用量柱状',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+          ]),
+          agg: 'avg', interval: 600, windowSecs: 86400, shape: 'series',
+        },
+      }),
+      svgItem('ah-bi-table', cid('bi-table'), {
+        left: 404, top: 1810,
         props: {
           title: '设备指标明细',
           series: JSON.stringify([

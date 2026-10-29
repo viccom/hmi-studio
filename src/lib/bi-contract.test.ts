@@ -139,6 +139,64 @@ describe('BI 契约：查询计划（planQueries）', () => {
     expect(q[0]).toMatchObject({ slot: 'main', start: now - 3600, end: now, agg: null, interval: 0 })
   })
 
+  it('both → 每条 series 两条查询（main 聚合 + spark 降采样时序）', () => {
+    const panels = collectBiPanels({
+      json: [pel('bi-kpi', 'ah-bi-kpi', panelProps({
+        series: '[{"dev_id":"d1","tag":"power"}]', shape: 'both', interval: 60, windowSecs: 3600,
+      }))],
+    })
+    const q = planQueries(panels, now)
+    expect(q).toHaveLength(2)
+    expect(q[0].slot).toBe('main')
+    expect(q[1].slot).toBe('spark')
+    expect(q[0].agg).toBe(q[1].agg)
+    expect(q[1].start).toBe(now - 3600)
+  })
+
+  it('both → 信封同时带聚合值与时序点（KPI 卡大数字 + sparkline）', () => {
+    const ps = collectBiPanels({
+      json: [pel('bi-kpi', 'ah-bi-kpi', panelProps({
+        series: '[{"dev_id":"d1","tag":"power"}]', shape: 'both', interval: 60, windowSecs: 3600,
+      }))],
+    })
+    const q = planQueries(ps, now)
+    const results = [
+      { dev_id: 'd1', tag: 'power', count: 1, points: [{ ts: 1, value: 0.6 }] },
+      { dev_id: 'd1', tag: 'power', count: 2, points: [{ ts: 1, value: 0.5 }, { ts: 2, value: 0.6 }] },
+    ]
+    const envs = buildEnvelopes(ps, q, results, now)
+    const s = envs.get('bi-kpi')!.series[0]
+    expect(s.value).toBe(0.6)
+    expect(s.points).toHaveLength(2)
+  })
+
+  it('both + cumulative → main 走 raw（分段累加出窗口用量），不退回 last 降采样', () => {
+    // 回归锁：both 若把累计量的 main 也走 last 降采样，KPI 卡会显示「累计总量」
+    // 而非「窗口用量」（实测：今日用水量显示 2846 m³ = 累计水量）
+    const ps = collectBiPanels({
+      json: [pel('bi-kpi', 'ah-bi-kpi', panelProps({
+        series: '[{"dev_id":"d1","tag":"flow_total","mode":"cumulative"}]', shape: 'both', windowSecs: 86400,
+      }))],
+    })
+    const q = planQueries(ps, now)
+    const main = q.find((x) => x.slot === 'main')!
+    const spark = q.find((x) => x.slot === 'spark')!
+    expect(main.agg).toBeNull()      // raw（分段累加需要逐点）
+    expect(main.interval).toBe(0)
+    expect(spark.agg).toBe('last')   // 迷你趋势用累计曲线
+    // 值 = 分段累加（复位点切段），不是末值
+    const results = [
+      { dev_id: 'd1', tag: 'flow_total', count: 4, points: [
+        { ts: 1, value: 100 }, { ts: 2, value: 110 }, { ts: 3, value: 5 }, { ts: 4, value: 12 },
+      ] },
+      { dev_id: 'd1', tag: 'flow_total', count: 2, points: [{ ts: 1, value: 100 }, { ts: 2, value: 110 }] },
+    ]
+    const envs = buildEnvelopes(ps, q, results, now)
+    const s = envs.get('bi-kpi')!.series[0]
+    expect(s.value).toBeCloseTo(17, 6)   // (110-100) + (12-5)
+    expect(s.points).toHaveLength(2)     // spark 时序
+  })
+
   it('daily → 单条 last 查询（周期累计计数器取当前值，不做差）', () => {
     const panels = collectBiPanels({
       json: [pel('bi-1', 'ah-bi-kpi', panelProps({

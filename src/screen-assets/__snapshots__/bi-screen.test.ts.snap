@@ -40,9 +40,9 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "text-vue",
       "binfo": {
         "angle": 0,
-        "height": 44,
-        "left": 40,
-        "top": 20,
+        "height": 38,
+        "left": 30,
+        "top": 14,
         "width": 700
       },
       "common_animations": {
@@ -56,7 +56,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "props": {
         "fill": "#e6f7ff",
         "fontFamily": "黑体",
-        "fontSize": 30,
+        "fontSize": 26,
         "text": "监控站数据大屏 · 能源计量分析",
         "vertical": false
       },
@@ -74,10 +74,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "text-vue",
       "binfo": {
         "angle": 0,
-        "height": 24,
-        "left": 40,
-        "top": 66,
-        "width": 460
+        "height": 20,
+        "left": 30,
+        "top": 52,
+        "width": 420
       },
       "common_animations": {
         "val": "",
@@ -88,44 +88,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "events": [],
       "ports": [],
       "props": {
-        "fill": "#8fa3b8",
+        "fill": "#6e7681",
         "fontFamily": "黑体",
-        "fontSize": 15,
-        "text": "实时数据 rs-iot 时序库 · 30s 聚合刷新",
-        "vertical": false
-      },
-      "binds": []
-    },
-    {
-      "active": false,
-      "hide": false,
-      "lock": false,
-      "resize": true,
-      "rotate": true,
-      "id": "text-vue-bist-secA",
-      "title": "文字",
-      "type": "vue",
-      "tag": "text-vue",
-      "binfo": {
-        "angle": 0,
-        "height": 26,
-        "left": 40,
-        "top": 110,
-        "width": 240
-      },
-      "common_animations": {
-        "val": "",
-        "delay": "delay-0s",
-        "speed": "slow",
-        "repeat": "infinite"
-      },
-      "events": [],
-      "ports": [],
-      "props": {
-        "fill": "#8fa3b8",
-        "fontFamily": "黑体",
-        "fontSize": 17,
-        "text": "── 总览 KPI ──",
+        "fontSize": 13,
+        "text": "rs-iot 时序库 · 30s 聚合刷新",
         "vertical": false
       },
       "binds": []
@@ -142,10 +108,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "ah-bi-kpi",
       "binfo": {
         "angle": 0,
-        "width": 440,
-        "height": 150,
-        "left": 40,
-        "top": 140
+        "width": 300,
+        "height": 124,
+        "left": 30,
+        "top": 86
       },
       "common_animations": {
         "val": "",
@@ -160,9 +126,9 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
         "title": "今日用电量",
         "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"}]",
         "agg": "last",
-        "interval": 60,
+        "interval": 300,
         "windowSecs": 86400,
-        "shape": "aggregate",
+        "shape": "both",
         "data": "[]"
       },
       "binds": []
@@ -179,10 +145,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "ah-bi-kpi",
       "binfo": {
         "angle": 0,
-        "width": 440,
-        "height": 150,
-        "left": 500,
-        "top": 140
+        "width": 300,
+        "height": 124,
+        "left": 342,
+        "top": 86
       },
       "common_animations": {
         "val": "",
@@ -193,13 +159,13 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "events": [],
       "ports": [],
       "props": {
-        "fill": "#f5a623",
+        "fill": "#39c5cf",
         "title": "今日用水量",
         "series": "[{\\"dev_id\\":\\"home-meter-w1\\",\\"tag\\":\\"flow_total\\",\\"label\\":\\"1#水表\\",\\"unit\\":\\"m³\\",\\"mode\\":\\"cumulative\\"},{\\"dev_id\\":\\"home-meter-w2\\",\\"tag\\":\\"flow_total\\",\\"label\\":\\"2#水表\\",\\"unit\\":\\"m³\\",\\"mode\\":\\"cumulative\\"}]",
         "agg": "last",
-        "interval": 60,
+        "interval": 300,
         "windowSecs": 86400,
-        "shape": "aggregate",
+        "shape": "both",
         "data": "[]"
       },
       "binds": []
@@ -216,10 +182,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "ah-bi-kpi",
       "binfo": {
         "angle": 0,
-        "width": 440,
-        "height": 150,
-        "left": 960,
-        "top": 140
+        "width": 300,
+        "height": 124,
+        "left": 654,
+        "top": 86
       },
       "common_animations": {
         "val": "",
@@ -230,13 +196,13 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "events": [],
       "ports": [],
       "props": {
-        "fill": "#f5a623",
+        "fill": "#bc8cff",
         "title": "今日用气量",
         "series": "[{\\"dev_id\\":\\"home-meter-g1\\",\\"tag\\":\\"gas_total\\",\\"label\\":\\"1#燃气表\\",\\"unit\\":\\"m³\\",\\"mode\\":\\"cumulative\\"},{\\"dev_id\\":\\"home-meter-g2\\",\\"tag\\":\\"gas_total\\",\\"label\\":\\"2#燃气表\\",\\"unit\\":\\"m³\\",\\"mode\\":\\"cumulative\\"}]",
         "agg": "last",
-        "interval": 60,
+        "interval": 300,
         "windowSecs": 86400,
-        "shape": "aggregate",
+        "shape": "both",
         "data": "[]"
       },
       "binds": []
@@ -253,10 +219,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "ah-bi-kpi",
       "binfo": {
         "angle": 0,
-        "width": 440,
-        "height": 150,
-        "left": 1420,
-        "top": 140
+        "width": 300,
+        "height": 124,
+        "left": 966,
+        "top": 86
       },
       "common_animations": {
         "val": "",
@@ -271,9 +237,9 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
         "title": "1#电表 有功功率",
         "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"}]",
         "agg": "avg",
-        "interval": 60,
+        "interval": 300,
         "windowSecs": 3600,
-        "shape": "aggregate",
+        "shape": "both",
         "data": "[]"
       },
       "binds": []
@@ -284,16 +250,16 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "lock": false,
       "resize": true,
       "rotate": true,
-      "id": "text-vue-bist-secB",
-      "title": "文字",
+      "id": "ah-bi-kpi-bist-5",
+      "title": "BI-KPI 数字卡",
       "type": "vue",
-      "tag": "text-vue",
+      "tag": "ah-bi-kpi",
       "binfo": {
         "angle": 0,
-        "height": 26,
-        "left": 40,
-        "top": 320,
-        "width": 240
+        "width": 300,
+        "height": 124,
+        "left": 1278,
+        "top": 86
       },
       "common_animations": {
         "val": "",
@@ -304,11 +270,14 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "events": [],
       "ports": [],
       "props": {
-        "fill": "#8fa3b8",
-        "fontFamily": "黑体",
-        "fontSize": 17,
-        "text": "── 用量分析 ──",
-        "vertical": false
+        "fill": "#39c5cf",
+        "title": "1#水表 瞬时流量",
+        "series": "[{\\"dev_id\\":\\"home-meter-w1\\",\\"tag\\":\\"flow_instant\\",\\"label\\":\\"1#水表\\",\\"unit\\":\\"m³/h\\"}]",
+        "agg": "avg",
+        "interval": 300,
+        "windowSecs": 3600,
+        "shape": "both",
+        "data": "[]"
       },
       "binds": []
     },
@@ -318,16 +287,16 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "lock": false,
       "resize": true,
       "rotate": true,
-      "id": "ah-bi-rank-bist-1",
-      "title": "BI-排名条形",
+      "id": "ah-bi-kpi-bist-6",
+      "title": "BI-KPI 数字卡",
       "type": "vue",
-      "tag": "ah-bi-rank",
+      "tag": "ah-bi-kpi",
       "binfo": {
         "angle": 0,
-        "width": 600,
-        "height": 340,
-        "left": 40,
-        "top": 350
+        "width": 300,
+        "height": 124,
+        "left": 1590,
+        "top": 86
       },
       "common_animations": {
         "val": "",
@@ -338,13 +307,50 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "events": [],
       "ports": [],
       "props": {
-        "fill": "#f5a623",
-        "title": "电表用电量排名（24h 窗口增量）",
-        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"}]",
-        "agg": "last",
+        "fill": "#bc8cff",
+        "title": "1#燃气表 瞬时流量",
+        "series": "[{\\"dev_id\\":\\"home-meter-g1\\",\\"tag\\":\\"gas_instant\\",\\"label\\":\\"1#燃气表\\",\\"unit\\":\\"m³/h\\"}]",
+        "agg": "avg",
+        "interval": 300,
+        "windowSecs": 3600,
+        "shape": "both",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-stack-area-bist-1",
+      "title": "BI 多设备堆叠面积图",
+      "type": "vue",
+      "tag": "ah-bi-stack-area",
+      "binfo": {
+        "angle": 0,
+        "width": 1000,
+        "height": 372,
+        "left": 30,
+        "top": 226
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#58a6ff",
+        "title": "各表瞬时负荷（1h 窗口）",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表 功率\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表 功率\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
         "interval": 60,
-        "windowSecs": 86400,
-        "shape": "aggregate",
+        "windowSecs": 3600,
+        "shape": "series",
         "data": "[]"
       },
       "binds": []
@@ -361,10 +367,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "ah-bi-pie",
       "binfo": {
         "angle": 0,
-        "width": 620,
-        "height": 340,
-        "left": 660,
-        "top": 350
+        "width": 380,
+        "height": 372,
+        "left": 1042,
+        "top": 226
       },
       "common_animations": {
         "val": "",
@@ -376,7 +382,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "ports": [],
       "props": {
         "fill": "#f5a623",
-        "title": "用电量占比（1#/2# 电表）",
+        "title": "用电量占比",
         "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"}]",
         "agg": "last",
         "interval": 60,
@@ -392,16 +398,16 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "lock": false,
       "resize": true,
       "rotate": true,
-      "id": "ah-bi-stack-bist-1",
-      "title": "BI 构成堆叠条",
+      "id": "ah-bi-rank-bist-1",
+      "title": "BI-排名条形",
       "type": "vue",
-      "tag": "ah-bi-stack",
+      "tag": "ah-bi-rank",
       "binfo": {
         "angle": 0,
-        "width": 560,
-        "height": 340,
-        "left": 1300,
-        "top": 350
+        "width": 456,
+        "height": 372,
+        "left": 1434,
+        "top": 226
       },
       "common_animations": {
         "val": "",
@@ -413,10 +419,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "ports": [],
       "props": {
         "fill": "#f5a623",
-        "title": "水气用量构成",
-        "series": "[{\\"dev_id\\":\\"home-meter-w1\\",\\"tag\\":\\"flow_total\\",\\"label\\":\\"1#水表\\",\\"unit\\":\\"m³\\",\\"mode\\":\\"cumulative\\"},{\\"dev_id\\":\\"home-meter-w2\\",\\"tag\\":\\"flow_total\\",\\"label\\":\\"2#水表\\",\\"unit\\":\\"m³\\",\\"mode\\":\\"cumulative\\"},{\\"dev_id\\":\\"home-meter-g1\\",\\"tag\\":\\"gas_total\\",\\"label\\":\\"1#燃气表\\",\\"unit\\":\\"m³\\",\\"mode\\":\\"cumulative\\"},{\\"dev_id\\":\\"home-meter-g2\\",\\"tag\\":\\"gas_total\\",\\"label\\":\\"2#燃气表\\",\\"unit\\":\\"m³\\",\\"mode\\":\\"cumulative\\"}]",
+        "title": "电表用电量排名（24h）",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"}]",
         "agg": "last",
-        "interval": 0,
+        "interval": 60,
         "windowSecs": 86400,
         "shape": "aggregate",
         "data": "[]"
@@ -429,16 +435,16 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "lock": false,
       "resize": true,
       "rotate": true,
-      "id": "text-vue-bist-secC",
-      "title": "文字",
+      "id": "ah-bi-matrix-bist-1",
+      "title": "BI 设备×时间矩阵热力图",
       "type": "vue",
-      "tag": "text-vue",
+      "tag": "ah-bi-matrix",
       "binfo": {
         "angle": 0,
-        "height": 26,
-        "left": 40,
-        "top": 720,
-        "width": 240
+        "width": 1180,
+        "height": 440,
+        "left": 30,
+        "top": 610
       },
       "common_animations": {
         "val": "",
@@ -449,43 +455,9 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "events": [],
       "ports": [],
       "props": {
-        "fill": "#8fa3b8",
-        "fontFamily": "黑体",
-        "fontSize": 17,
-        "text": "── 明细与趋势 ──",
-        "vertical": false
-      },
-      "binds": []
-    },
-    {
-      "active": false,
-      "hide": false,
-      "lock": false,
-      "resize": true,
-      "rotate": true,
-      "id": "ah-bi-trend-bist-1",
-      "title": "BI 多序列趋势图",
-      "type": "vue",
-      "tag": "ah-bi-trend",
-      "binfo": {
-        "angle": 0,
-        "width": 1160,
-        "height": 300,
-        "left": 40,
-        "top": 750
-      },
-      "common_animations": {
-        "val": "",
-        "delay": "delay-0s",
-        "speed": "slow",
-        "repeat": "infinite"
-      },
-      "events": [],
-      "ports": [],
-      "props": {
-        "fill": "#f5a623",
-        "title": "1#/2# 电表有功功率趋势（1h 窗口）",
-        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kW\\"}]",
+        "fill": "#58a6ff",
+        "title": "各表瞬时流量 × 时间（1min 桶）",
+        "series": "[{\\"dev_id\\":\\"home-meter-w1\\",\\"tag\\":\\"flow_instant\\",\\"label\\":\\"1#水表\\",\\"unit\\":\\"m³/h\\"},{\\"dev_id\\":\\"home-meter-w2\\",\\"tag\\":\\"flow_instant\\",\\"label\\":\\"2#水表\\",\\"unit\\":\\"m³/h\\"},{\\"dev_id\\":\\"home-meter-g1\\",\\"tag\\":\\"gas_instant\\",\\"label\\":\\"1#燃气表\\",\\"unit\\":\\"m³/h\\"},{\\"dev_id\\":\\"home-meter-g2\\",\\"tag\\":\\"gas_instant\\",\\"label\\":\\"2#燃气表\\",\\"unit\\":\\"m³/h\\"}]",
         "agg": "avg",
         "interval": 60,
         "windowSecs": 3600,
@@ -506,10 +478,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "ah-bi-table",
       "binfo": {
         "angle": 0,
-        "width": 640,
-        "height": 300,
-        "left": 1220,
-        "top": 750
+        "width": 668,
+        "height": 440,
+        "left": 1222,
+        "top": 610
       },
       "common_animations": {
         "val": "",
@@ -522,7 +494,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "props": {
         "fill": "#f5a623",
         "title": "设备指标明细（24h 窗口）",
-        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表 功率\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表 功率\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-w1\\",\\"tag\\":\\"flow_instant\\",\\"label\\":\\"1#水表 瞬时流量\\",\\"unit\\":\\"m³/h\\"},{\\"dev_id\\":\\"home-meter-g1\\",\\"tag\\":\\"gas_instant\\",\\"label\\":\\"1#燃气表 瞬时流量\\",\\"unit\\":\\"m³/h\\"}]",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表 功率\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表 功率\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"voltage\\",\\"label\\":\\"1#电表 电压\\",\\"unit\\":\\"V\\"},{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"current\\",\\"label\\":\\"1#电表 电流\\",\\"unit\\":\\"A\\"},{\\"dev_id\\":\\"home-meter-w1\\",\\"tag\\":\\"flow_instant\\",\\"label\\":\\"1#水表 瞬时流量\\",\\"unit\\":\\"m³/h\\"},{\\"dev_id\\":\\"home-meter-w2\\",\\"tag\\":\\"flow_instant\\",\\"label\\":\\"2#水表 瞬时流量\\",\\"unit\\":\\"m³/h\\"},{\\"dev_id\\":\\"home-meter-g1\\",\\"tag\\":\\"gas_instant\\",\\"label\\":\\"1#燃气表 瞬时流量\\",\\"unit\\":\\"m³/h\\"},{\\"dev_id\\":\\"home-meter-g2\\",\\"tag\\":\\"gas_instant\\",\\"label\\":\\"2#燃气表 瞬时流量\\",\\"unit\\":\\"m³/h\\"}]",
         "agg": "avg",
         "interval": 0,
         "windowSecs": 86400,

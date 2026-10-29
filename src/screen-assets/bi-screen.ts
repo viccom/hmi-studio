@@ -94,88 +94,89 @@ export function buildBiStationScreen(): ScreenDoc {
     name: '监控站数据大屏', group: BI_GROUP,
     ...canvas(),
     json: [
-      // ---- 标题带 ----
+      // ---- 标题带（Grafana 式：紧凑，数字与标题同层）----
       textItem('text-vue-bist-title', {
-        text: '监控站数据大屏 · 能源计量分析', left: 40, top: 20, width: 700, height: 44,
-        fill: '#e6f7ff', fontSize: 30,
+        text: '监控站数据大屏 · 能源计量分析', left: 30, top: 14, width: 700, height: 38,
+        fill: '#e6f7ff', fontSize: 26,
       }),
       textItem('text-vue-bist-sub', {
-        text: '实时数据 rs-iot 时序库 · 30s 聚合刷新', left: 40, top: 66, width: 460, height: 24,
-        fill: '#8fa3b8', fontSize: 15,
+        text: 'rs-iot 时序库 · 30s 聚合刷新', left: 30, top: 52, width: 420, height: 20,
+        fill: '#6e7681', fontSize: 13,
       }),
 
-      // ---- A 区：总览 KPI（4 卡）----
-      textItem('text-vue-bist-secA', {
-        text: '── 总览 KPI ──', left: 40, top: 110, width: 240, height: 26,
-        fill: '#8fa3b8', fontSize: 17,
-      }),
+      // ---- A 区：总览 KPI 带（6 张紧凑卡，shape=both → 大数字 + 卡内迷你趋势）----
       biItem('ah-bi-kpi', 'ah-bi-kpi-bist-1', {
-        left: 40, top: 140, width: 440, height: 150,
+        left: 30, top: 86, width: 300, height: 124,
         props: {
           title: '今日用电量',
-          series: spec([
-            { dev_id: 'home-meter-e1', tag: 'energy_today', label: '1#电表', unit: 'kWh', mode: 'daily' },
-            { dev_id: 'home-meter-e2', tag: 'energy_today', label: '2#电表', unit: 'kWh', mode: 'daily' },
-          ]),
-          agg: 'last', windowSecs: 86400, shape: 'aggregate',
+          series: JSON.stringify([{dev_id:'home-meter-e1',tag:'energy_today',label:'1#电表',unit:'kWh',mode:'daily'},{dev_id:'home-meter-e2',tag:'energy_today',label:'2#电表',unit:'kWh',mode:'daily'}]),
+          agg: 'last', windowSecs: 86400, shape: 'both', interval: 300,
+          fill: '#f5a623',
         },
       }),
       biItem('ah-bi-kpi', 'ah-bi-kpi-bist-2', {
-        left: 500, top: 140, width: 440, height: 150,
+        left: 342, top: 86, width: 300, height: 124,
         props: {
           title: '今日用水量',
-          series: spec([
-            { dev_id: 'home-meter-w1', tag: 'flow_total', label: '1#水表', unit: 'm³', mode: 'cumulative' },
-            { dev_id: 'home-meter-w2', tag: 'flow_total', label: '2#水表', unit: 'm³', mode: 'cumulative' },
-          ]),
-          agg: 'last', windowSecs: 86400, shape: 'aggregate',
+          series: JSON.stringify([{dev_id:'home-meter-w1',tag:'flow_total',label:'1#水表',unit:'m³',mode:'cumulative'},{dev_id:'home-meter-w2',tag:'flow_total',label:'2#水表',unit:'m³',mode:'cumulative'}]),
+          agg: 'last', windowSecs: 86400, shape: 'both', interval: 300,
+          fill: '#39c5cf',
         },
       }),
       biItem('ah-bi-kpi', 'ah-bi-kpi-bist-3', {
-        left: 960, top: 140, width: 440, height: 150,
+        left: 654, top: 86, width: 300, height: 124,
         props: {
           title: '今日用气量',
-          series: spec([
-            { dev_id: 'home-meter-g1', tag: 'gas_total', label: '1#燃气表', unit: 'm³', mode: 'cumulative' },
-            { dev_id: 'home-meter-g2', tag: 'gas_total', label: '2#燃气表', unit: 'm³', mode: 'cumulative' },
-          ]),
-          agg: 'last', windowSecs: 86400, shape: 'aggregate',
+          series: JSON.stringify([{dev_id:'home-meter-g1',tag:'gas_total',label:'1#燃气表',unit:'m³',mode:'cumulative'},{dev_id:'home-meter-g2',tag:'gas_total',label:'2#燃气表',unit:'m³',mode:'cumulative'}]),
+          agg: 'last', windowSecs: 86400, shape: 'both', interval: 300,
+          fill: '#bc8cff',
         },
       }),
       biItem('ah-bi-kpi', 'ah-bi-kpi-bist-4', {
-        left: 1420, top: 140, width: 440, height: 150,
+        left: 966, top: 86, width: 300, height: 124,
         props: {
           title: '1#电表 有功功率',
-          series: spec([
-            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
-          ]),
-          agg: 'avg', windowSecs: 3600, shape: 'aggregate',
+          series: JSON.stringify([{dev_id:'home-meter-e1',tag:'power',label:'1#电表',unit:'kW'}]),
+          agg: 'avg', windowSecs: 3600, shape: 'both', interval: 300,
+          fill: '#f5a623',
+        },
+      }),
+      biItem('ah-bi-kpi', 'ah-bi-kpi-bist-5', {
+        left: 1278, top: 86, width: 300, height: 124,
+        props: {
+          title: '1#水表 瞬时流量',
+          series: JSON.stringify([{dev_id:'home-meter-w1',tag:'flow_instant',label:'1#水表',unit:'m³/h'}]),
+          agg: 'avg', windowSecs: 3600, shape: 'both', interval: 300,
+          fill: '#39c5cf',
+        },
+      }),
+      biItem('ah-bi-kpi', 'ah-bi-kpi-bist-6', {
+        left: 1590, top: 86, width: 300, height: 124,
+        props: {
+          title: '1#燃气表 瞬时流量',
+          series: JSON.stringify([{dev_id:'home-meter-g1',tag:'gas_instant',label:'1#燃气表',unit:'m³/h'}]),
+          agg: 'avg', windowSecs: 3600, shape: 'both', interval: 300,
+          fill: '#bc8cff',
         },
       }),
 
-      // ---- B 区：分析区（排名 / 构成 / 构成条）----
-      textItem('text-vue-bist-secB', {
-        text: '── 用量分析 ──', left: 40, top: 320, width: 240, height: 26,
-        fill: '#8fa3b8', fontSize: 17,
-      }),
-      biItem('ah-bi-rank', 'ah-bi-rank-bist-1', {
-        left: 40, top: 350, width: 600, height: 340,
+      // ---- B 区：分析区（堆叠趋势 / 占比环 / 排名）----
+      biItem('ah-bi-stack-area', 'ah-bi-stack-area-bist-1', {
+        left: 30, top: 226, width: 1000, height: 372,
         props: {
-          // 同单位同介质才可比：只放两台电表（kWh）。水/气是不同介质（m³），
-          // 与 kWh 混排排名即「不可比的量级对比」——那是谎报，故不入此图
-          // （水/气维度由右侧构成图与 KPI 卡覆盖）。
-          title: '电表用电量排名（24h 窗口增量）',
+          title: '各表瞬时负荷（1h 窗口）',
+          // 堆叠是**相加**——必须同单位：只放两台电表功率（kW）
           series: spec([
-            { dev_id: 'home-meter-e1', tag: 'energy_today', label: '1#电表', unit: 'kWh', mode: 'daily' },
-            { dev_id: 'home-meter-e2', tag: 'energy_today', label: '2#电表', unit: 'kWh', mode: 'daily' },
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表 功率', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表 功率', unit: 'kW' },
           ]),
-          agg: 'last', windowSecs: 86400, shape: 'aggregate',
+          agg: 'avg', interval: 60, windowSecs: 3600, shape: 'series',
         },
       }),
       biItem('ah-bi-pie', 'ah-bi-pie-bist-1', {
-        left: 660, top: 350, width: 620, height: 340,
+        left: 1042, top: 226, width: 380, height: 372,
         props: {
-          title: '用电量占比（1#/2# 电表）',
+          title: '用电量占比',
           series: spec([
             { dev_id: 'home-meter-e1', tag: 'energy_today', label: '1#电表', unit: 'kWh', mode: 'daily' },
             { dev_id: 'home-meter-e2', tag: 'energy_today', label: '2#电表', unit: 'kWh', mode: 'daily' },
@@ -183,45 +184,47 @@ export function buildBiStationScreen(): ScreenDoc {
           agg: 'last', windowSecs: 86400, shape: 'aggregate',
         },
       }),
-      biItem('ah-bi-stack', 'ah-bi-stack-bist-1', {
-        left: 1300, top: 350, width: 560, height: 340,
+      biItem('ah-bi-rank', 'ah-bi-rank-bist-1', {
+        left: 1434, top: 226, width: 456, height: 372,
         props: {
-          title: '水气用量构成',
+          // 同单位同介质才可比：只放两台电表（kWh）
+          title: '电表用电量排名（24h）',
           series: spec([
-            { dev_id: 'home-meter-w1', tag: 'flow_total', label: '1#水表', unit: 'm³', mode: 'cumulative' },
-            { dev_id: 'home-meter-w2', tag: 'flow_total', label: '2#水表', unit: 'm³', mode: 'cumulative' },
-            { dev_id: 'home-meter-g1', tag: 'gas_total', label: '1#燃气表', unit: 'm³', mode: 'cumulative' },
-            { dev_id: 'home-meter-g2', tag: 'gas_total', label: '2#燃气表', unit: 'm³', mode: 'cumulative' },
+            { dev_id: 'home-meter-e1', tag: 'energy_today', label: '1#电表', unit: 'kWh', mode: 'daily' },
+            { dev_id: 'home-meter-e2', tag: 'energy_today', label: '2#电表', unit: 'kWh', mode: 'daily' },
           ]),
           agg: 'last', windowSecs: 86400, shape: 'aggregate',
         },
       }),
 
-      // ---- C 区：明细 + 趋势 ----
-      textItem('text-vue-bist-secC', {
-        text: '── 明细与趋势 ──', left: 40, top: 720, width: 240, height: 26,
-        fill: '#8fa3b8', fontSize: 17,
-      }),
-      biItem('ah-bi-trend', 'ah-bi-trend-bist-1', {
-        left: 40, top: 750, width: 1160, height: 300,
+      // ---- C 区：明细区（矩阵热力 / 明细表）----
+      biItem('ah-bi-matrix', 'ah-bi-matrix-bist-1', {
+        left: 30, top: 610, width: 1180, height: 440,
         props: {
-          title: '1#/2# 电表有功功率趋势（1h 窗口）',
+          title: '各表瞬时流量 × 时间（1min 桶）',
+          // 热力是**颜色深浅比较**——同样要同单位可比：四台表均为瞬时流量（m³/h）
           series: spec([
-            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
-            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表', unit: 'kW' },
+            { dev_id: 'home-meter-w1', tag: 'flow_instant', label: '1#水表', unit: 'm³/h' },
+            { dev_id: 'home-meter-w2', tag: 'flow_instant', label: '2#水表', unit: 'm³/h' },
+            { dev_id: 'home-meter-g1', tag: 'gas_instant', label: '1#燃气表', unit: 'm³/h' },
+            { dev_id: 'home-meter-g2', tag: 'gas_instant', label: '2#燃气表', unit: 'm³/h' },
           ]),
           agg: 'avg', interval: 60, windowSecs: 3600, shape: 'series',
         },
       }),
       biItem('ah-bi-table', 'ah-bi-table-bist-1', {
-        left: 1220, top: 750, width: 640, height: 300,
+        left: 1222, top: 610, width: 668, height: 440,
         props: {
           title: '设备指标明细（24h 窗口）',
           series: spec([
             { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表 功率', unit: 'kW' },
             { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表 功率', unit: 'kW' },
+            { dev_id: 'home-meter-e1', tag: 'voltage', label: '1#电表 电压', unit: 'V' },
+            { dev_id: 'home-meter-e1', tag: 'current', label: '1#电表 电流', unit: 'A' },
             { dev_id: 'home-meter-w1', tag: 'flow_instant', label: '1#水表 瞬时流量', unit: 'm³/h' },
+            { dev_id: 'home-meter-w2', tag: 'flow_instant', label: '2#水表 瞬时流量', unit: 'm³/h' },
             { dev_id: 'home-meter-g1', tag: 'gas_instant', label: '1#燃气表 瞬时流量', unit: 'm³/h' },
+            { dev_id: 'home-meter-g2', tag: 'gas_instant', label: '2#燃气表 瞬时流量', unit: 'm³/h' },
           ]),
           agg: 'avg', windowSecs: 86400, shape: 'aggregate',
         },

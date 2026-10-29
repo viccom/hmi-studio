@@ -153,7 +153,7 @@ watch(parts, () => draw())
 </script>
 
 <template>
-  <div class="ah-bs" :style="{ background: '#0d1117', border: `1px solid ${props.fill ?? '#f5a623'}` }">
+  <div class="ah-bs" :style="{ '--ah-accent': props.fill ?? '#f5a623' }">
     <div v-if="props.title" class="ah-bs-title">{{ props.title }}</div>
     <!-- 图表容器**常驻**（v-if 会让空态时容器消失 → onMounted 拿不到元素 →
          echarts 永不初始化，数据到达后仍空白）。空态用覆盖层遮住图表。 -->
@@ -175,11 +175,12 @@ watch(parts, () => draw())
 
 <style scoped>
 .ah-bs {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-radius: 6px;
+  border-radius: 4px;
   box-sizing: border-box;
   overflow: hidden;
   font-family: Consolas, Menlo, monospace;
@@ -204,7 +205,7 @@ watch(parts, () => draw())
   color: #8b949e;
   padding: 0 8px;
   text-align: center;
-  background: #0d1117;
+  background: #161b22;
 }
 .ah-bs-hint.err {
   color: #f85149;
@@ -218,7 +219,7 @@ watch(parts, () => draw())
   flex-wrap: wrap;
   gap: 2px 10px;
   padding: 0 8px 4px;
-  font-size: 10px;
+  font-size: 11px;
   color: #8b949e;
 }
 .ah-bs-dot {

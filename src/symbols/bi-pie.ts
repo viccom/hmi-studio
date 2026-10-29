@@ -68,6 +68,7 @@ export const biPie: HmiSymbol = {
       options: [
         { value: 'aggregate', label: '整窗单值' },
         { value: 'series', label: '时间序列' },
+        { value: 'both', label: '单值+时序（带迷你趋势）' },
       ],
     },
     data: { title: '运行时数据（宿主写回）', type: 'textArea', val: '[]' },

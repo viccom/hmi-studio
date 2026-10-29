@@ -48,8 +48,16 @@ export type BiAgg = 'avg' | 'max' | 'min' | 'sum' | 'count' | 'last'
  */
 export type BiMode = 'instant' | 'daily' | 'cumulative'
 
-/** 取数形态：aggregate=整窗单值（KPI/排名/占比）；series=时间序列（趋势/热力）。 */
-export type BiShape = 'aggregate' | 'series'
+/**
+ * 取数形态：
+ * - `aggregate`：整窗单值（排名/占比/构成）
+ * - `series`：时间序列（趋势/热力/堆叠）
+ * - `both`：**单值 + 时序同取**（KPI 卡——大数字来自整窗聚合，卡内迷你趋势来自同窗降采样）
+ *
+ * `both` 的代价：每条 series 发两条查询（聚合一条 + 降采样一条）。6 设备规模下
+ * 单批 32 条仍够用；换来的是「一张卡既有精确聚合值、又有 sparkline」。
+ */
+export type BiShape = 'aggregate' | 'series' | 'both'
 
 /** 一条序列的查询规格（组态员在图元 props.series 里配的 JSON 串条目）。 */
 export interface BiSeriesSpec {
@@ -80,8 +88,13 @@ export interface BiQueryPlan {
   panelId: string
   /** 面板内第几条序列（信封内 series 数组下标）。 */
   seriesIndex: number
-  /** main=主窗（当前唯一在用的槽；prev 为双窗差法遗留位，保留以兼容旧调用方）。 */
-  slot: 'main' | 'prev'
+  /**
+   * 查询槽位：
+   * - `main`：主查询（聚合值 / 时序点，视 shape 与 mode 而定）
+   * - `spark`：shape=both 时的**降采样时序**副查询（供 KPI 卡迷你趋势）
+   * - `prev`：双窗差法遗留位（保留以兼容旧调用方，当前不产出）
+   */
+  slot: 'main' | 'spark' | 'prev'
   dev_id: string
   tag: string
   /** 秒级 Unix 时间戳，后端窗口为半开 [start,end)。 */
@@ -204,7 +217,8 @@ export function collectBiPanels(done: unknown): BiPanelSpec[] {
     const aggRaw = typeof props.agg === 'string' ? props.agg : ''
     const agg: BiAgg = (AGGS as string[]).includes(aggRaw) ? (aggRaw as BiAgg) : 'avg'
     const shapeRaw = typeof props.shape === 'string' ? props.shape : ''
-    const shape: BiShape = shapeRaw === 'series' ? 'series' : 'aggregate'
+    const shape: BiShape =
+      shapeRaw === 'series' ? 'series' : shapeRaw === 'both' ? 'both' : 'aggregate'
     const intervalRaw = Number(props.interval)
     const interval = Number.isFinite(intervalRaw) && intervalRaw > 0 ? Math.floor(intervalRaw) : 0
     const windowRaw = Number(props.windowSecs)
@@ -237,6 +251,41 @@ export function planQueries(panels: BiPanelSpec[], nowSec: number): BiQueryPlan[
     for (let i = 0; i < panel.series.length; i++) {
       const s = panel.series[i]
       const base = { panelId: panel.id, seriesIndex: i, dev_id: s.dev_id, tag: s.tag }
+      if (panel.shape === 'both') {
+        const bucket = panel.interval > 0 ? panel.interval : seriesBucket(panel.windowSecs)
+        // main：**保持 aggregate 形态的口径**（instant=窗口聚合值 / cumulative=raw 分段累加）
+        // ——both 若把累计量也走 last 降采样，KPI 卡会显示「累计总量」而非「窗口用量」
+        // （实测：今日用水量显示 2846 m³ = 累计水量，而非窗口用量）。
+        if (s.mode === 'cumulative') {
+          out.push({
+            ...base,
+            slot: 'main',
+            start: nowSec - panel.windowSecs,
+            end: nowSec,
+            agg: null,
+            interval: 0,
+          })
+        } else {
+          out.push({
+            ...base,
+            slot: 'main',
+            start: nowSec - panel.windowSecs,
+            end: nowSec,
+            agg: panel.agg,
+            interval: panel.windowSecs,
+          })
+        }
+        // spark：同窗降采样时序（迷你趋势用）
+        out.push({
+          ...base,
+          slot: 'spark',
+          start: nowSec - panel.windowSecs,
+          end: nowSec,
+          agg: s.mode === 'instant' ? panel.agg : 'last',
+          interval: bucket,
+        })
+        continue
+      }
       if (panel.shape === 'series') {
         const bucket = panel.interval > 0 ? panel.interval : seriesBucket(panel.windowSecs)
         out.push({
@@ -344,7 +393,10 @@ export function buildEnvelopes(
 ): Map<string, BiEnvelope> {
   const byPanel = new Map<string, BiEnvelope>()
   const panelById = new Map(panels.map((p) => [p.id, p]))
-  const acc = new Map<string, { main?: BiQueryPlan; mainRes?: BiRawResult }>()
+  const acc = new Map<
+    string,
+    { main?: BiQueryPlan; mainRes?: BiRawResult; spark?: BiQueryPlan; sparkRes?: BiRawResult }
+  >()
 
   queries.forEach((q, i) => {
     const key = `${q.panelId}#${q.seriesIndex}`
@@ -352,6 +404,9 @@ export function buildEnvelopes(
     if (q.slot === 'main') {
       cur.main = q
       cur.mainRes = results[i]
+    } else if (q.slot === 'spark') {
+      cur.spark = q
+      cur.sparkRes = results[i]
     }
     acc.set(key, cur)
   })
@@ -388,6 +443,19 @@ export function buildEnvelopes(
         .filter((p) => Number.isFinite(p.ts) && p.value !== null) as BiPoint[]
       if (panel.shape === 'series') {
         base.points = pts
+        series.push(base)
+        return
+      }
+      if (panel.shape === 'both') {
+        // main 给**口径正确的单值**（instant=聚合桶值 / cumulative=raw 分段累加），
+        // spark 给同窗时序点（KPI 卡：大数字 + 迷你趋势）
+        const sparkPts = (got?.sparkRes?.points ?? [])
+          .map((p) => ({ ts: Number(p.ts), value: toNum(p.value) }))
+          .filter((p) => Number.isFinite(p.ts) && p.value !== null) as BiPoint[]
+        base.points = sparkPts
+        base.value = s.mode === 'cumulative'
+          ? (pts.length ? cumulativeTotal(pts) : null)
+          : (pts.length ? pts[pts.length - 1].value : null)
         series.push(base)
         return
       }

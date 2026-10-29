@@ -126,6 +126,27 @@ export function formatShort(tsSec: number): string {
 }
 
 /**
+ * 指标口径的中文标签——信封的 `metric` 是机器口径（avg/max/…），直接展示给用户
+ * 是英文内部术语（明细表「口径」列曾显示 'avg'）。图元渲染前统一过这道映射。
+ */
+const METRIC_LABELS: Record<string, string> = {
+  avg: '平均',
+  max: '最大',
+  min: '最小',
+  sum: '合计',
+  count: '计数',
+  last: '末值',
+  delta: '增量',
+  usage: '用量',
+  current: '当前值',
+}
+
+/** 指标口径 → 中文标签（未知口径回落原值，不猜语义）。 */
+export function metricLabel(metric: string): string {
+  return METRIC_LABELS[metric] ?? metric
+}
+
+/**
  * 面板状态：图元据此决定渲染「实数据 / 空态占位 / 错误提示」。
  *
  * 判定口径（2026-10-29 固化，契约 §1.4「单图失败不拖全屏」的推论）：
@@ -173,4 +194,48 @@ export const BI_THEME = {
   legend: '#8b949e',
   text: '#c9d1d9',
   fontFamily: 'Consolas, Menlo, monospace',
+} as const
+
+/**
+ * 面板视觉令牌（2026-10-29 对标 Grafana 大屏重做）。
+ *
+ * 之前的 BI 图元是「通用组件」样式：每个图元自带一圈橙色描边 + 小字号 + 大片留白。
+ * Grafana 那种仪表盘观感的要点恰恰相反：
+ * - **靠底色分区，不靠描边**（面板背景与页面背景有微弱色差即可）
+ * - **数字是主角**（40px+ 粗体，色彩语义），标签与单位退居次级
+ * - **紧凑**：内边距 8~12px，卡片间距 8~12px，几乎不留空
+ *
+ * 故建立这组令牌供全部 BI 图元共用——视觉一致性不能靠各图元各写一套 CSS。
+ */
+export const BI_PANEL = {
+  /** 页面底色（宿主画布用；图元内用 card） */
+  page: '#0b0e14',
+  /** 卡片底色 */
+  card: '#161b22',
+  /** 卡片次级底色（卡内嵌套块，如 KPI 卡的指标条区） */
+  cardAlt: '#1c2128',
+  /** 极淡分隔线（Grafana 几乎不可见，但有助分区） */
+  hairline: '#21262d',
+  /** 主文字 */
+  text: '#c9d1d9',
+  /** 次级文字（标签/单位/图例） */
+  textDim: '#8b949e',
+  /** 强调色（默认橙） */
+  accent: '#f5a623',
+  /** 语义色：绿（正常/达成） */
+  ok: '#3fb950',
+  /** 语义色：红（告警/超限） */
+  bad: '#f85149',
+  /** 语义色：蓝（次要数据） */
+  info: '#58a6ff',
+  /** 语义色：紫 */
+  purple: '#bc8cff',
+  /** 语义色：青 */
+  cyan: '#39c5cf',
+  /** 卡片圆角 */
+  radius: '4px',
+  /** 卡片内边距 */
+  pad: '10px',
+  /** 卡片阴影（Grafana 的分层感） */
+  shadow: '0 1px 2px rgba(0,0,0,0.35)',
 } as const

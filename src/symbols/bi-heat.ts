@@ -58,6 +58,7 @@ export const biHeat: HmiSymbol = {
       options: [
         { value: 'aggregate', label: '整窗单值' },
         { value: 'series', label: '时间序列' },
+        { value: 'both', label: '单值+时序（带迷你趋势）' },
       ],
     },
     data: { title: '数据通道（宿主写入）', type: 'textArea', val: '[]' },
