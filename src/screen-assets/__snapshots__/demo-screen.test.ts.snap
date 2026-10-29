@@ -6,7 +6,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
   "group": "水处理演示",
   "canvasCfg": {
     "width": 800,
-    "height": 950,
+    "height": 1800,
     "scale": 1,
     "color": "#141414",
     "img": "",
@@ -2109,6 +2109,299 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
       "props": {
         "devices": "[{\\"id\\":\\"home-meter-e1\\",\\"label\\":\\"1# 电表\\"},{\\"id\\":\\"home-meter-e2\\",\\"label\\":\\"2# 电表\\"}]",
         "value": ""
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-sec5",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 22,
+        "left": 24,
+        "top": 950,
+        "width": 240
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "── BI 图表（P2 通道 B）──",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-kpi-cat-1",
+      "title": "BI-KPI 数字卡",
+      "type": "vue",
+      "tag": "ah-bi-kpi",
+      "binfo": {
+        "angle": 0,
+        "width": 200,
+        "height": 120,
+        "left": 24,
+        "top": 976
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "title": "有功功率",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
+        "interval": 60,
+        "windowSecs": 3600,
+        "shape": "aggregate",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-rank-cat-1",
+      "title": "BI-排名条形",
+      "type": "vue",
+      "tag": "ah-bi-rank",
+      "binfo": {
+        "angle": 0,
+        "width": 280,
+        "height": 200,
+        "left": 244,
+        "top": 976
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "title": "设备功率排名",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
+        "interval": 60,
+        "windowSecs": 3600,
+        "shape": "aggregate",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-pie-cat-1",
+      "title": "BI-占比环图",
+      "type": "vue",
+      "tag": "ah-bi-pie",
+      "binfo": {
+        "angle": 0,
+        "width": 220,
+        "height": 200,
+        "left": 544,
+        "top": 976
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "title": "用量构成",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"电\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"},{\\"dev_id\\":\\"home-meter-g1\\",\\"tag\\":\\"gas_total\\",\\"label\\":\\"气\\",\\"unit\\":\\"m3\\",\\"mode\\":\\"cumulative\\"},{\\"dev_id\\":\\"home-meter-w1\\",\\"tag\\":\\"flow_total\\",\\"label\\":\\"水\\",\\"unit\\":\\"m3\\",\\"mode\\":\\"cumulative\\"}]",
+        "agg": "avg",
+        "interval": 60,
+        "windowSecs": 86400,
+        "shape": "aggregate",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-stack-cat-1",
+      "title": "BI 构成堆叠条",
+      "type": "vue",
+      "tag": "ah-bi-stack",
+      "binfo": {
+        "angle": 0,
+        "width": 240,
+        "height": 120,
+        "left": 24,
+        "top": 1190
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "title": "三表累计构成",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"电\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"energy_today\\",\\"label\\":\\"电2\\",\\"unit\\":\\"kWh\\",\\"mode\\":\\"daily\\"},{\\"dev_id\\":\\"home-meter-g1\\",\\"tag\\":\\"gas_total\\",\\"label\\":\\"气\\",\\"unit\\":\\"m3\\",\\"mode\\":\\"cumulative\\"},{\\"dev_id\\":\\"home-meter-w1\\",\\"tag\\":\\"flow_total\\",\\"label\\":\\"水\\",\\"unit\\":\\"m3\\",\\"mode\\":\\"cumulative\\"}]",
+        "agg": "avg",
+        "interval": 0,
+        "windowSecs": 86400,
+        "shape": "aggregate",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-trend-cat-1",
+      "title": "BI 多序列趋势图",
+      "type": "vue",
+      "tag": "ah-bi-trend",
+      "binfo": {
+        "angle": 0,
+        "width": 320,
+        "height": 200,
+        "left": 24,
+        "top": 1330
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "title": "功率趋势",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
+        "interval": 60,
+        "windowSecs": 3600,
+        "shape": "series",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-heat-cat-1",
+      "title": "BI 时段热力图",
+      "type": "vue",
+      "tag": "ah-bi-heat",
+      "binfo": {
+        "angle": 0,
+        "width": 320,
+        "height": 220,
+        "left": 364,
+        "top": 1330
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "title": "时段负荷热力",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
+        "interval": 300,
+        "windowSecs": 86400,
+        "shape": "series",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-table-cat-1",
+      "title": "BI 明细数据表",
+      "type": "vue",
+      "tag": "ah-bi-table",
+      "binfo": {
+        "angle": 0,
+        "width": 320,
+        "height": 200,
+        "left": 24,
+        "top": 1570
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "title": "设备指标明细",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表 功率\\",\\"unit\\":\\"kW\\"},{\\"dev_id\\":\\"home-meter-e2\\",\\"tag\\":\\"power\\",\\"label\\":\\"2#电表 功率\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
+        "interval": 0,
+        "windowSecs": 86400,
+        "shape": "aggregate",
+        "data": "[]"
       },
       "binds": []
     }

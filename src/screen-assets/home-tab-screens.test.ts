@@ -3,8 +3,8 @@ import {
   buildHomeTabScreens, HOME_E_TABS, HOME_W_TABS, HOME_G_TABS,
 } from './home-tab-screens'
 import { HOME_GROUP } from './home-screens'
-import { unwrapDoc } from './screens'
-import { collectBinds } from './binds'
+import { unwrapDoc } from '../lib/screens'
+import { collectBinds } from '../lib/binds'
 import { allSymbols } from '../symbols/registry'
 
 /**

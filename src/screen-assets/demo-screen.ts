@@ -18,7 +18,7 @@
 import type {
   CompareOperator, IExportDoneJson, IExportJson, IDoneJsonBindList, IDoneJsonEventList,
 } from 'maotu'
-import type { ScreenDoc } from './screens'
+import type { ScreenDoc } from '../lib/screens'
 import type { HmiSymbol } from '../symbols/types'
 import { allSymbols } from '../symbols/registry'
 
@@ -182,12 +182,13 @@ const boolBinds = (pelId: string, attr: string, bindId = 'rsiot.alarm_active'): 
   ])]
 
 /** 纯函数组态：图元陈列室（registry 全量覆盖判据的承载画面）。无随机、无副作用。
- * 画布 800×950（P2 三表与趋势节自 y596 起追加，出界/重叠判据由布局测试按 canvasCfg 推导）。 */
+ * 画布 800×1800（P2 三表与趋势节自 y596 起，P2-BI 图表节自 y950 起——
+ * 出界/重叠判据由布局测试按 canvasCfg 推导）。 */
 export function buildCatalogScreen(): ScreenDoc {
   const c: ScreenDoc = {
     name: '图元陈列室', group: '水处理演示',
     canvasCfg: {
-      width: 800, height: 950, scale: 1, color: '#141414', img: '',
+      width: 800, height: 1800, scale: 1, color: '#141414', img: '',
       guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
     },
     gridCfg: { enabled: true, align: true, size: 10 },
@@ -287,6 +288,89 @@ export function buildCatalogScreen(): ScreenDoc {
         props: { devices: '[{"id":"home-meter-e1","label":"1# 电表"},{"id":"home-meter-e2","label":"2# 电表"}]', value: '' },
         binds: [],
       },
+      // 分区五：BI 图表（P2，自 y860 起）——BI 图元走通道 B（宿主聚合收集器写
+      // props.data.val），陈列室里不绑 SSE 点位；series 规格给的是真实点位，
+      // 运行页的宿主采集器据此取历史数据。
+      // 布局按各图元注册默认尺寸排布（kpi 200×120 / rank 280×200 / pie 220×200 /
+      // stack 240×120），两两不重叠且不出画布（布局测试按 canvasCfg 派生判据）。
+      textItem(`text-vue-${C}-sec5`, { text: '── BI 图表（P2 通道 B）──', left: 24, top: 950, width: 240, height: 22, fill: '#8fa3b8', fontSize: 14 }),
+      svgItem('ah-bi-kpi', cid('bi-kpi'), {
+        left: 24, top: 976,
+        props: {
+          title: '有功功率',
+          series: JSON.stringify([{ dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' }]),
+          agg: 'avg', windowSecs: 3600, shape: 'aggregate',
+        },
+      }),
+      svgItem('ah-bi-rank', cid('bi-rank'), {
+        left: 244, top: 976,
+        props: {
+          title: '设备功率排名',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表', unit: 'kW' },
+          ]),
+          agg: 'avg', windowSecs: 3600, shape: 'aggregate',
+        },
+      }),
+      svgItem('ah-bi-pie', cid('bi-pie'), {
+        left: 544, top: 976,
+        props: {
+          title: '用量构成',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'energy_today', label: '电', unit: 'kWh', mode: 'daily' },
+            { dev_id: 'home-meter-g1', tag: 'gas_total', label: '气', unit: 'm3', mode: 'cumulative' },
+            { dev_id: 'home-meter-w1', tag: 'flow_total', label: '水', unit: 'm3', mode: 'cumulative' },
+          ]),
+          agg: 'avg', windowSecs: 86400, shape: 'aggregate',
+        },
+      }),
+      svgItem('ah-bi-stack', cid('bi-stack'), {
+        left: 24, top: 1190,
+        props: {
+          title: '三表累计构成',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'energy_today', label: '电', unit: 'kWh', mode: 'daily' },
+            { dev_id: 'home-meter-e2', tag: 'energy_today', label: '电2', unit: 'kWh', mode: 'daily' },
+            { dev_id: 'home-meter-g1', tag: 'gas_total', label: '气', unit: 'm3', mode: 'cumulative' },
+            { dev_id: 'home-meter-w1', tag: 'flow_total', label: '水', unit: 'm3', mode: 'cumulative' },
+          ]),
+          agg: 'avg', windowSecs: 86400, shape: 'aggregate',
+        },
+      }),
+      svgItem('ah-bi-trend', cid('bi-trend'), {
+        left: 24, top: 1330,
+        props: {
+          title: '功率趋势',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表', unit: 'kW' },
+          ]),
+          agg: 'avg', interval: 60, windowSecs: 3600, shape: 'series',
+        },
+      }),
+      svgItem('ah-bi-heat', cid('bi-heat'), {
+        left: 364, top: 1330,
+        props: {
+          title: '时段负荷热力',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表', unit: 'kW' },
+          ]),
+          agg: 'avg', interval: 300, windowSecs: 86400, shape: 'series',
+        },
+      }),
+      svgItem('ah-bi-table', cid('bi-table'), {
+        left: 24, top: 1570,
+        props: {
+          title: '设备指标明细',
+          series: JSON.stringify([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表 功率', unit: 'kW' },
+            { dev_id: 'home-meter-e2', tag: 'power', label: '2#电表 功率', unit: 'kW' },
+          ]),
+          agg: 'avg', windowSecs: 86400, shape: 'aggregate',
+        },
+      }),
     ],
     eventList: [], eventFlow: [],
   }

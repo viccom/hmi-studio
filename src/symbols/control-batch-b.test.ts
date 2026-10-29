@@ -8,7 +8,7 @@
 // - 选择开关：点击循环档位并 emit update:modelValue（回写合并进 props 的组件侧起点）
 import { describe, it, expect } from 'vitest'
 import { createApp, defineComponent, h, nextTick, reactive, type Component } from 'vue'
-import { lintSymbol } from '../lib/symbol-lint'
+import { lintSymbol } from './symbol-lint'
 import { allSymbols } from './registry'
 import { VUE_SYMBOL_COMPONENTS, vueTagFor } from './index'
 import { digitalDisplay } from './digital-display'

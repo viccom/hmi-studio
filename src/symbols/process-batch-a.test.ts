@@ -9,7 +9,7 @@ import { safetyValve } from './safety-valve'
 import { solenoidValve } from './solenoid-valve'
 import { fan } from './fan'
 import { agitator } from './agitator'
-import { lintSymbol } from '../lib/symbol-lint'
+import { lintSymbol } from './symbol-lint'
 import type { HmiSymbol } from './types'
 
 const FAMILY: [name: string, s: HmiSymbol][] = [

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { loginAsAdmin } from './helpers'
 import { seedCommandScreen } from './fixtures'
-import { DEMO_A } from '../src/lib/demo-screen'
+import { DEMO_A } from '../src/screen-assets/demo-screen'
 
 // M4（T16/T17）：主题（dark 默认）/状态栏/命令历史/断线 UX/缩略图。
 // LAN 部署冒烟（gateway origin）另见 e2e/lan.spec.ts（T18）。

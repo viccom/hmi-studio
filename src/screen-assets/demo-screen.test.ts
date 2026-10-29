@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildDemoScreen, buildCatalogScreen, DEMO_A, DEMO_B } from './demo-screen'
-import { unwrapDoc } from './screens'
-import { collectBinds } from './binds'
+import { unwrapDoc } from '../lib/screens'
+import { collectBinds } from '../lib/binds'
 import { allSymbols } from '../symbols/registry'
 
 /**

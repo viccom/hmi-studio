@@ -47,7 +47,9 @@ test.describe('M1 画面列表', () => {
   test('新建画面 → 卡片出现 → 删除 → 卡片消失', async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto('/')
-    await page.getByRole('button', { name: '新建画面' }).click()
+    // 精确定位 header 的「新建画面」按钮（.new-btn）——分组卡片里的同名按钮
+    // （.new-card，每组一个）会让 getByRole 命中多个 → strict mode violation
+    await page.locator('header .new-btn').click()
     await page.getByPlaceholder('screen-id').fill(slug)
     await page.getByPlaceholder('画面名称').fill('E2E-T3 验证画面')
     await page.getByRole('button', { name: '创建', exact: true }).click()
@@ -64,7 +66,7 @@ test.describe('M1 画面列表', () => {
   test('slug 非法输入被表单校验拦截（不弹错误、不发 PUT）', async ({ page }) => {
     await loginAsAdmin(page)
     await page.goto('/')
-    await page.getByRole('button', { name: '新建画面' }).click()
+    await page.locator('header .new-btn').click()
     await page.getByPlaceholder('screen-id').fill('Bad_Slug!')
     await page.getByPlaceholder('画面名称').fill('x')
     await page.getByRole('button', { name: '创建', exact: true }).click()

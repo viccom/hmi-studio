@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { buildHomeFaceplateScreen, HOME_E_FACEPLATE } from './home-faceplate-screen'
-import { unwrapDoc } from './screens'
-import { collectBinds } from './binds'
-import { applyDevContext, isDevParamScreen } from './dev-context'
+import { unwrapDoc } from '../lib/screens'
+import { collectBinds } from '../lib/binds'
+import { applyDevContext, isDevParamScreen } from '../lib/dev-context'
 import { allSymbols } from '../symbols/registry'
 
 // W11 参数化样板屏结构防漂移：绑定面 = 纯 @dev.* / @meta.dev（无具体设备），

@@ -1,7 +1,8 @@
 import { test, expect, type Locator } from '@playwright/test'
 import { loginAsAdmin } from './helpers'
 import { seedCatalogDemo } from './fixtures'
-import { DEMO_CATALOG } from '../src/lib/demo-screen'
+import { DEMO_CATALOG, buildCatalogScreen } from '../src/screen-assets/demo-screen'
+import { allSymbols } from '../src/symbols/registry'
 
 // G-SYMBOLS 图元批量轮汇总门（批 A svg 6 + 批 B vue/custom-svg 6 + 批 C 陈列室）：
 // 陈列室 = T14 同款长期资产（slug 恒定 catalog-demo，PUT upsert 幂等，无清扫）。
@@ -56,9 +57,13 @@ test.describe('G-SYMBOLS 图元陈列室（批 C）', () => {
     // P2 custom-svg 三表：SSR 串化 img（水/气表字轮数字可 decode）
     const waterSrc = await page.locator('#ah-water-meter-cat-1 img').getAttribute('src')
     expect(waterSrc).toContain('data:image/svg')
-    // 总节点 = 27 自绘（W11 +ah-dev-selector）+ 陈列室文本（标题/分区/值牌）
+    // 总节点 = 注册表全量自绘图元（每类恰好 1 上画）+ 陈列室文本图元
+    // 计数随注册表/画面资产派生——新增图元不必改本断言（写死数字必然腐烂）
     const total = await page.locator('[id^="ah-"], [id^="text-vue-"]').count()
-    expect(total).toBe(27 + 9)
+    const symCount = allSymbols().length
+    const textCount = (buildCatalogScreen().json as Array<{ tag: string }>)
+      .filter((i) => i.tag === 'text-vue').length
+    expect(total).toBe(symCount + textCount)
   })
 
   test('段2: 数显读数随 SSE 变化 + 泵阈值触发变色 + 压力表盘同步（cpu 95→20 往返）', async ({ page }) => {

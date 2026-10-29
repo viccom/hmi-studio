@@ -7,7 +7,7 @@ import { butterflyValve } from './butterfly-valve'
 import { tank } from './tank'
 import { levelGauge } from './level-gauge'
 import { flowMeter } from './flow-meter'
-import { lintSymbol } from '../lib/symbol-lint'
+import { lintSymbol } from './symbol-lint'
 import type { HmiSymbol } from './types'
 
 const FAMILY: [name: string, s: HmiSymbol][] = [

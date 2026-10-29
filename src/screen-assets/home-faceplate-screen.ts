@@ -12,7 +12,7 @@
  * JSON——增设备 = 加一行 JSON 或一个按钮，不动画面结构。
  */
 import type { IExportDoneJson, IDoneJsonBindList } from 'maotu'
-import type { ScreenDoc } from './screens'
+import type { ScreenDoc } from '../lib/screens'
 import { canvas, textItem, trendItem, svgItem, HOME_GROUP } from './home-screens'
 import { HOME_E_TABS } from './home-tab-screens'
 import { buttonItem } from './home-tab-screens'

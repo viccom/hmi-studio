@@ -17,7 +17,7 @@
  * 与 home-screens.ts 概览屏的「两两不重叠」约定不同）；面板内部两两不重叠（伴生测试冻结）。
  */
 import type { IExportDoneJson, IDoneJsonEventList } from 'maotu'
-import type { ScreenDoc } from './screens'
+import type { ScreenDoc } from '../lib/screens'
 import {
   canvas, textItem, svgItem, trendItem, bind, switchChain, fillTriggers, balanceTriggers,
   panelBinds, HOME_GROUP,

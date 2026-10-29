@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { loginAsAdmin } from './helpers'
 import { seedFaceplateScreen } from './fixtures'
-import { HOME_E_FACEPLATE } from '../src/lib/home-faceplate-screen'
+import { HOME_E_FACEPLATE } from '../src/screen-assets/home-faceplate-screen'
 
 // W11 参数化样板屏（传统 HMI 画面模板 + 标签前缀）汇总门：
 // - bind_id 前缀 @dev. 由 ViewView 按激活设备重写（dev-context.ts），一屏服务 N 台设备；

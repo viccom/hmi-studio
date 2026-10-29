@@ -2,7 +2,7 @@
 // 改动图元即改快照，review 时 diff 即审阅面；同时守 lint 约定不破。
 import { describe, it, expect } from 'vitest'
 import { pumpCentrifugal } from './pump-centrifugal'
-import { lintSymbol } from '../lib/symbol-lint'
+import { lintSymbol } from './symbol-lint'
 
 describe('离心泵（首图元）', () => {
   it('结构快照（ILeftAsideConfigItemPublic）', () => {

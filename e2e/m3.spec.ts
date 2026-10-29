@@ -1,7 +1,7 @@
 import { test, expect, type Locator } from '@playwright/test'
 import { loginAsAdmin, rsiotGetScreen } from './helpers'
 import { seedDemoScreens } from './fixtures'
-import { DEMO_A, DEMO_B } from '../src/lib/demo-screen'
+import { DEMO_A, DEMO_B } from '../src/screen-assets/demo-screen'
 
 // G-M3 汇总门（T15）：演示画面 = T14 长期资产（slug 恒定，PUT upsert 幂等）——
 // beforeAll 重播种保新鲜，**无 afterAll 清扫**（与 e2e-t* 语义相反，LAN 演示留存）。

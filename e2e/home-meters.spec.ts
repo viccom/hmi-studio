@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { loginAsAdmin } from './helpers'
 import { seedHomeScreens } from './fixtures'
-import { HOME_E, HOME_W, HOME_G } from '../src/lib/home-screens'
+import { HOME_E, HOME_W, HOME_G } from '../src/screen-assets/home-screens'
 
 // P3 家庭三表三屏汇总门：长期资产（slug 恒定，PUT upsert 幂等，beforeAll 重播种，**无清扫**——
 // 同 water-demo-m3 约定）。数据面 = 真实活数据 home-meter-e/w/g 系列（采集周期 2s，curl 实测

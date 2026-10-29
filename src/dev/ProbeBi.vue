@@ -8,21 +8,29 @@
 //  - 每档记录写入→组件 watch 的时延（数据参考，不做阈值断言）
 // vue 型渲染链：done_json item.tag='probe-bi-chart' → maotu bs() 解析全局组件
 // （kebab→PascalCase 归一）——本页经 appContext 注册，不进 main.ts 正式注册面。
-import { getCurrentInstance, onMounted, ref, watch } from 'vue'
+import { defineComponent, getCurrentInstance, onMounted, ref, watch } from 'vue'
 import { MtPreview } from 'maotu'
 import type { IExportJson } from 'maotu'
 
-/** 探针图元：series 为大 JSON 串（宿主写入），watch 记录到达与完整性。 */
-const ProbeBiChart = {
+/** 探针载荷形状（宿主写入的大 JSON 串解析结果）。 */
+interface ProbePayload {
+  series?: Array<{ points?: unknown[] }>
+  seq?: number
+}
+
+/** 探针图元：series 为大 JSON 串（宿主写入），watch 记录到达与完整性。
+ *  用 defineComponent 而非裸对象：裸对象的 props 声明无法匹配 maotu 的
+ *  Component 类型（app.component 注册处报错 TS2345）。 */
+const ProbeBiChart = defineComponent({
   props: { series: { type: String, default: '[]' } },
   setup(p: { series: string }) {
     watch(() => p.series, (s) => {
       const t1 = performance.now()
       const probe = (window as Window & { __probeBi?: ProbeBiState }).__probeBi
       if (!probe) return
-      let parsed: { series?: Array<{ points?: unknown[] }> } | null = null
-      try { parsed = JSON.parse(s) as typeof parsed } catch { probe.result = { ok: false, err: 'JSON.parse 失败', len: s.length }; return }
-      const n = parsed?.series?.reduce((a, x) => a + (x.points?.length ?? 0), 0) ?? 0
+      let parsed: ProbePayload | null = null
+      try { parsed = JSON.parse(s) as ProbePayload } catch { probe.result = { ok: false, err: 'JSON.parse 失败', len: s.length }; return }
+      const n = parsed?.series?.reduce((a: number, x: { points?: unknown[] }) => a + (x.points?.length ?? 0), 0) ?? 0
       probe.result = {
         ok: true, len: s.length, points: n,
         seq: typeof parsed?.seq === 'number' ? parsed.seq : undefined,
@@ -31,7 +39,7 @@ const ProbeBiChart = {
     }, { immediate: true })
     return () => null // 纯数据探针，无渲染面
   },
-}
+})
 
 interface ProbeBiState {
   t0: number

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { loginAsAdmin } from './helpers'
 import { seedHomeTabScreens } from './fixtures'
-import { HOME_G_TABS, HOME_E_TABS } from '../src/lib/home-tab-screens'
+import { HOME_G_TABS, HOME_E_TABS } from '../src/screen-assets/home-tab-screens'
 
 // W10 页签切换 + 自适应缩放汇总门（机制依据见 home-tab-screens.ts 文件头）：
 // - 页签 = click→changeAttr(hide) 纯组态：2# 面板出厂全隐（v-if 不渲染），点击互斥翻转 +

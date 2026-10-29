@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildHomeScreens, HOME_E, HOME_W, HOME_G, HOME_GROUP } from './home-screens'
-import { unwrapDoc } from './screens'
-import { collectBinds } from './binds'
+import { unwrapDoc } from '../lib/screens'
+import { collectBinds } from '../lib/binds'
 import { allSymbols } from '../symbols/registry'
 
 /**

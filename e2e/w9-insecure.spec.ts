@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import os from 'node:os'
-import { buildDemoScreen } from '../src/lib/demo-screen'
+import { buildDemoScreen } from '../src/screen-assets/demo-screen'
 import { loginAsAdmin, rsiotGetScreen, rsiotPutScreen } from './helpers'
 
 // W9 打回修复回归：crypto.randomUUID 仅安全上下文可用——用户经 LAN IP

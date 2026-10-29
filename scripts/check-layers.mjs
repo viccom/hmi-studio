@@ -12,16 +12,24 @@ import { fileURLToPath } from 'node:url'
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = join(ROOT, 'src')
 
-// 豁免：lib 中 import symbols 的画面资产及其测试（迁移目标 src/screen-assets/，architecture §4.2）
-const LIB_SYMBOLS_ALLOWLIST = new Set([
-  'src/lib/demo-screen.ts', 'src/lib/home-screens.ts', 'src/lib/home-tab-screens.ts',
-  'src/lib/home-faceplate-screen.ts', 'src/lib/demo-screen.test.ts', 'src/lib/home-screens.test.ts',
-  'src/lib/home-tab-screens.test.ts', 'src/lib/home-faceplate-screen.test.ts',
-  'src/lib/symbol-lint.test.ts', // 图元 lint 的全量被测对象在 symbols——lint 本体不 import
+// 画面资产已迁至独立层 src/screen-assets/（architecture §4.2 迁移目标，2026-10-29 结清）——
+// 原「lib → symbols」豁免清单随之作废：lib 层不再有任何模块依赖 symbols。
+// 保留 LIB_SYMBOLS_ALLOWLIST 定义为空集的位置说明，避免后人误加豁免。
+const LIB_SYMBOLS_ALLOWLIST = new Set()
+
+// 反向豁免：symbols → lib 的**单点**引用（architecture §2 依赖方向规则的受控例外）。
+// 背景：BI 契约层 src/lib/bi-contract.ts 是宿主聚合收集器与图表图元共享的载荷形状
+// 单点事实源——两侧各写一份必然漂移（信封字段一改两边不同步）。
+// 该文件是**纯类型 + 纯函数**（零网络 / 零 maotu 依赖），故放行不破坏分层精神：
+// symbols 依赖的是契约定义，不是业务实现。
+// 白名单是**文件级**的：bi-contract 之外任何 lib 文件仍禁止被 symbols 引用。
+const SYMBOLS_LIB_ALLOWLIST = new Set([
+  'src/lib/bi-contract.ts',
 ])
 
 function layerOf(rel) {
   if (rel.startsWith('src/lib/')) return 'lib'
+  if (rel.startsWith('src/screen-assets/')) return 'assets'
   if (rel.startsWith('src/symbols/')) return 'symbols'
   if (rel.startsWith('src/views/')) return 'views'
   if (rel.startsWith('src/components/')) return 'components'
@@ -33,10 +41,11 @@ function layerOf(rel) {
 /** importer 层 → 允许的 target 层集合（dev 研究资产不限；app 壳不限） */
 const ALLOWED = {
   lib: ['lib'],
+  assets: ['lib', 'symbols'], // 画面资产：需读图元注册表（符号默认 props）+ lib 契约
   symbols: ['symbols'], // symbols 源文件不依赖 lib（kit 自包含）；测试文件放宽见下
   components: ['lib', 'components'],
   views: ['lib', 'components', 'symbols'], // 互不依赖另行特判
-  app: ['lib', 'components', 'symbols', 'views', 'dev'],
+  app: ['lib', 'components', 'symbols', 'views', 'dev', 'assets'],
 }
 
 function walk(dir, out = []) {
@@ -83,6 +92,8 @@ for (const file of walk(SRC)) {
     if (!ok && isTest && layer === 'lib' && tLayer === 'symbols' && LIB_SYMBOLS_ALLOWLIST.has(rel)) ok = true
     // lib → symbols 豁免清单
     if (!ok && layer === 'lib' && tLayer === 'symbols' && LIB_SYMBOLS_ALLOWLIST.has(rel)) ok = true
+    // symbols → lib 单点豁免（BI 契约层：载荷形状单点事实源）
+    if (!ok && layer === 'symbols' && tLayer === 'lib' && SYMBOLS_LIB_ALLOWLIST.has(target)) ok = true
     if (!ok) violations.push(`${rel} → ${target}：${layer} 禁止依赖 ${tLayer}（architecture §2）`)
   }
 }

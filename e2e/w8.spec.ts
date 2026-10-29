@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { loginAsAdmin, rsiotPutScreen, rsiotGetScreen, rsiotDeleteScreen, rsiotSweepScreens } from './helpers'
-import { buildDemoScreen } from '../src/lib/demo-screen'
+import { buildDemoScreen } from '../src/screen-assets/demo-screen'
 
 // W8 用户反馈轮三段：绑定面板（deviceBind 官方插槽替换 + 直改 store item 驱动保存链——
 // 本轮最大技术假设，此处落锤）/ 画面分组（列表分区 + 切换器两层）/ 触发器（结构落库）。
@@ -71,22 +71,31 @@ test.describe('W8 绑定面板与画面分组', () => {
     const slug = `w8-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
     await loginAsAdmin(page)
 
-    // 列表页新建（分组=测试组，el-select allow-create：输入 + Enter 创建项）
+    try {
+    // 列表页新建（分组=测试组，el-select allow-create：点击下拉选项创建）
     await page.goto('/')
-    await page.getByRole('button', { name: '新建画面' }).click()
+    // 精确定位 header 的「新建画面」按钮（.new-btn）——分组卡片里的同名按钮
+    // （.new-card，每组一个）会让 getByRole 命中多个 → strict mode violation
+    await page.locator('header .new-btn').click()
     const dlg = page.locator('.el-dialog')
     await dlg.locator('.el-form-item', { hasText: '画面 ID' }).locator('input').fill(slug)
     await dlg.locator('.el-form-item', { hasText: '名称' }).locator('input').fill('W8 分组验证')
     const groupInput = dlg.locator('.el-form-item', { hasText: '分组' }).locator('input')
     await groupInput.fill('测试组')
-    await groupInput.press('Enter')
+    // 选中分组：**点击下拉里的选项**而非 press('Enter')——
+    // Enter 依赖 element-plus 的键盘创建时序，全量并发下偶发不生效（分组静默落空 →
+    //   画面建成「未分组」→ 列表无「测试组」区块 → 断言失败）。点击不依赖键盘时序。
+    await page.locator('.el-select-dropdown:visible .el-select-dropdown__item', { hasText: '测试组' })
+      .first().click()
     await dlg.locator('button', { hasText: '创建' }).click()
 
     // 列表出现「测试组」区头（组名+数量徽章），卡片在该区内
+    // 超时放宽到 15s：全量并行（多 worker × 真浏览器 × maotu 编辑器）下渲染延迟可超
+    // expect 默认 5s——本用例单跑必过，属并发负载型 flaky，非断言语义问题。
     const section = page.locator('.group-block', { hasText: '测试组' })
-    await expect(section.locator('.group-name')).toHaveText('测试组')
-    await expect(section.locator('.group-head .el-tag')).toHaveText('1')
-    await expect(section.locator('.card-name', { hasText: 'W8 分组验证' })).toBeVisible()
+    await expect(section.locator('.group-name')).toHaveText('测试组', { timeout: 15_000 })
+    await expect(section.locator('.group-head .el-tag')).toHaveText('1', { timeout: 15_000 })
+    await expect(section.locator('.card-name', { hasText: 'W8 分组验证' })).toBeVisible({ timeout: 15_000 })
 
     // 编辑器切换器含 option-group「测试组」且画面选项在组内
     // （element-plus 结构：li.el-select-group__title 与选项 ul.el-select-group 是
@@ -98,7 +107,9 @@ test.describe('W8 绑定面板与画面分组', () => {
     await expect(wrap.locator('.el-select-group__title')).toHaveText('测试组')
     await expect(wrap.locator('.el-select-dropdown__item', { hasText: 'W8 分组验证' })).toBeVisible()
 
-    await rsiotDeleteScreen(slug) // 清扫
+    } finally {
+      await rsiotDeleteScreen(slug) // 清扫（失败也清——残留画面会污染「未分组」区块）
+    }
   })
 
   test('段5 组管理：编辑信息改组 → 组重命名（批量改写）→ 解散（画面归未分组）', async ({ page }) => {

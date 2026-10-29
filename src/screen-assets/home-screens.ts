@@ -20,7 +20,7 @@
 import type {
   CompareOperator, IExportDoneJson, IExportJson, IDoneJsonBindList, IDoneJsonEventList,
 } from 'maotu'
-import type { ScreenDoc } from './screens'
+import type { ScreenDoc } from '../lib/screens'
 import type { HmiSymbol } from '../symbols/types'
 import { allSymbols } from '../symbols/registry'
 

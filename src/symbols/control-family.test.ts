@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest'
 import { motor } from './motor'
 import { disSwitch } from './dis-switch'
 import { navButton, NAV_EVENT_CODE } from './nav-button'
-import { lintSymbol } from '../lib/symbol-lint'
+import { lintSymbol } from './symbol-lint'
 import type { HmiSymbol } from './types'
 
 const FAMILY: [name: string, s: HmiSymbol][] = [

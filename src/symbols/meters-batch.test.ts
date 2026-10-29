@@ -4,7 +4,7 @@
 // bind 直写（宿主改 prop）→ watch → 环形缓冲 → setOption 数据、节流 ≥1s、卸载 dispose。
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createApp, defineComponent, h, nextTick, reactive, type Component } from 'vue'
-import { lintSymbol } from '../lib/symbol-lint'
+import { lintSymbol } from './symbol-lint'
 import { allSymbols } from './registry'
 import { VUE_SYMBOL_COMPONENTS, vueTagFor } from './index'
 import { trendChart } from './trend-chart'
