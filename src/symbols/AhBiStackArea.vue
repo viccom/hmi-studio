@@ -128,13 +128,13 @@ function draw(): void {
       top: 0,
       itemWidth: 12,
       itemHeight: 8,
-      textStyle: { color: BI_THEME.legend, fontSize: 10 },
+      textStyle: { color: BI_THEME.legend, fontSize: 12 },
     },
     tooltip: {
       trigger: 'axis',
       backgroundColor: '#161b22',
       borderColor: BI_THEME.axisLine,
-      textStyle: { color: BI_THEME.text, fontSize: 11 },
+      textStyle: { color: BI_THEME.text, fontSize: 13 },
       // tooltip 标题来自 axisPointer 的 label（缺省按毫秒格式化 → 会显示 1970 epoch）
       axisPointer: { label: { formatter: (p: { value: unknown }) => tickLabel(p.value) } },
     },
@@ -144,7 +144,7 @@ function draw(): void {
       ...(extent.value ? { min: extent.value.min, max: extent.value.max } : {}),
       splitNumber: 5,
       axisLabel: {
-        color: BI_THEME.axisLabel, fontSize: 10, hideOverlap: true,
+        color: BI_THEME.axisLabel, fontSize: 12, hideOverlap: true,
         formatter: (v: number) => tickLabel(v),
       },
       axisLine: { lineStyle: { color: BI_THEME.axisLine } },
@@ -152,7 +152,7 @@ function draw(): void {
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: BI_THEME.axisLabel, fontSize: 10 },
+      axisLabel: { color: BI_THEME.axisLabel, fontSize: 12 },
       axisLine: { show: false },
       splitLine: { lineStyle: { color: BI_THEME.splitLine } },
     },
@@ -216,7 +216,7 @@ watch(() => props.data, () => draw())
   align-items: center;
   gap: 6px;
   padding: 5px 8px 0;
-  font-size: 12px;
+  font-size: 14px;
   color: #c9d1d9;
 }
 .ah-bsa-accent {
@@ -228,7 +228,7 @@ watch(() => props.data, () => draw())
 }
 .ah-bsa-err {
   padding: 2px 8px 0;
-  font-size: 10px;
+  font-size: 12px;
   color: #f85149;
 }
 .ah-bsa-body {
@@ -242,7 +242,7 @@ watch(() => props.data, () => draw())
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
   padding: 0 8px;
   text-align: center;

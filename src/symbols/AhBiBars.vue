@@ -152,13 +152,13 @@ function draw(): void {
       top: 0,
       itemWidth: 12,
       itemHeight: 8,
-      textStyle: { color: BI_THEME.legend, fontSize: 10 },
+      textStyle: { color: BI_THEME.legend, fontSize: 12 },
     },
     tooltip: {
       trigger: 'axis',
       backgroundColor: '#161b22',
       borderColor: BI_THEME.axisLine,
-      textStyle: { color: BI_THEME.text, fontSize: 11 },
+      textStyle: { color: BI_THEME.text, fontSize: 13 },
       formatter: (params: unknown) => {
         const arr = (Array.isArray(params) ? params : [params]) as Array<{
           axisValue?: unknown
@@ -177,13 +177,13 @@ function draw(): void {
     xAxis: {
       type: 'category',
       data: b.xs,
-      axisLabel: { color: BI_THEME.axisLabel, fontSize: 10, hideOverlap: true },
+      axisLabel: { color: BI_THEME.axisLabel, fontSize: 12, hideOverlap: true },
       axisLine: { lineStyle: { color: BI_THEME.axisLine } },
       splitArea: { show: false },
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: BI_THEME.axisLabel, fontSize: 10 },
+      axisLabel: { color: BI_THEME.axisLabel, fontSize: 12 },
       axisLine: { show: false },
       splitLine: { lineStyle: { color: BI_THEME.splitLine } },
     },
@@ -249,7 +249,7 @@ watch(() => props.interval, () => draw())
   align-items: center;
   gap: 6px;
   padding: 5px 8px 0;
-  font-size: 12px;
+  font-size: 14px;
   color: #c9d1d9;
 }
 .ah-bbars-accent {
@@ -261,7 +261,7 @@ watch(() => props.interval, () => draw())
 }
 .ah-bbars-err {
   padding: 2px 8px 0;
-  font-size: 10px;
+  font-size: 12px;
   color: #f85149;
 }
 .ah-bbars-body {
@@ -275,7 +275,7 @@ watch(() => props.interval, () => draw())
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
   padding: 0 8px;
   text-align: center;

@@ -120,7 +120,7 @@ function draw(): void {
             silent: true,
             symbol: 'none',
             lineStyle: { color: BI_PANEL.bad, type: 'dashed', width: 1 },
-            label: { color: BI_PANEL.bad, fontSize: 10, formatter: () => '尖峰阈值' },
+            label: { color: BI_PANEL.bad, fontSize: 12, formatter: () => '尖峰阈值' },
             data: [{ yAxis: th }],
           },
         }
@@ -135,7 +135,7 @@ function draw(): void {
       trigger: 'axis',
       backgroundColor: '#161b22',
       borderColor: BI_THEME.axisLine,
-      textStyle: { color: BI_THEME.text, fontSize: 11 },
+      textStyle: { color: BI_THEME.text, fontSize: 13 },
       axisPointer: { type: 'shadow', label: { formatter: (p: { value: unknown }) => tickLabel(p.value) } },
     },
     xAxis: {
@@ -143,7 +143,7 @@ function draw(): void {
       ...(extent.value ? { min: extent.value.min, max: extent.value.max } : {}),
       splitNumber: 5,
       axisLabel: {
-        color: BI_THEME.axisLabel, fontSize: 10, hideOverlap: true,
+        color: BI_THEME.axisLabel, fontSize: 12, hideOverlap: true,
         formatter: (v: number) => tickLabel(v),
       },
       axisLine: { lineStyle: { color: BI_THEME.axisLine } },
@@ -151,7 +151,7 @@ function draw(): void {
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: BI_THEME.axisLabel, fontSize: 10 },
+      axisLabel: { color: BI_THEME.axisLabel, fontSize: 12 },
       axisLine: { show: false },
       splitLine: { lineStyle: { color: BI_THEME.splitLine } },
     },
@@ -214,7 +214,7 @@ watch(() => props.data, () => draw())
   align-items: center;
   gap: 6px;
   padding: 5px 8px 0;
-  font-size: 12px;
+  font-size: 14px;
   color: #c9d1d9;
 }
 .ah-bsp-accent {
@@ -226,12 +226,12 @@ watch(() => props.data, () => draw())
 }
 .ah-bsp-th {
   margin-left: auto;
-  font-size: 10px;
+  font-size: 12px;
   color: #f85149;
 }
 .ah-bsp-err {
   padding: 2px 8px 0;
-  font-size: 10px;
+  font-size: 12px;
   color: #f85149;
 }
 .ah-bsp-body {
@@ -245,7 +245,7 @@ watch(() => props.data, () => draw())
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
   padding: 0 8px;
   text-align: center;

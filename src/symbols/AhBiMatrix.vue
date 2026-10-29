@@ -134,7 +134,7 @@ function draw(): void {
       position: 'top',
       backgroundColor: '#161b22',
       borderColor: BI_THEME.axisLine,
-      textStyle: { color: BI_THEME.text, fontSize: 11 },
+      textStyle: { color: BI_THEME.text, fontSize: 13 },
       formatter: (p: unknown) => {
         const first = (Array.isArray(p) ? p[0] : p) as { value?: unknown } | undefined
         const v = first?.value
@@ -148,7 +148,7 @@ function draw(): void {
     xAxis: {
       type: 'category',
       data: m.xs,
-      axisLabel: { color: BI_THEME.axisLabel, fontSize: 10, hideOverlap: true },
+      axisLabel: { color: BI_THEME.axisLabel, fontSize: 12, hideOverlap: true },
       axisLine: { lineStyle: { color: BI_THEME.axisLine } },
       splitArea: { show: false },
     },
@@ -157,7 +157,7 @@ function draw(): void {
       data: m.ys,
       // 第一条序列显示在最上方（读表顺序：上→下 = 配置顺序）
       inverse: true,
-      axisLabel: { color: BI_THEME.axisLabel, fontSize: 10 },
+      axisLabel: { color: BI_THEME.axisLabel, fontSize: 12 },
       axisLine: { show: false },
       axisTick: { show: false },
       splitArea: { show: false },
@@ -172,7 +172,7 @@ function draw(): void {
       top: 'middle',
       itemWidth: 10,
       itemHeight: 90,
-      textStyle: { color: BI_THEME.legend, fontSize: 10 },
+      textStyle: { color: BI_THEME.legend, fontSize: 12 },
       inRange: { color: SCALE },
     },
     series: [{
@@ -243,7 +243,7 @@ watch(() => props.data, () => draw())
   align-items: center;
   gap: 6px;
   padding: 5px 8px 0;
-  font-size: 12px;
+  font-size: 14px;
   color: #c9d1d9;
 }
 .ah-bmx-accent {
@@ -255,7 +255,7 @@ watch(() => props.data, () => draw())
 }
 .ah-bmx-err {
   padding: 2px 8px 0;
-  font-size: 10px;
+  font-size: 12px;
   color: #f85149;
 }
 .ah-bmx-body {
@@ -269,7 +269,7 @@ watch(() => props.data, () => draw())
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
   padding: 0 8px;
   text-align: center;

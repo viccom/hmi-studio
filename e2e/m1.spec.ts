@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test'
 import { loginAsAdmin, rsiotSweepScreens, rsiotPutScreen, rsiotGetScreen } from './helpers'
-import { allSymbols } from '../src/symbols/registry'
+import { SYMBOL_GROUP_DEFS } from '../src/symbols/groups'
 
 // G-M1 段1：登录与守卫（列表页本体 T3 落地，此段只断言登录/跳转契约）
 test.describe('M1 登录', () => {
@@ -85,7 +85,7 @@ test.describe('M1 画面列表', () => {
 // - 画布 = #mtCanvasArea，监听 dragover(preventDefault)/drop 创建图元（无需 dataTransfer 数据）
 // - Playwright locator.dragTo() 走浏览器拖拽拦截协议，原生触发 dragstart/drop —— 实测一次成功
 // - 组内图元无 DOM id、title 只在 hover 弹层——kit.ts svgThumbnail 把 data-ah-id 注入缩略图 dataURI，
-//   div[draggable]:has(img[src*="ah-xxx"]) 按图元 id 唯一定位；组内项数 = allSymbols() 事实源
+//   div[draggable]:has(img[src*="ah-xxx"]) 按图元 id 唯一定位；组内项数 = SYMBOL_GROUP_DEFS 事实源
 // - 保存按钮 = button .el-icon[title="保存"]（maotu 工具栏 tooltip title）
 test.describe('M1 编辑器', () => {
   const slug = `e2e-t4-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
@@ -100,9 +100,11 @@ test.describe('M1 编辑器', () => {
   }
 
   async function expandHmiGroup(page: Page) {
-    const group = page.locator('.el-collapse-item', { hasText: 'HMI 图元' }).first()
+    // 2026-10-29 分组化：目录按功能分六组，泵在第一组「过程设备」
+    const first = SYMBOL_GROUP_DEFS[0]
+    const group = page.locator('.el-collapse-item', { hasText: first.title }).first()
     await group.locator('.el-collapse-item__header').click()
-    await expect(group.locator('div[draggable="true"]')).toHaveCount(allSymbols().length)
+    await expect(group.locator('div[draggable="true"]')).toHaveCount(first.ids.length)
     return group
   }
 

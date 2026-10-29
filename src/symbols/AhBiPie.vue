@@ -109,7 +109,7 @@ function draw(): void {
       trigger: 'item',
       backgroundColor: 'rgba(13,17,23,0.92)',
       borderColor: BI_THEME.axisLine,
-      textStyle: { color: BI_THEME.text, fontSize: 11 },
+      textStyle: { color: BI_THEME.text, fontSize: 13 },
       valueFormatter: (v) => `${formatValue(Number(v))} ${unitText.value}`.trim(),
     },
     legend: {
@@ -118,7 +118,7 @@ function draw(): void {
       top: 'middle',
       itemWidth: 8,
       itemHeight: 8,
-      textStyle: { color: BI_THEME.legend, fontSize: 10 },
+      textStyle: { color: BI_THEME.legend, fontSize: 12 },
       formatter: (name: string) => {
         const it = slices.value.find((s) => s.label === name)
         if (!it) return name
@@ -198,7 +198,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
 }
 .ah-bip-head {
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
   padding: 4px 8px 0;
   white-space: nowrap;
@@ -224,14 +224,14 @@ onBeforeUnmount(() => {
   max-width: 40%;
 }
 .ah-bip-total {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .ah-bip-unit {
-  font-size: 9px;
+  font-size: 11px;
   color: #8b949e;
 }
 .ah-bip-mask {
@@ -240,7 +240,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
   background: #161b22;
 }

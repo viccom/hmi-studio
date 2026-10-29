@@ -108,7 +108,7 @@ const rows = computed<Array<{
 }
 .ah-bitbl-title {
   padding: 4px 8px 0;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--ah-label);
 }
 .ah-bitbl-hint {
@@ -116,7 +116,7 @@ const rows = computed<Array<{
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: var(--ah-label);
 }
 .ah-bitbl-wrap {
@@ -128,7 +128,7 @@ const rows = computed<Array<{
 .ah-bitbl-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
+  font-size: 13px;
 }
 .ah-bitbl-table th {
   text-align: left;

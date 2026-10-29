@@ -101,7 +101,7 @@ const levelBarMax = computed(() => Math.max(1, ...levels.value.map((l) => l.coun
   align-items: center;
   gap: 6px;
   padding: 5px 8px 0;
-  font-size: 12px;
+  font-size: 14px;
   color: #c9d1d9;
 }
 .ah-bal-accent {
@@ -116,7 +116,7 @@ const levelBarMax = computed(() => Math.max(1, ...levels.value.map((l) => l.coun
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
 }
 .ah-bal-head {
@@ -126,17 +126,17 @@ const levelBarMax = computed(() => Math.max(1, ...levels.value.map((l) => l.coun
   padding: 6px 10px 2px;
 }
 .ah-bal-total {
-  font-size: 30px;
+  font-size: 34px;
   font-weight: 700;
   line-height: 1;
 }
 .ah-bal-total-label {
-  font-size: 10px;
+  font-size: 12px;
   color: #8b949e;
   margin-right: 4px;
 }
 .ah-bal-levels { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.ah-bal-level { display: flex; align-items: center; gap: 5px; font-size: 10px; }
+.ah-bal-level { display: flex; align-items: center; gap: 5px; font-size: 12px; }
 .ah-bal-level-name { width: 24px; color: #8b949e; flex: none; }
 .ah-bal-level-track { flex: 1; height: 5px; background: #1c2128; border-radius: 3px; overflow: hidden; }
 .ah-bal-level-bar { height: 100%; border-radius: 3px; }
@@ -146,7 +146,7 @@ const levelBarMax = computed(() => Math.max(1, ...levels.value.map((l) => l.coun
   padding: 4px 10px;
 }
 .ah-bal-chip {
-  font-size: 10px; color: #8b949e;
+  font-size: 12px; color: #8b949e;
   background: #1c2128; border-radius: 3px;
   padding: 1px 6px;
   max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -160,11 +160,11 @@ const levelBarMax = computed(() => Math.max(1, ...levels.value.map((l) => l.coun
 }
 .ah-bal-calm {
   display: flex; align-items: center; justify-content: center;
-  height: 100%; font-size: 12px; color: #3fb950;
+  height: 100%; font-size: 14px; color: #3fb950;
 }
 .ah-bal-row {
   display: flex; align-items: center; gap: 6px;
-  padding: 2.5px 0; font-size: 11px; color: #c9d1d9;
+  padding: 2.5px 0; font-size: 13px; color: #c9d1d9;
 }
 .ah-bal-dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
 .ah-bal-time { color: #8b949e; flex: none; }

@@ -40,10 +40,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "text-vue",
       "binfo": {
         "angle": 0,
-        "height": 38,
+        "height": 48,
         "left": 30,
         "top": 14,
-        "width": 700
+        "width": 800
       },
       "common_animations": {
         "val": "",
@@ -56,7 +56,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "props": {
         "fill": "#e6f7ff",
         "fontFamily": "黑体",
-        "fontSize": 26,
+        "fontSize": 34,
         "text": "监控站数据大屏 · 能源计量分析",
         "vertical": false
       },
@@ -74,10 +74,10 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "text-vue",
       "binfo": {
         "angle": 0,
-        "height": 20,
+        "height": 24,
         "left": 30,
-        "top": 52,
-        "width": 420
+        "top": 62,
+        "width": 480
       },
       "common_animations": {
         "val": "",
@@ -90,7 +90,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "props": {
         "fill": "#6e7681",
         "fontFamily": "黑体",
-        "fontSize": 13,
+        "fontSize": 16,
         "text": "rs-iot 时序库 · 30s 聚合刷新",
         "vertical": false
       },

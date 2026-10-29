@@ -135,14 +135,14 @@ const spark = computed(() => {
   gap: 8px;
 }
 .ah-kpi-label {
-  font-size: 12px;
+  font-size: 14px;
   color: #8b949e;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .ah-kpi-unit-top {
-  font-size: 11px;
+  font-size: 13px;
   color: #6e7681;
   white-space: nowrap;
 }
@@ -157,7 +157,7 @@ const spark = computed(() => {
   text-overflow: ellipsis;
 }
 .ah-kpi-unit {
-  font-size: 13px;
+  font-size: 14px;
   color: #8b949e;
   font-weight: 400;
   margin-left: 5px;
@@ -173,7 +173,7 @@ const spark = computed(() => {
   height: 34px;
 }
 .ah-kpi-hint {
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
 }
 .ah-kpi-err {

@@ -103,7 +103,7 @@ function pick(o: WinOption): void {
   box-sizing: border-box;
   font-family: Consolas, Menlo, monospace;
 }
-.ah-bwd-title { font-size: 11px; color: #8b949e; flex: none; }
+.ah-bwd-title { font-size: 13px; color: #8b949e; flex: none; }
 .ah-bwd-seg { display: flex; gap: 6px; }
 .ah-bwd-btn {
   height: 28px;
@@ -112,7 +112,7 @@ function pick(o: WinOption): void {
   border: 1px solid #30363d;
   background: #161b22;
   color: #8b949e;
-  font-size: 12px;
+  font-size: 14px;
   font-family: inherit;
   cursor: pointer;
 }

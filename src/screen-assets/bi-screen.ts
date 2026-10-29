@@ -95,13 +95,14 @@ export function buildBiStationScreen(): ScreenDoc {
     ...canvas(),
     json: [
       // ---- 标题带（Grafana 式：紧凑，数字与标题同层）----
+      // 字号按 4K/200% 运行环境校准（2026-10-29 用户反馈：小字看不清）——标题 34 / 副标 16
       textItem('text-vue-bist-title', {
-        text: '监控站数据大屏 · 能源计量分析', left: 30, top: 14, width: 700, height: 38,
-        fill: '#e6f7ff', fontSize: 26,
+        text: '监控站数据大屏 · 能源计量分析', left: 30, top: 14, width: 800, height: 48,
+        fill: '#e6f7ff', fontSize: 34,
       }),
       textItem('text-vue-bist-sub', {
-        text: 'rs-iot 时序库 · 30s 聚合刷新', left: 30, top: 52, width: 420, height: 20,
-        fill: '#6e7681', fontSize: 13,
+        text: 'rs-iot 时序库 · 30s 聚合刷新', left: 30, top: 62, width: 480, height: 24,
+        fill: '#6e7681', fontSize: 16,
       }),
       // 窗口切换器（上行控制）：点击整屏 BI 面板切统计窗（默认/1时/24时/7天），
       // 宿主收集器 windowOverride 生效——不用改画面/重播种

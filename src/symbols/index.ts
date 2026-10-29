@@ -41,7 +41,12 @@ import AhBiSpike from './AhBiSpike.vue'
 import AhBiAlarms from './AhBiAlarms.vue'
 import AhBiWindow from './AhBiWindow.vue'
 
-export const SYMBOL_GROUP = 'HMI 图元'
+/**
+ * 图元目录分组（定义在 groups.ts——纯 ts 无 .vue 依赖，e2e 可直接 import；
+ * 此处复导出维持既有导入路径）。
+ */
+import { SYMBOL_GROUP_DEFS, type SymbolGroupDef } from './groups'
+export { SYMBOL_GROUP_DEFS, type SymbolGroupDef }
 
 /** kebab id → PascalCase 组件名（Vue 全局解析归一的镜像，测试锁定 id↔名配对） */
 export function vueTagFor(id: string): string {
@@ -86,8 +91,16 @@ export function registerSymbolComponents(app: App): void {
 }
 
 export function registerSymbols(): void {
-  if (leftAsideStore.config.has(SYMBOL_GROUP)) return
-  leftAsideStore.registerConfig(SYMBOL_GROUP, allSymbols())
+  if (leftAsideStore.config.has(SYMBOL_GROUP_DEFS[0].title)) return
+  const byId = new Map(allSymbols().map((s) => [s.id, s]))
+  for (const g of SYMBOL_GROUP_DEFS) {
+    const items = g.ids.map((id) => {
+      const s = byId.get(id)
+      if (!s) throw new Error(`registerSymbols: 组「${g.title}」引用了未注册图元 ${id}`)
+      return s
+    })
+    leftAsideStore.registerConfig(g.title, items)
+  }
 }
 
 // W9：跳转按钮目标画面下拉。options 存活于 nav-button.ts 模块态（注册项描述符引用同一数组），

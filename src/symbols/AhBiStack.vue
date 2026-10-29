@@ -98,13 +98,13 @@ function draw(): void {
       bottom: 0,
       itemWidth: 10,
       itemHeight: 8,
-      textStyle: { color: BI_THEME.legend, fontSize: 10 },
+      textStyle: { color: BI_THEME.legend, fontSize: 12 },
     },
     tooltip: {
       trigger: 'item',
       backgroundColor: '#161b22',
       borderColor: '#30363d',
-      textStyle: { color: BI_THEME.text, fontSize: 11 },
+      textStyle: { color: BI_THEME.text, fontSize: 13 },
       formatter: (p: unknown) => {
         const it = p as { name?: string; value?: number; seriesName?: string }
         const row = rows.find((r) => r.label === (it.name ?? it.seriesName))
@@ -115,7 +115,7 @@ function draw(): void {
     xAxis: {
       type: 'value',
       max: 100,
-      axisLabel: { color: BI_THEME.axisLabel, fontSize: 9, formatter: '{value}%' },
+      axisLabel: { color: BI_THEME.axisLabel, fontSize: 11, formatter: '{value}%' },
       axisLine: { show: false },
       splitLine: { show: false },
     },
@@ -187,7 +187,7 @@ watch(parts, () => draw())
 }
 .ah-bs-title {
   padding: 4px 8px 0;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
 }
 .ah-bs-body {
@@ -201,7 +201,7 @@ watch(parts, () => draw())
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
   padding: 0 8px;
   text-align: center;
@@ -219,7 +219,7 @@ watch(parts, () => draw())
   flex-wrap: wrap;
   gap: 2px 10px;
   padding: 0 8px 4px;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
 }
 .ah-bs-dot {

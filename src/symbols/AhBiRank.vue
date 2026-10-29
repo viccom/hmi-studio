@@ -112,19 +112,19 @@ function draw(): void {
       axisPointer: { type: 'shadow' },
       backgroundColor: 'rgba(13,17,23,0.92)',
       borderColor: BI_THEME.axisLine,
-      textStyle: { color: BI_THEME.text, fontSize: 11 },
+      textStyle: { color: BI_THEME.text, fontSize: 13 },
       valueFormatter: (v) => `${formatValue(Number(v))} ${unitText.value}`.trim(),
     },
     xAxis: {
       type: 'value',
-      axisLabel: { color: BI_THEME.axisLabel, fontSize: 9 },
+      axisLabel: { color: BI_THEME.axisLabel, fontSize: 11 },
       axisLine: { show: false },
       splitLine: { lineStyle: { color: BI_THEME.splitLine } },
     },
     yAxis: {
       type: 'category',
       data: rows.map((r) => r.label),
-      axisLabel: { color: BI_THEME.axisLabel, fontSize: 10 },
+      axisLabel: { color: BI_THEME.axisLabel, fontSize: 12 },
       axisLine: { lineStyle: { color: BI_THEME.axisLine } },
       axisTick: { show: false },
       splitLine: { show: false },
@@ -139,7 +139,7 @@ function draw(): void {
           show: true,
           position: 'right',
           color: BI_THEME.text,
-          fontSize: 10,
+          fontSize: 12,
           formatter: (p: { value: unknown; dataIndex: number }) => {
             const it = rows[p.dataIndex]
             if (!it || it.value === null) return '无数据'
@@ -200,7 +200,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
 }
 .ah-bir-head {
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
   padding: 4px 8px 0;
   white-space: nowrap;
@@ -222,7 +222,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 13px;
   color: #8b949e;
   background: #161b22;
 }
