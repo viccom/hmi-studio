@@ -389,18 +389,18 @@ describe('BI 图元：尖峰柱图（阈值着色）', () => {
     }
     expect(opt.series[0].data).toHaveLength(5)
     const colors = opt.series[0].data.map((d) => d.itemStyle.color)
-    expect(colors.filter((c) => c === '#f85149')).toHaveLength(1) // 只有 9 超过 p90=3
+    // 值 [1,2,9,3,2] → 插值 p90 = 6.6，严格大于 → 仅 9 染红
+    expect(colors.filter((c) => c === '#f85149')).toHaveLength(1)
     unmount()
   })
 
-  it('阈值虚线画在第一条柱序列上（markLine.yAxis = p90）', async () => {
+  it('阈值虚线画在第一条柱序列上（markLine.yAxis = 插值 p90）', async () => {
     const { unmount } = mountReactive(AhBiSpike, { data: SPIKE_POINTS, spikeMode: 'p90' })
     await nextTick()
     const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as {
       series: Array<{ markLine?: { data: Array<{ yAxis: number }> } }>
     }
-    // 值 [1,2,3,9,2] → p90 nearest-rank = ceil(4.5)=5 位 = 9? 排序 [1,2,2,3,9] 第 5 位 = 9
-    expect(opt.series[0].markLine?.data[0].yAxis).toBe(9)
+    expect(opt.series[0].markLine?.data[0].yAxis).toBeCloseTo(6.6, 9)
     unmount()
   })
 
@@ -421,11 +421,32 @@ describe('BI 图元：尖峰柱图（阈值着色）', () => {
     expect(el.textContent).toContain('暂无历史数据')
     unmount()
   })
+
+  it('平坦数据 → 零误报（恒定负荷不是尖峰，审查问题2）', async () => {
+    const flat = envelope([
+      {
+        key: 'd1.power', label: '1#电表', unit: 'kW', color: '#f5a623',
+        mode: 'instant', metric: 'avg', value: null,
+        points: Array.from({ length: 5 }, (_, i) => ({ ts: 1_800_000_000 - 300 + i * 60, value: 5 })),
+        error: null,
+      },
+    ])
+    const { unmount } = mountReactive(AhBiSpike, { data: flat, spikeMode: 'p90' })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as {
+      series: Array<{ data: Array<{ itemStyle: { color: string } }> }>
+    }
+    expect(opt.series[0].data.every((d) => d.itemStyle.color !== '#f85149')).toBe(true)
+    unmount()
+  })
 })
 
 describe('spikeThreshold（纯函数）', () => {
-  it('p90 = 升序第 ceil(0.9n) 位（nearest-rank）', () => {
-    expect(spikeThreshold([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'p90', 2, 0)).toBe(9)
+  it('p90 = 线性插值分位（并列值不抬到值本身——平坦数据阈值=原值，严格大于判定下零误报）', () => {
+    // [1,2,9,3,2]：插值位置 0.9×4=3.6 → 3 与 9 之间 = 6.6（旧 nearest-rank 取 9 → 平坦数据全红）
+    expect(spikeThreshold([1, 2, 9, 3, 2], 'p90', 2, 0)).toBeCloseTo(6.6, 9)
+    expect(spikeThreshold([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'p90', 2, 0)).toBeCloseTo(9.1, 9)
+    expect(spikeThreshold([5, 5, 5, 5, 5], 'p90', 2, 0)).toBe(5)
     expect(spikeThreshold([5], 'p90', 2, 0)).toBe(5)
   })
 

@@ -92,9 +92,8 @@ export interface BiQueryPlan {
    * 查询槽位：
    * - `main`：主查询（聚合值 / 时序点，视 shape 与 mode 而定）
    * - `spark`：shape=both 时的**降采样时序**副查询（供 KPI 卡迷你趋势）
-   * - `prev`：双窗差法遗留位（保留以兼容旧调用方，当前不产出）
    */
-  slot: 'main' | 'spark' | 'prev'
+  slot: 'main' | 'spark'
   dev_id: string
   tag: string
   /** 秒级 Unix 时间戳，后端窗口为半开 [start,end)。 */
@@ -392,7 +391,6 @@ export function buildEnvelopes(
   nowSec: number,
 ): Map<string, BiEnvelope> {
   const byPanel = new Map<string, BiEnvelope>()
-  const panelById = new Map(panels.map((p) => [p.id, p]))
   const acc = new Map<
     string,
     { main?: BiQueryPlan; mainRes?: BiRawResult; spark?: BiQueryPlan; sparkRes?: BiRawResult }
@@ -480,7 +478,6 @@ export function buildEnvelopes(
       series,
     })
   }
-  void panelById
   return byPanel
 }
 

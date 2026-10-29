@@ -14,6 +14,7 @@
  * - now：时间源（测试可控）
  */
 import {
+  BI_SERIES_MAX_BUCKETS,
   buildAlarmEnvelope,
   buildEnvelopes,
   chunkQueries,
@@ -88,8 +89,17 @@ export function createBiCollector(deps: BiCollectorDeps, opts: BiCollectorOption
 
     const t = now()
     const ov = opts.windowOverride?.() ?? null
-    // 覆盖窗应用到面板规格本身（planQueries/buildEnvelopes 读同一份 → 查询与信封窗口天然一致）
-    const panels = ov && ov > 0 ? found.map((p) => ({ ...p, windowSecs: Math.floor(ov) })) : found
+    // 覆盖窗应用到面板规格本身（planQueries/buildEnvelopes 读同一份 → 查询与信封窗口天然一致）。
+    // 桶宽同步抬到防爆下限：声明桶宽是按面板自己的窗配的（60s×1h=60 桶），覆盖到 7d 时若
+    // 任其直通会切出 10080 桶/序列（深度审查问题1——图表只需 ~120 点，爆量 100 倍）。
+    // 只作用于覆盖路径：未覆盖时已组态画面零回归。
+    const panels = ov && ov > 0
+      ? found.map((p) => ({
+          ...p,
+          windowSecs: Math.floor(ov),
+          interval: Math.max(p.interval, Math.ceil(ov / BI_SERIES_MAX_BUCKETS)),
+        }))
+      : found
 
     if (alarmIds.length && deps.fetchAlarms) {
       try {

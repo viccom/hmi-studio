@@ -92,6 +92,10 @@ export const biSpike: HmiSymbol = {
  * @param times  times 模式的倍数（非正回落 2）
  * @param fixed  fixed 模式的绝对阈值（非正 → 无阈值 = 不染尖峰）
  * @returns 阈值；null = 无阈值（空数据或 fixed 未配置）
+ *
+ * p90 用**线性插值分位**而非 nearest-rank（深度审查问题2）：nearest-rank 在并列值上
+ * 取到值本身（平坦数据阈值=原值），配合 ≥ 判定会把恒定负荷整图判成尖峰。
+ * 插值分位平坦数据阈值=原值，组件侧用严格大于 → 零误报。
  */
 export function spikeThreshold(
   values: number[],
@@ -105,8 +109,10 @@ export function spikeThreshold(
     const avg = values.reduce((a, b) => a + b, 0) / values.length
     return avg * (times > 0 ? times : 2)
   }
-  // p90（nearest-rank）：升序第 ceil(0.9n) 位
+  // p90（线性插值）：pos = q×(n−1)，落在两值之间按比例内插
   const s = [...values].sort((a, b) => a - b)
-  const idx = Math.ceil(0.9 * s.length) - 1
-  return s[Math.max(0, Math.min(idx, s.length - 1))]
+  const pos = 0.9 * (s.length - 1)
+  const lo = Math.floor(pos)
+  const hi = Math.ceil(pos)
+  return lo === hi ? s[lo] : s[lo] + (pos - lo) * (s[hi] - s[lo])
 }

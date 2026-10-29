@@ -110,8 +110,9 @@ function draw(): void {
     emphasis: { focus: 'series' },
     data: r.data.map(([ts, v]) => ({
       value: [ts, v],
-      // 尖峰逐点着色：≥阈值染语义红（不透明），常态柱保持序列色淡显
-      itemStyle: th !== null && v >= th ? { color: BI_PANEL.bad, opacity: 1 } : { color: base, opacity: 0.55 },
+      // 尖峰逐点着色：**严格大于**阈值才染语义红（≥ 会把并列于阈值的平坦数据整图
+      // 判红——审查问题2）；常态柱保持序列色淡显
+      itemStyle: th !== null && v > th ? { color: BI_PANEL.bad, opacity: 1 } : { color: base, opacity: 0.55 },
     })),
     // 阈值虚线只画在第一条柱序列上（多条序列时重复画线只是噪声）
     ...(r === bars.value[0] && th !== null

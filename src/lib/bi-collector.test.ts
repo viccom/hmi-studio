@@ -292,3 +292,40 @@ describe('BI 收集器：告警快照（通道 B 扩展）', () => {
     expect(deps.fetchBatch).not.toHaveBeenCalled()
   })
 })
+
+// ---- 审查修复（2026-10-29 深度审查 问题1）：覆盖窗必须同步抬桶宽 ----
+
+describe('BI 收集器：覆盖窗 × 声明桶宽防爆量', () => {
+  it('覆盖 7d 时声明桶宽 60s → 抬到 5040s（≈120 桶上限），不得 10080 桶爆量', async () => {
+    const deps = makeDeps()
+    const c = createBiCollector(deps, { now: () => NOW, windowOverride: () => 604800 })
+    const done = { json: [pel('m', 'ah-bi-matrix', panelProps({
+      series: '[{"dev_id":"d1","tag":"power"}]', interval: 60, windowSecs: 3600, shape: 'series',
+    }))] }
+    await c.collect(done)
+    const body = deps.fetchBatch.mock.calls[0][0] as { queries: Array<{ interval: number; start: number }> }
+    expect(body.queries[0].start).toBe(NOW - 604800)
+    expect(body.queries[0].interval).toBe(5040) // ceil(604800/120)
+    expect((NOW - body.queries[0].start) / body.queries[0].interval).toBeLessThanOrEqual(120)
+  })
+
+  it('桶宽不受压制当声明值 ≥ 上限推导值（24h 覆盖 + 声明 1800s → 保持 1800s）', async () => {
+    const deps = makeDeps()
+    const c = createBiCollector(deps, { now: () => NOW, windowOverride: () => 86400 })
+    await c.collect({ json: [pel('m', 'ah-bi-matrix', panelProps({
+      series: '[{"dev_id":"d1","tag":"power"}]', interval: 1800, windowSecs: 3600, shape: 'series',
+    }))] })
+    const body = deps.fetchBatch.mock.calls[0][0] as { queries: Array<{ interval: number }> }
+    expect(body.queries[0].interval).toBe(1800)
+  })
+
+  it('未覆盖时声明桶宽直通（已组态画面零回归）', async () => {
+    const deps = makeDeps()
+    const c = createBiCollector(deps, { now: () => NOW })
+    await c.collect({ json: [pel('m', 'ah-bi-matrix', panelProps({
+      series: '[{"dev_id":"d1","tag":"power"}]', interval: 60, windowSecs: 3600, shape: 'series',
+    }))] })
+    const body = deps.fetchBatch.mock.calls[0][0] as { queries: Array<{ interval: number }> }
+    expect(body.queries[0].interval).toBe(60)
+  })
+})
