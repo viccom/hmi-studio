@@ -182,13 +182,13 @@ const boolBinds = (pelId: string, attr: string, bindId = 'rsiot.alarm_active'): 
   ])]
 
 /** 纯函数组态：图元陈列室（registry 全量覆盖判据的承载画面）。无随机、无副作用。
- * 画布 800×2060（P2 三表与趋势节自 y596 起，P2-BI 图表节自 y950 起——
+ * 画布 800×2380（P2 三表与趋势节自 y596 起，P2-BI 图表节自 y950 起，补三件节自 y2050——
  * 出界/重叠判据由布局测试按 canvasCfg 推导）。 */
 export function buildCatalogScreen(): ScreenDoc {
   const c: ScreenDoc = {
     name: '图元陈列室', group: '水处理演示',
     canvasCfg: {
-      width: 800, height: 2060, scale: 1, color: '#141414', img: '',
+      width: 800, height: 2380, scale: 1, color: '#141414', img: '',
       guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
     },
     gridCfg: { enabled: true, align: true, size: 10 },
@@ -403,6 +403,17 @@ export function buildCatalogScreen(): ScreenDoc {
           agg: 'avg', windowSecs: 86400, shape: 'aggregate',
         },
       }),
+      svgItem('ah-bi-spike', cid('bi-spike'), {
+        left: 24, top: 2050,
+        props: {
+          title: '功率尖峰',
+          series: JSON.stringify([{ dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' }]),
+          agg: 'avg', interval: 60, windowSecs: 3600, shape: 'series', spikeMode: 'p90',
+        },
+      }),
+      // 无 series 面板：告警统计（宿主拉活动告警快照）/ 窗口切换器（上行控制）
+      svgItem('ah-bi-alarms', cid('bi-alarms'), { left: 404, top: 2050 }),
+      svgItem('ah-bi-window', cid('bi-window'), { left: 24, top: 2300, props: { title: '' } }),
     ],
     eventList: [], eventFlow: [],
   }

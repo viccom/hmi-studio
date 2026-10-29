@@ -206,3 +206,89 @@ describe('BI 收集器：面板规格与契约层同源', () => {
     expect(body.queries[0].end).toBe(123)
   })
 })
+
+// ---- ① 时间窗口切换器 + ③ 告警快照（红测先行）----
+
+describe('BI 收集器：全局窗口覆盖（窗口切换器）', () => {
+  it('windowOverride 返回正秒 → 所有面板按覆盖窗取数（信封窗口同步）', async () => {
+    const deps = makeDeps()
+    const c = createBiCollector(deps, { now: () => NOW, windowOverride: () => 86400 })
+    const done = { json: [pel('bi-kpi', 'ah-bi-kpi', panelProps({
+      series: '[{"dev_id":"d1","tag":"power"}]', windowSecs: 3600,
+    }))] }
+    await c.collect(done)
+    const body = deps.fetchBatch.mock.calls[0][0] as { queries: Array<{ start: number; end: number }> }
+    expect(body.queries[0].start).toBe(NOW - 86400)
+    expect(body.queries[0].end).toBe(NOW)
+    const payload = JSON.parse(deps.write.mock.calls[0][1] as string) as { window: { start: number } }
+    expect(payload.window.start).toBe(NOW - 86400)
+  })
+
+  it('windowOverride 返回 null/0 → 按面板各自 windowSecs', async () => {
+    const deps = makeDeps()
+    const c = createBiCollector(deps, { now: () => NOW, windowOverride: () => 0 })
+    await c.collect(TWO_PANELS)
+    const body = deps.fetchBatch.mock.calls[0][0] as { queries: Array<{ start: number }> }
+    expect(body.queries[0].start).toBe(NOW - 3600)
+  })
+})
+
+describe('BI 收集器：告警快照（通道 B 扩展）', () => {
+  const ALARM_PANEL = { json: [pel('alm-1', 'ah-bi-alarms', {})] }
+  const ALARMS = [
+    { key: 'k1', level: 'warn', source: 'dev-a.power', message: '超限', ts: '2026-10-29T08:00:00Z' },
+  ]
+
+  it('画面含告警面板 → fetchAlarms 拉快照并写告警信封（props.data.val）', async () => {
+    const fetchAlarms = vi.fn(async () => ALARMS)
+    const deps = makeDeps({ fetchAlarms })
+    const c = createBiCollector(deps)
+    const r = await c.collect(ALARM_PANEL)
+    expect(fetchAlarms).toHaveBeenCalledTimes(1)
+    expect(deps.fetchBatch).not.toHaveBeenCalled() // 告警面板无 series → 零历史查询
+    expect(deps.write).toHaveBeenCalledWith('alm-1', expect.any(String), 'props.data.val')
+    const env = JSON.parse(deps.write.mock.calls[0][1] as string) as { v: number; total: number }
+    expect(env.v).toBe(1)
+    expect(env.total).toBe(1)
+    expect(r.ok).toBe(true)
+  })
+
+  it('告警面板与数据面板并存 → 两路都写（互不拖累）', async () => {
+    const deps = makeDeps({ fetchAlarms: vi.fn(async () => ALARMS) })
+    const c = createBiCollector(deps)
+    await c.collect({
+      json: [pel('alm-1', 'ah-bi-alarms', {}), ...TWO_PANELS.json],
+    })
+    const ids = deps.write.mock.calls.map((a) => a[0])
+    expect(ids).toContain('alm-1')
+    expect(ids).toContain('bi-kpi')
+    expect(ids).toContain('bi-rank')
+  })
+
+  it('fetchAlarms 失败 → 告警面板不写（保留旧信封），数据面板照常，ok=true', async () => {
+    const deps = makeDeps({ fetchAlarms: vi.fn(async () => { throw new Error('boom') }) })
+    const c = createBiCollector(deps)
+    const r = await c.collect({ json: [pel('alm-1', 'ah-bi-alarms', {}), ...TWO_PANELS.json] })
+    expect(r.ok).toBe(true)
+    const ids = deps.write.mock.calls.map((a) => a[0])
+    expect(ids).not.toContain('alm-1')
+    expect(ids).toContain('bi-kpi')
+  })
+
+  it('无告警面板 → fetchAlarms 不被调用（普通画面零开销）', async () => {
+    const fetchAlarms = vi.fn(async () => ALARMS)
+    const deps = makeDeps({ fetchAlarms })
+    const c = createBiCollector(deps)
+    await c.collect(TWO_PANELS)
+    expect(fetchAlarms).not.toHaveBeenCalled()
+  })
+
+  it('无 BI 图元无告警面板 → 零请求零写回', async () => {
+    const deps = makeDeps({ fetchAlarms: vi.fn(async () => ALARMS) })
+    const c = createBiCollector(deps)
+    const r = await c.collect({ json: [pel('x', 'text-vue', {})] })
+    expect(r).toEqual({ ok: true, panels: 0 })
+    expect(deps.fetchAlarms).not.toHaveBeenCalled()
+    expect(deps.fetchBatch).not.toHaveBeenCalled()
+  })
+})

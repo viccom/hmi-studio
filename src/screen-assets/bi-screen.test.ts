@@ -81,6 +81,7 @@ describe('监控站 BI 大屏（bi-station）', () => {
     const CUMULATIVE = new Set(['energy', 'gas_total', 'flow_total', 'flow_reverse', 'balance'])
     for (const it of items.filter((i) => i.tag.startsWith('ah-bi-'))) {
       const raw = String(it.props.series ?? '')
+      if (!raw.trim()) continue // 无 series 面板（告警统计/窗口切换器）不吃历史信封
       const rows = JSON.parse(raw) as Array<{ dev_id: string; tag: string; mode?: string }>
       for (const r of rows) {
         if (DAILY.has(r.tag)) {
@@ -94,7 +95,9 @@ describe('监控站 BI 大屏（bi-station）', () => {
 
   it('语义：序列条目含 dev_id + tag（宿主据此定位 series）', () => {
     for (const it of items.filter((i) => i.tag.startsWith('ah-bi-'))) {
-      const rows = JSON.parse(String(it.props.series ?? '')) as Array<{ dev_id?: string; tag?: string }>
+      const raw = String(it.props.series ?? '')
+      if (!raw.trim()) continue // 无 series 面板（告警统计/窗口切换器）
+      const rows = JSON.parse(raw) as Array<{ dev_id?: string; tag?: string }>
       expect(rows.length).toBeGreaterThan(0)
       for (const r of rows) {
         expect(r.dev_id).toBeTruthy()

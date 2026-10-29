@@ -14,9 +14,12 @@
  * - now：时间源（测试可控）
  */
 import {
+  buildAlarmEnvelope,
   buildEnvelopes,
   chunkQueries,
+  collectBiAlarmPanels,
   collectBiPanels,
+  parseAlarmList,
   planQueries,
   type BiPanelSpec,
   type BiQueryPlan,
@@ -32,11 +35,18 @@ export interface BiCollectorDeps {
   write: (itemId: string, payload: string, attr: string) => void
   /** 时间源（秒级 Unix 时间戳）。 */
   now: () => number
+  /** 拉活动告警快照（GET /api/v1/alarms 原始数组）——画面含 ah-bi-alarms 面板时调用；
+   *  未注入时告警面板静默跳过（旧部署形态不炸）。 */
+  fetchAlarms?: () => Promise<unknown>
 }
 
-/** 收集器可选覆盖（时间源可单独覆盖，便于测试固定窗口）。 */
+/** 收集器可选覆盖。 */
 export interface BiCollectorOptions {
   now?: () => number
+  /** 全局窗口覆盖（秒）——窗口切换器（ah-bi-window）的生效档。正秒 = 覆盖全部
+   *  面板的 windowSecs；0/null/undefined = 按面板各自配置。每拍实时读取
+   *  （操作员切换后下一拍即生效，无需重建收集器）。 */
+  windowOverride?: () => number | null
 }
 
 /** 一次采集的结果。 */
@@ -63,18 +73,36 @@ export function createBiCollector(deps: BiCollectorDeps, opts: BiCollectorOption
 
   /**
    * 采集一轮：扫描画面 → 合并查询 → 分批取数 → 结果按序配对 → 组装信封 → 写回。
+   * 画面含告警面板（ah-bi-alarms）时同拍拉取活动告警快照并写告警信封。
    *
    * 失败语义：
-   * - 无 BI 图元 → ok=true、零请求零写回（普通 HMI 画面走这条，不产生任何开销）
+   * - 无 BI 图元且无告警面板 → ok=true、零请求零写回（普通 HMI 画面走这条，不产生任何开销）
    * - batch 整体失败（网络/503）→ ok=false、**零写回**（保留图元上一次的旧信封，
-   *   总比写空白强）
+   *   总比写空白强）；告警拉取失败 → 仅告警面板不写（保留旧信封），数据面板照常
    * - 单条查询失败 → 字段化进该 series 的 error，其余面板照常写回（单图失败不拖全屏）
    */
   async function collect(done: unknown): Promise<BiCollectResult> {
-    const panels: BiPanelSpec[] = collectBiPanels(done)
-    if (!panels.length) return { ok: true, panels: 0 }
+    const alarmIds = collectBiAlarmPanels(done)
+    const found: BiPanelSpec[] = collectBiPanels(done)
+    if (!found.length && !alarmIds.length) return { ok: true, panels: 0 }
 
     const t = now()
+    const ov = opts.windowOverride?.() ?? null
+    // 覆盖窗应用到面板规格本身（planQueries/buildEnvelopes 读同一份 → 查询与信封窗口天然一致）
+    const panels = ov && ov > 0 ? found.map((p) => ({ ...p, windowSecs: Math.floor(ov) })) : found
+
+    if (alarmIds.length && deps.fetchAlarms) {
+      try {
+        const raw = await deps.fetchAlarms()
+        const payload = JSON.stringify(buildAlarmEnvelope(parseAlarmList(raw), t))
+        for (const id of alarmIds) deps.write(id, payload, BI_DATA_ATTR)
+      } catch {
+        /* 告警源失败不拖数据面板——告警面板保留旧信封 */
+      }
+    }
+
+    if (!panels.length) return { ok: true, panels: 0 }
+
     const queries = planQueries(panels, t)
     if (!queries.length) return { ok: true, panels: panels.length }
 

@@ -239,3 +239,79 @@ export const BI_PANEL = {
   /** 卡片阴影（Grafana 的分层感） */
   shadow: '0 1px 2px rgba(0,0,0,0.35)',
 } as const
+
+// ---------- ③ 告警统计区（ah-bi-alarms）的信封形状 ----------
+
+/** 告警信封（与 lib/bi-contract.ts 的 BiAlarmEnvelope 同形；独立声明避免 symbols→lib 依赖）。 */
+export interface BiAlarmEnvelope {
+  v: number
+  generatedAt: number
+  total: number
+  levels: Array<{ level: string; count: number }>
+  sources: Array<{ source: string; count: number }>
+  latest: Array<{ key: string; level: string; source: string; message: string; ts: number; count: number }>
+}
+
+/**
+ * 告警信封解析：props.data 的原始值 → 信封。
+ *
+ * 容错同 parseEnvelope：坏 JSON / 非对象 / 缺 levels → null（面板显示空态）。
+ * 注意与历史信封互斥：告警信封没有 series 字段，parseEnvelope 会拒收——两族面板各用各的解析。
+ */
+export function parseAlarmEnvelope(raw: unknown): BiAlarmEnvelope | null {
+  let v: unknown = raw
+  if (typeof raw === 'string') {
+    const s = raw.trim()
+    if (!s) return null
+    try {
+      v = JSON.parse(s)
+    } catch {
+      return null
+    }
+  }
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return null
+  const o = v as Record<string, unknown>
+  if (!Array.isArray(o.levels)) return null
+  const num = (x: unknown): number => (typeof x === 'number' && Number.isFinite(x) ? x : 0)
+  const str = (x: unknown): string => (typeof x === 'string' ? x : '')
+  return {
+    v: num(o.v) || 1,
+    generatedAt: num(o.generatedAt),
+    total: num(o.total),
+    levels: (o.levels as unknown[]).map((it) => {
+      const l = (it ?? {}) as Record<string, unknown>
+      return { level: str(l.level), count: num(l.count) }
+    }),
+    sources: Array.isArray(o.sources)
+      ? (o.sources as unknown[]).map((it) => {
+          const s = (it ?? {}) as Record<string, unknown>
+          return { source: str(s.source), count: num(s.count) }
+        })
+      : [],
+    latest: Array.isArray(o.latest)
+      ? (o.latest as unknown[]).map((it) => {
+          const a = (it ?? {}) as Record<string, unknown>
+          return {
+            key: str(a.key), level: str(a.level), source: str(a.source),
+            message: str(a.message), ts: num(a.ts), count: num(a.count),
+          }
+        })
+      : [],
+  }
+}
+
+/** 告警级别 → 语义色（error 红 / warn 橙 / info 蓝；未知灰）。 */
+export function alarmLevelColor(level: string): string {
+  if (level === 'error') return BI_PANEL.bad
+  if (level === 'warn') return BI_PANEL.accent
+  if (level === 'info') return BI_PANEL.info
+  return BI_PANEL.textDim
+}
+
+/** 告警级别 → 中文标签。 */
+export function alarmLevelLabel(level: string): string {
+  if (level === 'error') return '严重'
+  if (level === 'warn') return '警告'
+  if (level === 'info') return '提示'
+  return level || '未知'
+}

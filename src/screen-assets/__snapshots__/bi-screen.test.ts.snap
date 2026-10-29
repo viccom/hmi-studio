@@ -102,6 +102,39 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "lock": false,
       "resize": true,
       "rotate": true,
+      "id": "ah-bi-window-bist-1",
+      "title": "BI 时间窗口切换器",
+      "type": "vue",
+      "tag": "ah-bi-window",
+      "binfo": {
+        "angle": 0,
+        "width": 434,
+        "height": 48,
+        "left": 1456,
+        "top": 20
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "title": "统计窗口",
+        "options": "[{\\"label\\":\\"默认\\",\\"secs\\":0},{\\"label\\":\\"1时\\",\\"secs\\":3600},{\\"label\\":\\"24时\\",\\"secs\\":86400},{\\"label\\":\\"7天\\",\\"secs\\":604800}]",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
       "id": "ah-bi-kpi-bist-1",
       "title": "BI-KPI 数字卡",
       "type": "vue",
@@ -441,7 +474,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "tag": "ah-bi-matrix",
       "binfo": {
         "angle": 0,
-        "width": 1180,
+        "width": 456,
         "height": 440,
         "left": 30,
         "top": 610
@@ -472,15 +505,55 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
       "lock": false,
       "resize": true,
       "rotate": true,
+      "id": "ah-bi-spike-bist-1",
+      "title": "BI 尖峰柱图",
+      "type": "vue",
+      "tag": "ah-bi-spike",
+      "binfo": {
+        "angle": 0,
+        "width": 456,
+        "height": 440,
+        "left": 498,
+        "top": 610
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f5a623",
+        "title": "1#电表功率尖峰（1h · P90 阈值）",
+        "series": "[{\\"dev_id\\":\\"home-meter-e1\\",\\"tag\\":\\"power\\",\\"label\\":\\"1#电表\\",\\"unit\\":\\"kW\\"}]",
+        "agg": "avg",
+        "interval": 60,
+        "windowSecs": 3600,
+        "shape": "series",
+        "spikeMode": "p90",
+        "spikeTimes": 2,
+        "spikeThreshold": 0,
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
       "id": "ah-bi-table-bist-1",
       "title": "BI 明细数据表",
       "type": "vue",
       "tag": "ah-bi-table",
       "binfo": {
         "angle": 0,
-        "width": 668,
+        "width": 456,
         "height": 440,
-        "left": 1222,
+        "left": 966,
         "top": 610
       },
       "common_animations": {
@@ -499,6 +572,39 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
         "interval": 0,
         "windowSecs": 86400,
         "shape": "aggregate",
+        "data": "[]"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-bi-alarms-bist-1",
+      "title": "BI 告警统计",
+      "type": "vue",
+      "tag": "ah-bi-alarms",
+      "binfo": {
+        "angle": 0,
+        "width": 456,
+        "height": 440,
+        "left": 1434,
+        "top": 610
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#f85149",
+        "title": "活动告警",
+        "maxRows": 6,
         "data": "[]"
       },
       "binds": []

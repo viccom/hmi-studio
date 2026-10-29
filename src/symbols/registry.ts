@@ -67,6 +67,9 @@ import { biTable } from './bi-table'
 import { biMatrix } from './bi-matrix'
 import { biStackArea } from './bi-stack-area'
 import { biBars } from './bi-bars'
+import { biSpike } from './bi-spike'
+import { biAlarms } from './bi-alarms'
+import { biWindow } from './bi-window'
 
 const SYMBOLS: HmiSymbol[] = [
   pumpCentrifugal,
@@ -106,6 +109,9 @@ const SYMBOLS: HmiSymbol[] = [
   biMatrix,
   biStackArea,
   biBars,
+  biSpike,
+  biAlarms,
+  biWindow,
 ]
 
 export function allSymbols(): HmiSymbol[] {

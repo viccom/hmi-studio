@@ -19,7 +19,13 @@ import { biPie } from './bi-pie'
 import { biStack } from './bi-stack'
 import { biHeat } from './bi-heat'
 import { biTable } from './bi-table'
+import { biSpike, spikeThreshold } from './bi-spike'
+import { biAlarms } from './bi-alarms'
+import { biWindow } from './bi-window'
 import AhBiKpi from './AhBiKpi.vue'
+import AhBiSpike from './AhBiSpike.vue'
+import AhBiAlarms from './AhBiAlarms.vue'
+import AhBiWindow from './AhBiWindow.vue'
 import AhBiTrend from './AhBiTrend.vue'
 import AhBiRank from './AhBiRank.vue'
 import AhBiPie from './AhBiPie.vue'
@@ -39,6 +45,7 @@ vi.mock('echarts/charts', () => ({
 }))
 vi.mock('echarts/components', () => ({
   GridComponent: {}, LegendComponent: {}, TooltipComponent: {}, VisualMapComponent: {},
+  MarkLineComponent: {},
 }))
 vi.mock('echarts/renderers', () => ({ CanvasRenderer: {} }))
 
@@ -89,6 +96,7 @@ const FAMILY: Array<[string, HmiSymbol, unknown]> = [
   ['构成堆叠条', biStack, AhBiStack],
   ['时段热力图', biHeat, AhBiHeat],
   ['明细数据表', biTable, AhBiTable],
+  ['尖峰柱图', biSpike, AhBiSpike],
 ]
 
 describe.each(FAMILY)('BI 图元：%s', (_name, s, comp) => {
@@ -347,6 +355,204 @@ describe('BI 图元：刷新节流与陈旧数据', () => {
     const { el, unmount } = mountReactive(AhBiKpi, { data: '{not json' })
     await nextTick()
     expect(el.textContent).toContain('暂无历史数据')
+    unmount()
+  })
+})
+
+// ---- 补三件（2026-10-29）：尖峰柱图行为 + 无 series 面板（告警/窗口切换）----
+
+const SPIKE_POINTS = envelope([
+  {
+    key: 'd1.power', label: '1#电表', unit: 'kW', color: '#f5a623',
+    mode: 'instant', metric: 'avg', value: null,
+    points: [
+      { ts: 1_800_000_000 - 300, value: 1 },
+      { ts: 1_800_000_000 - 240, value: 2 },
+      { ts: 1_800_000_000 - 180, value: 9 },
+      { ts: 1_800_000_000 - 120, value: 3 },
+      { ts: 1_800_000_000 - 60, value: 2 },
+    ],
+    error: null,
+  },
+])
+
+describe('BI 图元：尖峰柱图（阈值着色）', () => {
+  beforeEach(() => {
+    echartsMock.chart.setOption.mockClear()
+  })
+
+  it('信封 points → 柱数据；≥阈值的桶染尖峰色', async () => {
+    const { unmount } = mountReactive(AhBiSpike, { data: SPIKE_POINTS, fill: '#f5a623', spikeMode: 'p90' })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as {
+      series: Array<{ data: Array<{ itemStyle: { color: string } }> }>
+    }
+    expect(opt.series[0].data).toHaveLength(5)
+    const colors = opt.series[0].data.map((d) => d.itemStyle.color)
+    expect(colors.filter((c) => c === '#f85149')).toHaveLength(1) // 只有 9 超过 p90=3
+    unmount()
+  })
+
+  it('阈值虚线画在第一条柱序列上（markLine.yAxis = p90）', async () => {
+    const { unmount } = mountReactive(AhBiSpike, { data: SPIKE_POINTS, spikeMode: 'p90' })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as {
+      series: Array<{ markLine?: { data: Array<{ yAxis: number }> } }>
+    }
+    // 值 [1,2,3,9,2] → p90 nearest-rank = ceil(4.5)=5 位 = 9? 排序 [1,2,2,3,9] 第 5 位 = 9
+    expect(opt.series[0].markLine?.data[0].yAxis).toBe(9)
+    unmount()
+  })
+
+  it('fixed 模式阈值非正 → 不画 markLine（不染尖峰）', async () => {
+    const { unmount } = mountReactive(AhBiSpike, { data: SPIKE_POINTS, spikeMode: 'fixed', spikeThreshold: 0 })
+    await nextTick()
+    const opt = echartsMock.chart.setOption.mock.calls.at(-1)![0] as {
+      series: Array<{ markLine?: unknown; data: Array<{ itemStyle: { color: string } }> }>
+    }
+    expect(opt.series[0].markLine).toBeUndefined()
+    expect(opt.series[0].data.every((d) => d.itemStyle.color !== '#f85149')).toBe(true)
+    unmount()
+  })
+
+  it('空信封 → 空态提示（不初始化空柱）', async () => {
+    const { el, unmount } = mountReactive(AhBiSpike, { data: '[]' })
+    await nextTick()
+    expect(el.textContent).toContain('暂无历史数据')
+    unmount()
+  })
+})
+
+describe('spikeThreshold（纯函数）', () => {
+  it('p90 = 升序第 ceil(0.9n) 位（nearest-rank）', () => {
+    expect(spikeThreshold([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'p90', 2, 0)).toBe(9)
+    expect(spikeThreshold([5], 'p90', 2, 0)).toBe(5)
+  })
+
+  it('times = 均值 × 倍数（非正倍数回落 2）', () => {
+    expect(spikeThreshold([2, 4], 'times', 3, 0)).toBeCloseTo(9, 6)
+    expect(spikeThreshold([2, 4], 'times', -1, 0)).toBeCloseTo(6, 6)
+  })
+
+  it('fixed 正值直通；非正 → null；空数据 → null', () => {
+    expect(spikeThreshold([1, 2], 'fixed', 2, 7.5)).toBe(7.5)
+    expect(spikeThreshold([1, 2], 'fixed', 2, 0)).toBeNull()
+    expect(spikeThreshold([], 'p90', 2, 0)).toBeNull()
+  })
+})
+
+// 无 series 面板族（不吃历史信封）：告警统计 / 窗口切换器
+const CONTROL_FAMILY: Array<[string, HmiSymbol, unknown]> = [
+  ['告警统计', biAlarms, AhBiAlarms],
+  ['窗口切换器', biWindow, AhBiWindow],
+]
+
+describe.each(CONTROL_FAMILY)('BI 控制面板：%s', (_name, s, comp) => {
+  it('过约定 lint + 已注册 + props 一一对应', () => {
+    expect(lintSymbol(s)).toEqual([])
+    expect(allSymbols()).toContain(s)
+    expect(VUE_SYMBOL_COMPONENTS[vueTagFor(s.id)]).toBeDefined()
+    const declared = (comp as { props?: Record<string, unknown> }).props
+      ? Object.keys((comp as { props: Record<string, unknown> }).props).sort()
+      : []
+    expect(declared).toEqual(Object.keys(s.props).sort())
+  })
+
+  it('id 带 ah-bi- 前缀 + 无 series prop（不吃历史信封）', () => {
+    expect(s.id.startsWith('ah-bi-')).toBe(true)
+    expect(s.props.series).toBeUndefined()
+    expect(s.props.data?.type).toBe('textArea')
+  })
+})
+
+describe('BI 图元：告警统计面板', () => {
+  const ALARM_ENV = JSON.stringify({
+    v: 1, generatedAt: 1_800_000_000, total: 3,
+    levels: [{ level: 'error', count: 1 }, { level: 'warn', count: 2 }, { level: 'info', count: 0 }],
+    sources: [{ source: 'dev-a.power', count: 2 }, { source: 'dev-b.flow', count: 1 }],
+    latest: [
+      { key: 'k2', level: 'error', source: 'dev-a.power', message: '超上限', ts: 1_800_000_000, count: 2 },
+      { key: 'k1', level: 'warn', source: 'dev-b.flow', message: '流量波动', ts: 1_799_999_000, count: 1 },
+    ],
+  })
+
+  it('告警信封 → 总数 + 分级 + 来源 + 最新列表', async () => {
+    const { el, unmount } = mountReactive(AhBiAlarms, { data: ALARM_ENV, title: '活动告警' })
+    await nextTick()
+    const t = el.textContent ?? ''
+    expect(t).toContain('3')
+    expect(t).toContain('严重')
+    expect(t).toContain('警告')
+    expect(t).toContain('dev-a.power')
+    expect(t).toContain('超上限')
+    expect(t).toContain('×2')
+    unmount()
+  })
+
+  it('total=0 → 安宁态（无活动告警，不是空数据）', async () => {
+    const env = JSON.stringify({
+      v: 1, generatedAt: 1, total: 0,
+      levels: [{ level: 'error', count: 0 }, { level: 'warn', count: 0 }, { level: 'info', count: 0 }],
+      sources: [], latest: [],
+    })
+    const { el, unmount } = mountReactive(AhBiAlarms, { data: env })
+    await nextTick()
+    expect(el.textContent).toContain('无活动告警')
+    unmount()
+  })
+
+  it('坏 JSON → 空数据占位（与「无告警」区分）', async () => {
+    const { el, unmount } = mountReactive(AhBiAlarms, { data: '{bad' })
+    await nextTick()
+    expect(el.textContent).toContain('暂无告警数据')
+    expect(el.textContent).not.toContain('无活动告警')
+    unmount()
+  })
+})
+
+describe('BI 图元：窗口切换器', () => {
+  it('options JSON → 档位按钮；点击发全局事件（detail.secs）', async () => {
+    const got: Array<number | undefined> = []
+    const onEvt = (e: Event): void => { got.push((e as CustomEvent<{ secs?: number }>).detail?.secs) }
+    window.addEventListener('ah-bi-window-change', onEvt)
+    try {
+      const { el, unmount } = mountReactive(AhBiWindow, {
+        options: '[{"label":"默认","secs":0},{"label":"1时","secs":3600}]',
+        fill: '#f5a623',
+      })
+      await nextTick()
+      const btns = Array.from(el.querySelectorAll('button'))
+      expect(btns.map((b) => b.textContent)).toEqual(['默认', '1时'])
+      ;(btns[1] as HTMLButtonElement).click()
+      await nextTick()
+      expect(got).toEqual([3600])
+      unmount()
+    } finally {
+      window.removeEventListener('ah-bi-window-change', onEvt)
+    }
+  })
+
+  it('宿主写回 {"activeSecs":86400} → 对应档位高亮（回显权威在宿主）', async () => {
+    const { el, set, unmount } = mountReactive(AhBiWindow, {
+      options: '[{"label":"默认","secs":0},{"label":"24时","secs":86400}]',
+      data: '[]',
+    })
+    await nextTick()
+    // 未写回时 activeSecs=0 → 「默认」档高亮（面板自然态就是默认窗）
+    const initial = Array.from(el.querySelectorAll('button')).find((b) => b.className.includes('on'))
+    expect(initial?.textContent).toBe('默认')
+    set('data', JSON.stringify({ activeSecs: 86400 }))
+    await nextTick()
+    const on = Array.from(el.querySelectorAll('button')).find((b) => b.className.includes('on'))
+    expect(on?.textContent).toBe('24时')
+    unmount()
+  })
+
+  it('坏 options JSON → 缺省档（默认/1时/24时/7天）', async () => {
+    const { el, unmount } = mountReactive(AhBiWindow, { options: '{bad' })
+    await nextTick()
+    const labels = Array.from(el.querySelectorAll('button')).map((b) => b.textContent)
+    expect(labels).toEqual(['默认', '1时', '24时', '7天'])
     unmount()
   })
 })

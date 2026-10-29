@@ -20,6 +20,7 @@ import { installBridge } from '../lib/bridge'
 import { createDispatcher, createNavStack } from '../lib/nav'
 import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
 import { createBiCollector } from '../lib/bi-collector'
+import { BI_WINDOW_EVENT, collectBiWindowControls } from '../lib/bi-contract'
 import { registerSymbols } from '../symbols'
 import { computeFitScale } from '../lib/fit-scale'
 import { applyDevContext, isDevParamScreen, META_DEV_FIELD } from '../lib/dev-context'
@@ -169,6 +170,7 @@ async function mountScreen(done: IExportJson, devOverride?: string): Promise<voi
 /**
  * BI 聚合采集（通道 B，P2）：宿主扫描画面里的 ah-bi- 图元 → 合并查询 →
  * /history/batch → 结果按面板组装信封 → 写回图元 props.data.val。
+ * 画面含 ah-bi-alarms 面板时同拍拉活动告警快照写告警信封（fetchAlarms 注入）。
  *
  * 拉模式刷新（30s）：历史分析对实时性不敏感；SSE 通道（A）继续承担实时刷新。
  * 图元不自发请求（架构裁定），故本方法是 BI 数据的唯一出口。
@@ -176,25 +178,52 @@ async function mountScreen(done: IExportJson, devOverride?: string): Promise<voi
 const BI_REFRESH_MS = 30_000
 let biTimer: ReturnType<typeof setInterval> | undefined
 let biRunning = false
+/** 在飞期间收到触发（如窗口切换）→ 记账，本轮结束后立即补跑（不等下一拍） */
+let biPending = false
+/** 当前采集轮（窗口切换器切换后立即触发一轮，不等下一拍） */
+let biTick: () => Promise<void> = async () => {}
+/** 当前采集的画面 doc（窗口切换器回显写回的扫描源） */
+let biDone: unknown
+/** 窗口切换器（ah-bi-window）的生效覆盖窗（秒）；null = 各面板用自己配置的窗 */
+const biWindowOverride = ref<number | null>(null)
 
 function stopBiCollect(): void {
   if (biTimer !== undefined) { clearInterval(biTimer); biTimer = undefined }
 }
 
+/** 窗口切换器回显：把当前生效档写回画面里全部 ah-bi-window 的 props.data.val。 */
+function syncBiWindowControls(): void {
+  const payload = JSON.stringify({ activeSecs: biWindowOverride.value ?? 0 })
+  for (const c of collectBiWindowControls(biDone)) {
+    previewRef.value?.setItemAttrByID(c.id, 'props.data.val', payload)
+  }
+}
+
+/** 窗口切换器上行事件（图元 → 宿主）：改覆盖窗 → 回显 → 立即重采一轮。 */
+function onBiWindowChange(e: Event): void {
+  const n = Number((e as CustomEvent<{ secs?: unknown }>).detail?.secs)
+  biWindowOverride.value = Number.isFinite(n) && n > 0 ? Math.floor(n) : null
+  syncBiWindowControls()
+  void biTick()
+}
+
 /** 启动采集：无 BI 图元则 collect 内部判空返回，普通 HMI 画面零开销。 */
 function startBiCollect(done: IExportJson): void {
   stopBiCollect()
+  biDone = done
   const collector = createBiCollector({
     fetchBatch: async (body) => {
       const res = await api().post('/api/v1/history/batch', body)
       return (res ?? {}) as { results?: never[] }
     },
+    // 告警快照（ah-bi-alarms 面板在画面才被调用）：与 AlarmBanner 同一 REST 源
+    fetchAlarms: async () => await api().get('/api/v1/alarms'),
     // 写回 maotu 画布元素：props.data.val 是 props 直写路径（jT 平面化喂给图元）
     write: (itemId, payload, attr) => { previewRef.value?.setItemAttrByID(itemId, attr, payload) },
     now: () => Math.floor(Date.now() / 1000),
-  })
+  }, { windowOverride: () => biWindowOverride.value })
   const tick = async (): Promise<void> => {
-    if (biRunning) return // 上一轮未完不叠加（慢后端下防堆积）
+    if (biRunning) { biPending = true; return } // 上一轮未完不叠加——记账，结束后补跑
     biRunning = true
     try {
       await collector.collect(done)
@@ -203,8 +232,11 @@ function startBiCollect(done: IExportJson): void {
     } finally {
       biRunning = false
     }
+    if (biPending) { biPending = false; void tick() }
   }
+  biTick = tick
   void tick()
+  syncBiWindowControls() // 跳转后新画面的切换器立即回显当前生效档
   biTimer = setInterval(() => { void tick() }, BI_REFRESH_MS)
 }
 
@@ -325,6 +357,8 @@ const stateTagType = (s: string): 'success' | 'danger' | 'warning' | 'info' =>
 onMounted(async () => {
   resizeObs = new ResizeObserver(applyFit)
   if (viewportRef.value) resizeObs.observe(viewportRef.value)
+  // 窗口切换器上行事件（ah-bi-window 图元 → 本页）：全局 DOM 事件，卸载时摘除
+  window.addEventListener(BI_WINDOW_EVENT, onBiWindowChange)
   // 自绘图元注册（幂等）：MtPreview 渲染 svg 图元同样查注册表——不注册则自绘图元静默空白
   registerSymbols()
   // 告警双源（与画面加载独立——画面失败告警仍可见）：REST 快照 + events SSE 命名事件
@@ -355,6 +389,7 @@ onMounted(async () => {
 onUnmounted(() => {
   disposed = true
   resizeObs?.disconnect()
+  window.removeEventListener(BI_WINDOW_EVENT, onBiWindowChange)
   stream?.close()
   alarmStream?.close()
   stopBiCollect()

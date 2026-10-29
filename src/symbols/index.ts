@@ -37,6 +37,9 @@ import AhBiTable from './AhBiTable.vue'
 import AhBiMatrix from './AhBiMatrix.vue'
 import AhBiStackArea from './AhBiStackArea.vue'
 import AhBiBars from './AhBiBars.vue'
+import AhBiSpike from './AhBiSpike.vue'
+import AhBiAlarms from './AhBiAlarms.vue'
+import AhBiWindow from './AhBiWindow.vue'
 
 export const SYMBOL_GROUP = 'HMI 图元'
 
@@ -70,6 +73,9 @@ export const VUE_SYMBOL_COMPONENTS: Record<string, Component> = {
   [vueTagFor('ah-bi-matrix')]: AhBiMatrix,
   [vueTagFor('ah-bi-stack-area')]: AhBiStackArea,
   [vueTagFor('ah-bi-bars')]: AhBiBars,
+  [vueTagFor('ah-bi-spike')]: AhBiSpike,
+  [vueTagFor('ah-bi-alarms')]: AhBiAlarms,
+  [vueTagFor('ah-bi-window')]: AhBiWindow,
 }
 
 /** 全局组件注册（main.ts createApp 后调用一次；app.component 幂等覆盖） */

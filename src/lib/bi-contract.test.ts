@@ -390,3 +390,163 @@ describe('BI 契约：信封组装（buildEnvelopes）', () => {
     expect(envs.get('bi-kpi')!.series[0].error).toBeNull()
   })
 })
+
+// ---- ① 时间窗口切换器 + ③ 告警统计（2026-10-29 补三件，红测先行）----
+
+import {
+  BI_WINDOW_EVENT,
+  buildAlarmEnvelope,
+  collectBiAlarmPanels,
+  collectBiWindowControls,
+  parseAlarmList,
+} from './bi-contract'
+
+describe('BI 契约：窗口控制扫描（collectBiWindowControls）', () => {
+  it('ah-bi-window pel → id + 配置项（options JSON 解析）', () => {
+    const done = {
+      json: [pel('bi-win-1', 'ah-bi-window', {
+        options: '[{"label":"1时","secs":3600},{"label":"24时","secs":86400}]',
+      })],
+    }
+    const cs = collectBiWindowControls(done)
+    expect(cs).toEqual([{
+      id: 'bi-win-1',
+      options: [{ label: '1时', secs: 3600 }, { label: '24时', secs: 86400 }],
+    }])
+  })
+
+  it('options 缺省/坏 JSON → 默认档（默认 / 1h / 24h / 7d）', () => {
+    const dflt = [
+      { label: '默认', secs: 0 },
+      { label: '1时', secs: 3600 },
+      { label: '24时', secs: 86400 },
+      { label: '7天', secs: 604800 },
+    ]
+    expect(collectBiWindowControls({ json: [pel('w', 'ah-bi-window', {})] })[0].options).toEqual(dflt)
+    expect(collectBiWindowControls({ json: [pel('w', 'ah-bi-window', { options: '{bad' })] })[0].options).toEqual(dflt)
+  })
+
+  it('secs 非正数 / label 非串的条目丢弃；secs 归一为整数', () => {
+    const cs = collectBiWindowControls({
+      json: [pel('w', 'ah-bi-window', {
+        options: '[{"label":"坏","secs":-5},{"label":"好","secs":3600.9},{"secs":60},{"label":"缺secs"}]',
+      })],
+    })
+    expect(cs[0].options).toEqual([{ label: '好', secs: 3600 }])
+  })
+
+  it('非 ah-bi-window pel 与缺 id 的 pel 忽略', () => {
+    const done = {
+      json: [
+        pel('k', 'ah-bi-kpi', panelProps({})),
+        pel('', 'ah-bi-window', {}),
+      ],
+    }
+    expect(collectBiWindowControls(done)).toEqual([])
+  })
+
+  it('事件名常量稳定（图元与宿主两侧共享，改名即双炸）', () => {
+    expect(BI_WINDOW_EVENT).toBe('ah-bi-window-change')
+  })
+})
+
+describe('BI 契约：告警面板扫描（collectBiAlarmPanels）', () => {
+  it('ah-bi-alarms pel → id 列表（无 series 也收——告警面板不吃历史信封）', () => {
+    const done = {
+      json: [
+        pel('alm-1', 'ah-bi-alarms', {}),
+        pel('k', 'ah-bi-kpi', panelProps({})),
+        pel('', 'ah-bi-alarms', {}),
+      ],
+    }
+    expect(collectBiAlarmPanels(done)).toEqual(['alm-1'])
+  })
+})
+
+describe('BI 契约：告警快照解析（parseAlarmList）', () => {
+  it('/api/v1/alarms 原始条目 → 规范告警（ISO ts → 秒级 epoch）', () => {
+    const got = parseAlarmList([{
+      key: 'k1', level: 'warn', source: 'home-meter-e1.power',
+      message: '超限', ts: '2026-10-29T08:00:00Z', count: 3,
+    }])
+    expect(got).toEqual([{
+      key: 'k1', level: 'warn', source: 'home-meter-e1.power',
+      message: '超限', tsSec: Date.parse('2026-10-29T08:00:00Z') / 1000, count: 3,
+    }])
+  })
+
+  it('level 归一：未知回落 warn；count 缺省 1；坏条目（缺 key）丢弃', () => {
+    const got = parseAlarmList([
+      { key: 'a', level: 'weird', ts: '2026-10-29T08:00:00Z' },
+      { key: 'b', ts: '2026-10-29T08:00:00Z' },
+      { level: 'info', ts: '2026-10-29T08:00:00Z' },
+      'not-an-object',
+    ])
+    expect(got.map((g) => [g.key, g.level, g.count])).toEqual([['a', 'warn', 1], ['b', 'warn', 1]])
+  })
+
+  it('坏 ts → tsSec=0（排序垫底，不炸）', () => {
+    const got = parseAlarmList([{ key: 'a', ts: 'not-a-date' }])
+    expect(got[0].tsSec).toBe(0)
+  })
+
+  it('非数组输入 → 空数组', () => {
+    expect(parseAlarmList(undefined)).toEqual([])
+    expect(parseAlarmList({ nope: 1 })).toEqual([])
+  })
+})
+
+describe('BI 契约：告警信封组装（buildAlarmEnvelope）', () => {
+  const NOW = 1_800_000_000
+  const iso = (s: number): string => new Date(s * 1000).toISOString()
+
+  it('total + 分级计数（error/warn/info 固定序）', () => {
+    const items = parseAlarmList([
+      { key: 'a', level: 'error', ts: iso(1) },
+      { key: 'b', level: 'warn', ts: iso(2) },
+      { key: 'c', level: 'warn', ts: iso(3) },
+      { key: 'd', ts: iso(4) },
+    ])
+    const env = buildAlarmEnvelope(items, NOW)
+    expect(env.v).toBe(1)
+    expect(env.total).toBe(4)
+    // 'd' 无 level → 归 warn（分级词表缺省）
+    expect(env.levels).toEqual([
+      { level: 'error', count: 1 },
+      { level: 'warn', count: 3 },
+      { level: 'info', count: 0 },
+    ])
+  })
+
+  it('latest 按 ts 倒序取前 8；空表 → 全空信封（total=0 不是 null）', () => {
+    const items = parseAlarmList(
+      Array.from({ length: 10 }, (_, i) => ({ key: `k${i}`, level: 'warn', ts: iso(i + 1) })),
+    )
+    const env = buildAlarmEnvelope(items, NOW)
+    expect(env.latest).toHaveLength(8)
+    expect(env.latest[0].key).toBe('k9')
+    const empty = buildAlarmEnvelope([], NOW)
+    expect(empty.total).toBe(0)
+    expect(empty.latest).toEqual([])
+  })
+
+  it('sources 按次数倒序取前 5（次数并列按名称稳定序）', () => {
+    const items = parseAlarmList([
+      { key: '1', source: 'dev-b', ts: iso(1) },
+      { key: '2', source: 'dev-a', ts: iso(2) },
+      { key: '3', source: 'dev-b', ts: iso(3) },
+      { key: '4', source: 'dev-c', ts: iso(4) },
+      { key: '5', source: 'dev-d', ts: iso(5) },
+      { key: '6', source: 'dev-e', ts: iso(6) },
+      { key: '7', source: 'dev-f', ts: iso(7) },
+    ])
+    const env = buildAlarmEnvelope(items, NOW)
+    expect(env.sources).toEqual([
+      { source: 'dev-b', count: 2 },
+      { source: 'dev-a', count: 1 },
+      { source: 'dev-c', count: 1 },
+      { source: 'dev-d', count: 1 },
+      { source: 'dev-e', count: 1 },
+    ])
+  })
+})

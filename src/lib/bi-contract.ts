@@ -12,9 +12,9 @@
  * 对 symbols 一律禁向）。这样契约单点可改、两侧不会各写一份形状。
  *
  * 三个关键语义（错了整屏皆错，故在此固化）：
- * 1. **累计量走双窗 last 差**：后端 REST 只暴露 min/max/avg/sum/count/last 六值聚合，
- *    没有 first——累计量（累计电能/累计水气）的「窗口增量」只能用
- *    「主窗末值 − 前窗末值」求得（design §1.4）。sum 对累计量无意义。
+ * 1. **累计量走分段累加**：后端 REST 只暴露 min/max/avg/sum/count/last 六值聚合，
+ *    而现场表计存在周期性复位（回退点两侧末值不可直接相减）——累计量的窗口用量
+ *    必须 raw 取点后按回退点分段累加（cumulativeTotal，design §1.4）。sum 对累计量无意义。
  * 2. **空窗不是 0**：窗口无采样 → value=null 且 error=null（图元显示占位而非 0）。
  * 3. **单图失败不拖全屏**：单条查询 error 字段化，只落在该 series 上。
  */
@@ -482,4 +482,177 @@ export function buildEnvelopes(
   }
   void panelById
   return byPanel
+}
+
+// ---------- ① 时间窗口切换器（ah-bi-window） ----------
+//
+// 机制：切换器图元点击后发全局 DOM 事件（BI_WINDOW_EVENT，detail.secs=0 表示恢复默认），
+// 宿主 ViewView 收到后记住覆盖窗，收集器每拍把覆盖窗应用到全部面板（零请求参数改动面），
+// 并把生效档写回切换器的 props.data.val 供高亮回显。图元侧只发事件不持状态——
+// 状态权威在宿主（画面跳转/重播种后回显不漂）。
+
+/** 窗口切换 DOM 事件名（图元 → 宿主；CustomEvent<%{secs:number}>）。 */
+export const BI_WINDOW_EVENT = 'ah-bi-window-change'
+
+/** 切换器 tag（带 ah-bi- 前缀 → 会被面板扫描收编，但无 series 不产生查询）。 */
+export const BI_WINDOW_TAG = 'ah-bi-window'
+
+/** 一个窗口档位。secs=0 表示「恢复面板各自配置的窗口」。 */
+export interface BiWindowOption {
+  label: string
+  secs: number
+}
+
+/** 切换器缺省档位（默认 / 1时 / 24时 / 7天）。 */
+export const BI_WINDOW_DEFAULT_OPTIONS: BiWindowOption[] = [
+  { label: '默认', secs: 0 },
+  { label: '1时', secs: 3600 },
+  { label: '24时', secs: 86400 },
+  { label: '7天', secs: 604800 },
+]
+
+/** 画面里一个窗口切换器的扫描结果。 */
+export interface BiWindowControl {
+  id: string
+  options: BiWindowOption[]
+}
+
+/** 扫描画面里的窗口切换器（组态期只配 options；坏 JSON 回落缺省档）。 */
+export function collectBiWindowControls(done: unknown): BiWindowControl[] {
+  const json = Array.isArray(done)
+    ? done
+    : ((asRecord(done)?.json as unknown[]) ?? [])
+  const out: BiWindowControl[] = []
+  for (const p of json) {
+    const pel = asRecord(p)
+    if (!pel) continue
+    if (pel.tag !== BI_WINDOW_TAG) continue
+    const id = typeof pel.id === 'string' ? pel.id : ''
+    if (!id) continue
+    const props = asRecord(pel.props) ?? {}
+    let arr: unknown = props.options
+    if (typeof arr === 'string') {
+      const s = arr.trim()
+      if (!s) { arr = undefined } else {
+        try { arr = JSON.parse(s) } catch { arr = undefined }
+      }
+    }
+    const options: BiWindowOption[] = []
+    if (Array.isArray(arr)) {
+      for (const it of arr) {
+        const o = asRecord(it)
+        if (!o) continue
+        const label = typeof o.label === 'string' ? o.label : ''
+        const secsRaw = Number(o.secs)
+        if (!label || !Number.isFinite(secsRaw) || secsRaw < 0) continue
+        options.push({ label, secs: Math.floor(secsRaw) })
+      }
+    }
+    out.push({ id, options: options.length ? options : BI_WINDOW_DEFAULT_OPTIONS })
+  }
+  return out
+}
+
+// ---------- ③ 告警统计区（ah-bi-alarms） ----------
+//
+// 后端 /api/v1/alarms 只存**当前活跃集**（无历史），故本区口径 = 活跃告警快照的
+// 呈现统计（分级计数 / 来源 Top / 最新列表），不做趋势与发生率。数据由宿主在
+// BI 采集拍里顺带拉取（fetchAlarms 注入）并组装告警信封写回——图元照旧不取数。
+
+/** 告警面板 tag（无 series → 面板扫描跳过，由本扫描单独收编）。 */
+export const BI_ALARMS_TAG = 'ah-bi-alarms'
+
+/** 规范化后的活动告警条目（tsSec = 秒级 epoch）。 */
+export interface BiAlarmItem {
+  key: string
+  level: string
+  source: string
+  message: string
+  tsSec: number
+  count: number
+}
+
+/** 写回告警面板 props.data.val 的信封。 */
+export interface BiAlarmEnvelope {
+  v: 1
+  generatedAt: number
+  total: number
+  /** 分级计数（error/warn/info 固定序，0 也占位——面板直接画三行）。 */
+  levels: Array<{ level: string; count: number }>
+  /** 来源 Top（按次数倒序，cap 5；并列按名称稳定序）。 */
+  sources: Array<{ source: string; count: number }>
+  /** 最新告警（ts 倒序，cap 8）。 */
+  latest: Array<{ key: string; level: string; source: string; message: string; ts: number; count: number }>
+}
+
+/** 分级词表（与 rs-iot level 值域一致；未知级别归 warn）。 */
+const ALARM_LEVELS = ['error', 'warn', 'info'] as const
+const ALARM_SOURCES_CAP = 5
+const ALARM_LATEST_CAP = 8
+
+/** /api/v1/alarms 原始数组 → 规范告警列表（缺 key 丢弃；坏 ts → 0 垫底）。 */
+export function parseAlarmList(raw: unknown): BiAlarmItem[] {
+  if (!Array.isArray(raw)) return []
+  const out: BiAlarmItem[] = []
+  for (const it of raw) {
+    const o = asRecord(it)
+    if (!o) continue
+    const key = typeof o.key === 'string' ? o.key : ''
+    if (!key) continue
+    const level = typeof o.level === 'string' && (ALARM_LEVELS as readonly string[]).includes(o.level)
+      ? o.level
+      : 'warn'
+    const t = typeof o.ts === 'string' ? Date.parse(o.ts) : NaN
+    const countRaw = Number(o.count)
+    out.push({
+      key,
+      level,
+      source: typeof o.source === 'string' ? o.source : '',
+      message: typeof o.message === 'string' ? o.message : '',
+      tsSec: Number.isFinite(t) ? Math.floor(t / 1000) : 0,
+      count: Number.isFinite(countRaw) && countRaw > 0 ? Math.floor(countRaw) : 1,
+    })
+  }
+  return out
+}
+
+/** 扫描画面里的告警面板 id（无 series 也收——告警面板不吃历史信封）。 */
+export function collectBiAlarmPanels(done: unknown): string[] {
+  const json = Array.isArray(done)
+    ? done
+    : ((asRecord(done)?.json as unknown[]) ?? [])
+  const out: string[] = []
+  for (const p of json) {
+    const pel = asRecord(p)
+    if (!pel || pel.tag !== BI_ALARMS_TAG) continue
+    const id = typeof pel.id === 'string' ? pel.id : ''
+    if (id) out.push(id)
+  }
+  return out
+}
+
+/** 组装告警信封：分级计数 + 来源 Top + 最新列表（全纯函数，空表给 total=0 信封）。 */
+export function buildAlarmEnvelope(items: BiAlarmItem[], nowSec: number): BiAlarmEnvelope {
+  const counts = new Map<string, number>(ALARM_LEVELS.map((l) => [l, 0]))
+  const bySource = new Map<string, number>()
+  for (const a of items) {
+    counts.set(a.level, (counts.get(a.level) ?? 0) + 1)
+    if (a.source) bySource.set(a.source, (bySource.get(a.source) ?? 0) + 1)
+  }
+  const sources = [...bySource.entries()]
+    .map(([source, count]) => ({ source, count }))
+    .sort((x, y) => y.count - x.count || (x.source < y.source ? -1 : 1))
+    .slice(0, ALARM_SOURCES_CAP)
+  const latest = [...items]
+    .sort((x, y) => y.tsSec - x.tsSec)
+    .slice(0, ALARM_LATEST_CAP)
+    .map((a) => ({ key: a.key, level: a.level, source: a.source, message: a.message, ts: a.tsSec, count: a.count }))
+  return {
+    v: 1,
+    generatedAt: nowSec,
+    total: items.length,
+    levels: ALARM_LEVELS.map((l) => ({ level: l, count: counts.get(l) ?? 0 })),
+    sources,
+    latest,
+  }
 }

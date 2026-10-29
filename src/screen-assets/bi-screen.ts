@@ -10,8 +10,8 @@
  * - 图元**不绑** SSE 点位、不轮询。宿主（ViewView）扫描画面里的 ah-bi- 图元 →
  *   合并查询 → POST /api/v1/history/batch → 结果按面板组装信封 → 写回 props.data.val。
  * - 图元 props.series 声明「查什么」（dev_id/tag/mode），props.data 是「查到了什么」。
- * - mode=cumulative 的序列（累计电量/累计水气）由宿主按**双窗 last 差**求窗口增量，
- *   图元拿到的 value 已是增量（图元侧不再求差）。
+ * - mode=cumulative 的序列（累计电能/累计水气）由宿主按**分段累加**求窗口增量
+ *   （现场表计周期性复位，双窗末值差会差出负数），图元拿到的 value 已是增量。
  *
  * 现场点位（2026-10-29 实测）：home-meter-e1/e2 电表、g1/g2 燃气表、w1/w2 水表；
  * 归档白名单已开通瞬时量（power/voltage/current/pf/frequency/gas_instant/flow_instant/battery）。
@@ -102,6 +102,12 @@ export function buildBiStationScreen(): ScreenDoc {
       textItem('text-vue-bist-sub', {
         text: 'rs-iot 时序库 · 30s 聚合刷新', left: 30, top: 52, width: 420, height: 20,
         fill: '#6e7681', fontSize: 13,
+      }),
+      // 窗口切换器（上行控制）：点击整屏 BI 面板切统计窗（默认/1时/24时/7天），
+      // 宿主收集器 windowOverride 生效——不用改画面/重播种
+      biItem('ah-bi-window', 'ah-bi-window-bist-1', {
+        left: 1456, top: 20, width: 434, height: 48,
+        props: { title: '统计窗口', fill: '#f5a623' },
       }),
 
       // ---- A 区：总览 KPI 带（6 张紧凑卡，shape=both → 大数字 + 卡内迷你趋势）----
@@ -197,9 +203,9 @@ export function buildBiStationScreen(): ScreenDoc {
         },
       }),
 
-      // ---- C 区：明细区（矩阵热力 / 明细表）----
+      // ---- C 区：明细区（矩阵热力 / 尖峰 / 明细表 / 告警统计，4 等列）----
       biItem('ah-bi-matrix', 'ah-bi-matrix-bist-1', {
-        left: 30, top: 610, width: 1180, height: 440,
+        left: 30, top: 610, width: 456, height: 440,
         props: {
           title: '各表瞬时流量 × 时间（1min 桶）',
           // 热力是**颜色深浅比较**——同样要同单位可比：四台表均为瞬时流量（m³/h）
@@ -212,8 +218,20 @@ export function buildBiStationScreen(): ScreenDoc {
           agg: 'avg', interval: 60, windowSecs: 3600, shape: 'series',
         },
       }),
+      // 尖峰柱图（②）：p90 动态阈值——超阈值桶染红 + 阈值虚线（对标 Grafana Power Spikes）
+      biItem('ah-bi-spike', 'ah-bi-spike-bist-1', {
+        left: 498, top: 610, width: 456, height: 440,
+        props: {
+          title: '1#电表功率尖峰（1h · P90 阈值）',
+          series: spec([
+            { dev_id: 'home-meter-e1', tag: 'power', label: '1#电表', unit: 'kW' },
+          ]),
+          agg: 'avg', interval: 60, windowSecs: 3600, shape: 'series',
+          spikeMode: 'p90',
+        },
+      }),
       biItem('ah-bi-table', 'ah-bi-table-bist-1', {
-        left: 1222, top: 610, width: 668, height: 440,
+        left: 966, top: 610, width: 456, height: 440,
         props: {
           title: '设备指标明细（24h 窗口）',
           series: spec([
@@ -228,6 +246,11 @@ export function buildBiStationScreen(): ScreenDoc {
           ]),
           agg: 'avg', windowSecs: 86400, shape: 'aggregate',
         },
+      }),
+      // 告警统计（③）：活动告警快照（后端无告警历史）——宿主 fetchAlarms 写告警信封
+      biItem('ah-bi-alarms', 'ah-bi-alarms-bist-1', {
+        left: 1434, top: 610, width: 456, height: 440,
+        props: { title: '活动告警', fill: '#f85149', maxRows: 6 },
       }),
     ],
     eventList: [], eventFlow: [],
