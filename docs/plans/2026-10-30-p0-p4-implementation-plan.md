@@ -65,7 +65,13 @@
 1. 设计 §3.6 说 auth 中间件「未注入请求扩展，需补提取」——实读 rs-iot `src/api/auth.rs:96-100`
    **已存在 `AuthedUser` Extension 注入**（复审 M2 已做）：P0 后端直接消费，无需改
    auth.rs。列此偏差以代码为准。
-2. （其余随实施追加）
+2. **prune 保留集修正（线上事故，2026-10-30 晚实测发现并当日修复）**：v1 只扫
+   index.html 直接引用——懒加载 chunk（EditView/ViewView/LoginView，import() 不
+  出现在 index.html）被全部误删 → /hmi/ 白屏。修复：deploy 换装时写
+   `.rollback/build-<ts>-<sha>.files` 构建清单（一次构建的 chunk 集内部引用
+   完备），prune 保留集 = 构建清单 ∪ index 引用 ∪ 旧制备份兜底；复验口径改为
+   响应体检查（gateway SPA fallback 会把 assets 404 伪装成 200/HTML）。
+   修复后全链实测：prune 零误删、20 资产响应体全部真实内容。
 
 ## 4. 完成判据（任务书 §9 摘要）
 
