@@ -46,9 +46,12 @@ run('pnpm', ['test'])
 if (WITH_E2E) run('pnpm', ['e2e'])
 
 // ---------- 2. 构建到 dist-next（不动线上） ----------
-
+// **必须走 pnpm build（package.json 单源）**：它带 VITE_API_BASE=/api/rsiot +
+// VITE_LOGIN_PATH=/api/gw/login——deploy 若裸调 vite build 会漏烘 API 前缀，
+// 线上页面打到 gateway 不存在的 /api/v1/* → 列表全空（2026-10-30 实测事故）。
+// pnpm 把尾部参数追加到 script 命令，outDir 覆盖不碰线上 dist/。
 rmSync(DIST_NEXT, { recursive: true, force: true })
-run('pnpm', ['exec', 'vite', 'build', '--outDir', 'dist-next', '--emptyOutDir'])
+run('pnpm', ['build', '--outDir', 'dist-next', '--emptyOutDir'])
 
 // ---------- 3. 原子换装 ----------
 
