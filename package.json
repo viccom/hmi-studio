@@ -12,10 +12,14 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@incremark/theme": "^1.0.2",
+    "@incremark/vue": "^1.0.2",
     "@vueuse/core": "^15.0.0",
+    "dompurify": "^3.4.17",
     "echarts": "^6.1.0",
     "element-plus": "^2.14.7",
     "maotu": "0.6.5",
+    "pinia": "^4.1.0",
     "vue": "^3.5.44",
     "vue-router": "^5.4.0"
   },
