@@ -105,8 +105,9 @@
 2. **本机恒有 2 个 rs-iot 进程**（dev :8790 + field :18790，同一二进制）——这不是僵尸进程，
    判别看 `--config` 参数（dev=`config.toml`，field=`config/config.toml`）。
 3. `rs-iot/config.toml` 已转为**本地实例配置并 gitignore**（模板 `config.example.toml` 入库）；
-   它仍在磁盘上，测试照常能读。工作区另有当日的 README/AGENTS/.gitignore 未提交改动，
-   属环境整理，不涉你要改的 Rust/前端代码。
+   它仍在磁盘上，测试照常能读。工作区未提交改动的真实口径**以 §0 漂移记录为准**
+   （开工时另有 BUG#11 的 18 文件功能性未提交改动，当日已裁决提交收口——
+   不要按"仅 README/AGENTS/.gitignore 环境整理"的旧印象判断基线）。
 4. docs 档基线复核过仍绿（71 md，2026-10-30 晚实测）。
 
 ## 5. 门禁命令（权威入口 = justfile；两仓都有）
