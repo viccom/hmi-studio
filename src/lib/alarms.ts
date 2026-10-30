@@ -27,6 +27,35 @@ export interface AlarmEvent {
   ts?: string
 }
 
+/** 画面/主题变更事件（SSE `screen` 帧，P0 版本管理）：运行页据此提示「画面已更新」 */
+export interface ScreenEvent {
+  id: string
+  /** 资源种类（"screen" | "theme"） */
+  resource: string
+  action: 'put' | 'delete' | 'rollback'
+  version: number
+  actor?: string
+  ts?: string
+}
+
+/** SSE data 帧 → ScreenEvent；坏 JSON / 缺 id / 未知 action → undefined（静默丢帧，同 parseAlarmEvent） */
+export function parseScreenEvent(raw: string): ScreenEvent | undefined {
+  let obj: unknown
+  try { obj = JSON.parse(raw) } catch { return undefined }
+  if (typeof obj !== 'object' || obj === null) return undefined
+  const e = obj as Record<string, unknown>
+  if (typeof e.id !== 'string' || !e.id) return undefined
+  if (e.action !== 'put' && e.action !== 'delete' && e.action !== 'rollback') return undefined
+  return {
+    id: e.id,
+    resource: typeof e.resource === 'string' ? e.resource : 'screen',
+    action: e.action,
+    version: typeof e.version === 'number' ? e.version : 0,
+    actor: typeof e.actor === 'string' ? e.actor : undefined,
+    ts: typeof e.ts === 'string' ? e.ts : undefined,
+  }
+}
+
 /** SSE data 帧 → AlarmEvent；坏 JSON / 缺 key / 未知 action → undefined（静默丢帧） */
 export function parseAlarmEvent(raw: string): AlarmEvent | undefined {
   let obj: unknown
@@ -120,13 +149,16 @@ export interface AlarmStreamOptions {
   /** 失效探测用 Bearer（probeUnauthorized；SSE 本体走同源 cookie，统一会话） */
   getToken?: () => string | null
   onEvent: (e: AlarmEvent) => void
+  /** 画面/主题变更事件（P0：types=alarm,screen 单连接双事件——不新开连接，
+   *  EventSource 有连接成本且 probeUnauthorized 失效探测现成复用）；缺省不挂监听 */
+  onScreen?: (e: ScreenEvent) => void
   /** auth-failed = 连续失败后探测 401（凭证失效——与 sse.ts 同款语义；画面无绑定点位时
    *  本流是唯一的失效信号源，ViewView 据此走全局登出） */
   onState?: (s: 'online' | 'offline' | 'auth-failed') => void
 }
 
-/** /api/v1/events?types=alarm —— 命名事件 `alarm`；错误自管重连（同 sse.ts 退避 +
- *  代际守卫 + 3 连错 probe 401 —— 竞态语义与 sse.test.ts 的回归锁同款） */
+/** /api/v1/events?types=alarm,screen —— 命名事件 `alarm` + `screen`（P0 单连接双事件）；
+ *  错误自管重连（同 sse.ts 退避 + 代际守卫 + 3 连错 probe 401 —— 竞态语义与 sse.ts 的回归锁同款） */
 export function createAlarmStream(opts: AlarmStreamOptions): { close(): void } {
   let es: EventSource | undefined
   let timer: ReturnType<typeof setTimeout> | undefined
@@ -135,8 +167,9 @@ export function createAlarmStream(opts: AlarmStreamOptions): { close(): void } {
   let gen = 0
   const bo = backoff()
 
-  /** 告警事件流 URL：鉴权走同源 HttpOnly cookie（统一会话，两形态一致）。 */
-  const streamUrl = (): string => `${opts.base ?? API_BASE}/api/v1/events?types=alarm`
+  /** 告警+画面事件流 URL（P0：types=alarm,screen 一条连接收两类命名事件）：
+   *  鉴权走同源 HttpOnly cookie（统一会话，两形态一致）。 */
+  const streamUrl = (): string => `${opts.base ?? API_BASE}/api/v1/events?types=alarm,screen`
 
   const open = (): void => {
     if (closed) return
@@ -147,6 +180,12 @@ export function createAlarmStream(opts: AlarmStreamOptions): { close(): void } {
       const e = parseAlarmEvent((ev as MessageEvent).data)
       if (e) opts.onEvent(e)
     })
+    if (opts.onScreen) {
+      es.addEventListener('screen', (ev) => {
+        const e = parseScreenEvent((ev as MessageEvent).data)
+        if (e) opts.onScreen!(e)
+      })
+    }
     es.addEventListener('error', () => {
       es?.close()
       es = undefined

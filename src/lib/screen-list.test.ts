@@ -53,7 +53,7 @@ describe('loadScreenCards', () => {
       put: async () => undefined,
       del: async () => undefined,
     }
-    const cards = await loadScreenCards(fake as ReturnType<typeof screensApi>, 6)
+    const cards = await loadScreenCards(fake as unknown as ReturnType<typeof screensApi>, 6)
     expect(cards).toHaveLength(2)
     // done（IExportJson）随卡返回——T17 缩略图渲染源
     expect(cards.map(({ id, name, group, done }) => ({ id, name, group, hasDone: done !== undefined })))
@@ -78,7 +78,7 @@ describe('loadScreenCards', () => {
       put: async () => undefined,
       del: async () => undefined,
     }
-    const cards = await loadScreenCards(fake as ReturnType<typeof screensApi>)
+    const cards = await loadScreenCards(fake as unknown as ReturnType<typeof screensApi>)
     expect(cards).toHaveLength(8)
     expect(peak).toBe(4)
   })
@@ -90,7 +90,7 @@ describe('loadScreenCards', () => {
       put: async () => undefined,
       del: async () => undefined,
     }
-    await expect(loadScreenCards(fake as ReturnType<typeof screensApi>, 6))
+    await expect(loadScreenCards(fake as unknown as ReturnType<typeof screensApi>, 6))
       .rejects.toBeInstanceOf(ApiError)
   })
 })

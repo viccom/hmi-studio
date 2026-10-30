@@ -7,7 +7,7 @@
  * 故 store 的「确认」= clear(key)（本地剔除+入历史），SSE Clear 再到时幂等。
  */
 import { describe, expect, it } from 'vitest'
-import { AlarmStore, parseAlarmEvent, createAlarmStream } from './alarms'
+import { AlarmStore, parseAlarmEvent, parseScreenEvent, createAlarmStream } from './alarms'
 
 const item = (key: string, ts: string, level = 'warn'): { key: string; level: string; source: string; message: string; ts: string; count: number } =>
   ({ key, level, source: 'self', message: `msg-${key}`, ts, count: 1 })
@@ -81,18 +81,30 @@ describe('parseAlarmEvent（SSE data 帧 → 事件）', () => {
   })
 })
 
+describe('parseScreenEvent（P0 screen 帧 → 事件）', () => {
+  it('合法帧：id/action 必备，resource/version 宽松回落', () => {
+    expect(parseScreenEvent('{"kind":"screen","id":"bi-station","resource":"screen","action":"put","version":8,"actor":"admin","ts":"2026-10-30T12:00:00Z"}'))
+      .toMatchObject({ id: 'bi-station', action: 'put', version: 8, actor: 'admin' })
+  })
+  it('坏 JSON / 缺 id / 未知 action → undefined（静默丢帧）', () => {
+    expect(parseScreenEvent('not-json')).toBeUndefined()
+    expect(parseScreenEvent('{"action":"put"}')).toBeUndefined()
+    expect(parseScreenEvent('{"id":"a","action":"save"}')).toBeUndefined()
+  })
+})
+
 // ---------- 事件流层重连状态机（FakeES 注入；对齐 sse.ts 的 P1 竞态回归锁） ----------
 
 class FakeES {
   static instances: FakeES[] = []
   url: string
   closed = false
-  private ls = new Map<string, Set<() => void>>()
+  private ls = new Map<string, Set<(ev?: unknown) => void>>()
   constructor(url: string) { this.url = url; FakeES.instances.push(this) }
-  addEventListener(type: string, fn: () => void): void {
+  addEventListener(type: string, fn: (ev?: unknown) => void): void {
     const s = this.ls.get(type) ?? new Set(); s.add(fn); this.ls.set(type, s)
   }
-  emit(type: string): void { for (const fn of this.ls.get(type) ?? []) fn() }
+  emit(type: string, data?: string): void { for (const fn of this.ls.get(type) ?? []) fn(data !== undefined ? ({ data } as MessageEvent) : undefined) }
   close(): void { this.closed = true }
 }
 const current = (): FakeES => FakeES.instances[FakeES.instances.length - 1]
@@ -100,6 +112,32 @@ const liveCount = (): number => FakeES.instances.filter((i) => !i.closed).length
 
 import { afterEach, vi } from 'vitest'
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); FakeES.instances = [] })
+
+describe('createAlarmStream 单连接双事件（P0：types=alarm,screen）', () => {
+  it('URL 是 types=alarm,screen；screen 帧分发到 onScreen（坏帧静默丢）', () => {
+    vi.stubGlobal('EventSource', FakeES)
+    const onEvent = vi.fn()
+    const onScreen = vi.fn()
+    const stream = createAlarmStream({ getToken: () => 't', onEvent, onScreen })
+    const es = current()
+    expect(es.url).toContain('/api/v1/events?types=alarm,screen')
+    es.emit('screen', '{"id":"a","action":"put","version":2}')
+    expect(onScreen).toHaveBeenCalledWith(expect.objectContaining({ id: 'a', action: 'put', version: 2 }))
+    es.emit('screen', 'not-json') // 坏帧不炸不派发
+    expect(onScreen).toHaveBeenCalledTimes(1)
+    es.emit('alarm', '{"action":"fire","key":"k1"}') // alarm 侧不受影响
+    expect(onEvent).toHaveBeenCalledTimes(1)
+    stream.close()
+  })
+
+  it('不传 onScreen：URL 仍双 types（服务端形状单源），无监听不炸', () => {
+    vi.stubGlobal('EventSource', FakeES)
+    const stream = createAlarmStream({ getToken: () => 't', onEvent: vi.fn() })
+    expect(current().url).toContain('types=alarm,screen')
+    expect(() => current().emit('screen', '{"id":"a","action":"put","version":1}')).not.toThrow()
+    stream.close()
+  })
+})
 
 describe('createAlarmStream 重连状态机（凭证失效探测——与 sse.ts 同款语义）', () => {
   it('三连错 + probe 401 → auth-failed 单次上报且永久停摆（画面无绑定时告警流是唯一失效信号源）', async () => {

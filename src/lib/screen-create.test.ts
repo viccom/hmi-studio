@@ -9,7 +9,11 @@ import { ApiError } from './api'
 // 否则探测失败 + PUT 成功 = 既有画面被 blankScreen 静默全量覆盖。
 describe('createScreen', () => {
   const client = (get: unknown, put: unknown) =>
-    ({ get, put, del: async () => undefined, list: async () => [] }) as ReturnType<typeof import('./screens').screensApi>
+    ({
+      get, put, del: async () => undefined, list: async () => [],
+      versions: async () => [], versionDoc: async () => { throw new Error('unused') },
+      rollback: async () => { throw new Error('unused') },
+    }) as unknown as ReturnType<typeof import('./screens').screensApi>
 
   it('探测 404 → PUT blankScreen+meta 全量 doc，返回 ok', async () => {
     const put = vi.fn(async () => undefined)

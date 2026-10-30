@@ -68,6 +68,39 @@ describe('screensApi CRUD 薄封装（mock fetch）', () => {
     expect(JSON.parse(String(init?.body))).toEqual(doc)
   })
 
+  it('put +ifVersion（P0 乐观锁）：拼 ?if_version=，body 不变', async () => {
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response('{"status":"ok","version":3}'))
+    vi.stubGlobal('fetch', fetchMock)
+    const doc = wrapDoc(blankScreen('a'), { name: 'A' })
+    const r = await screensApi(api()).put('a', doc, 2)
+    const [url, init] = fetchMock.mock.calls[0]
+    expect(url).toBe('/api/v1/screens/a?if_version=2')
+    expect(JSON.parse(String(init?.body))).toEqual(doc)
+    expect(r.version).toBe(3)
+  })
+
+  it('versions/versionDoc/rollback（P0 版本三端点）：URL 与响应形状', async () => {
+    const fetchMock = vi.fn(async (url: string) => new Response(
+      url.includes('/versions/7') ? '{"id":"a","seq":7,"ts":1,"author":"admin","doc":{"name":"A"}}'
+      : url.includes('/versions') ? '{"versions":[{"seq":7,"ts":1,"author":"hmi-mcp","size":120,"sha":"ab","expired":false}]}'
+      : '{"status":"ok","version":8}',
+    ))
+    vi.stubGlobal('fetch', fetchMock)
+    const c = screensApi(api())
+    expect(await c.versions('a')).toEqual([{ seq: 7, ts: 1, author: 'hmi-mcp', size: 120, sha: 'ab', expired: false }])
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/screens/a/versions')
+    expect((await c.versionDoc('a', 7)).doc.name).toBe('A')
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/v1/screens/a/versions/7')
+    const r = await c.rollback('a', 7)
+    const [url3, init3] = fetchMock.mock.calls[2]
+    expect(url3).toBe('/api/v1/screens/a/rollback')
+    expect(init3?.method).toBe('POST')
+    expect(JSON.parse(String(init3?.body))).toEqual({ to_version: 7 })
+    expect(r.version).toBe(8)
+    await c.rollback('a', 7, 8)
+    expect(fetchMock.mock.calls[3][0]).toBe('/api/v1/screens/a/rollback?if_version=8')
+  })
+
   it('del：DELETE /api/v1/screens/:id', async () => {
     const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response('{"status":"ok"}'))
     vi.stubGlobal('fetch', fetchMock)

@@ -66,6 +66,30 @@ const currentAlarm = ref<AlarmItem | undefined>(undefined)
 const drawerOpen = ref(false)
 let alarmStream: ReturnType<typeof createAlarmStream> | undefined
 
+// ---- P0 画面变更感知：复用告警 EventSource（types=alarm,screen 单连接双事件） ----
+/** 本画面收到 put/rollback → 横幅提示（画面文档在别处被编辑器/AI 改了） */
+const screenStale = ref(false)
+function onScreenEvent(e: { id: string; resource: string; action: string }): void {
+  if (e.resource !== 'screen') return
+  if (e.id !== currentSlug.value) return
+  if (e.action !== 'put' && e.action !== 'rollback') return
+  screenStale.value = true
+}
+/** 横幅「点击刷新」：重拉当前画面 doc 并重挂（jump 对同 slug 会拒绝，走独立 reload） */
+async function reloadCurrentScreen(): Promise<void> {
+  screenStale.value = false
+  try {
+    const { doc } = await sApi.get(currentSlug.value)
+    if (disposed) return
+    const { done, meta: m } = unwrapDoc(doc)
+    meta.value = m
+    templateDone.value = done
+    await mountScreen(done, '')
+  } catch {
+    ElMessage.error('画面刷新失败')
+  }
+}
+
 const refreshAlarms = (): void => {
   activeAlarms.value = alarmStore.active()
   historyAlarms.value = alarmStore.history()
@@ -292,6 +316,7 @@ const jump = async (target: string): Promise<boolean> => {
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
     currentSlug.value = target
+    screenStale.value = false // 跳到新画面：旧画面的"已更新"横幅不再适用
     void router.replace(`/view/${target}`)
     await mountScreen(done, '')
     return true
@@ -368,6 +393,8 @@ onMounted(async () => {
   alarmStream = createAlarmStream({
     getToken: tokenStore.get,
     onEvent: (e) => { alarmStore.applyEvent(e); refreshAlarms() },
+    // P0：同一连接收 screen 帧（画面被他人/AI 修改 → 顶部横幅提示刷新）
+    onScreen: onScreenEvent,
     // 凭证失效链与数据流同款（T16 relogin 选型）：画面无绑定点位时告警流是唯一失效信号源
     onState: (st) => { if (st === 'auth-failed') doLogout() },
   })
@@ -400,6 +427,10 @@ onUnmounted(() => {
 <template>
   <main class="view-page">
     <AlarmBanner :alarm="currentAlarm" @open="drawerOpen = true" />
+    <!-- P0 画面变更感知横幅：screen 事件（编辑器/AI 改了本画面）→ 提示刷新 -->
+    <div v-if="screenStale" class="stale-banner" data-testid="screen-stale-banner" @click="reloadCurrentScreen">
+      画面已更新（他人或 AI 修改）——点击刷新
+    </div>
     <div ref="viewportRef" class="fit-viewport">
       <div class="fit-stage" :style="stageStyle" :data-fit="fit.toFixed(4)">
         <MtPreview ref="previewRef" :show-popover="false" class="view-body" @onEventCallBack="onMtEvent" />
@@ -457,6 +488,15 @@ onUnmounted(() => {
 
 <style scoped>
 .view-page { height: 100vh; display: flex; flex-direction: column; }
+/* P0 画面变更横幅：醒目但不遮挡（顶部细条，点击刷新） */
+.stale-banner {
+  flex-shrink: 0; cursor: pointer; text-align: center;
+  padding: 4px 12px; font-size: 12px;
+  color: var(--el-color-warning); 
+  background: color-mix(in srgb, var(--el-color-warning) 14%, var(--el-bg-color));
+  border-bottom: 1px solid color-mix(in srgb, var(--el-color-warning) 40%, transparent);
+}
+.stale-banner:hover { background: color-mix(in srgb, var(--el-color-warning) 22%, var(--el-bg-color)); }
 /* W10 自适应：视口裁剪 + 设计分辨率舞台居中缩放（contain），letterbox 随主题底色 */
 .fit-viewport { flex: 1; min-height: 0; position: relative; overflow: hidden; background: var(--el-bg-color-page); }
 .fit-stage { position: absolute; left: 50%; top: 50%; transform-origin: center; }

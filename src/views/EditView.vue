@@ -6,11 +6,12 @@
 // 见 lib/screens.ts）。
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { MtEdit } from 'maotu'
 import type { IExportJson } from 'maotu'
 import { screensApi, unwrapDoc, wrapDoc } from '../lib/screens'
+import { ApiError } from '../lib/api'
 import { sanitizeBiProps } from '../lib/bi-sanitize'
 import { loadScreenCards, groupSections, type ScreenCard } from '../lib/screen-list'
 import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
@@ -20,6 +21,7 @@ import { installBridge } from '../lib/bridge'
 import { registerSymbols, setNavTargetOptions, upgradeNavTargets, flattenNavSections } from '../symbols'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import BindPanel from '../components/BindPanel.vue'
+import VersionPanel from '../components/VersionPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -31,6 +33,11 @@ const editRef = ref<InstanceType<typeof MtEdit>>()
 const deviceInfo = ref<IDeviceInfo[]>([])
 const meta = ref<{ name?: string; group?: string }>({})
 const user = getAuthedUser()
+/** 当前画面版本号（P0 乐观锁）：加载时从 GET 取，保存时作 if_version 回传，成功后随响应更新。
+ *  遗留画面（版本机制上线前）= 0——GET→PUT 原样回传即为正解，无需特判。 */
+const version = ref(0)
+/** 版本面板抽屉（P0 v1 极简：列表/预览/回滚） */
+const verDrawer = ref(false)
 
 // D6 编辑态守卫：编辑页同注入 $rsiot，send 确认框按钮为「取消/真实下发」
 const bridge = installBridge({ mode: 'edit', router })
@@ -45,10 +52,11 @@ const loaded = ref(false)
 async function loadScreen() {
   const reqSlug = slug.value
   try {
-    const { doc } = await sApi.get(reqSlug)
+    const { doc, version: ver } = await sApi.get(reqSlug)
     if (slug.value !== reqSlug) return // 竞态守卫：GET 在飞时已切换画面，迟到响应不得写入新画布（否则保存即跨画面覆盖）
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
+    version.value = ver
     upgradeNavTargets(done) // 存量跳转按钮 input→select（拖入为注册项深拷贝，旧实例需就地升级）
     editRef.value?.setImportJson(done)
     loaded.value = true
@@ -171,11 +179,36 @@ async function save(payload: IExportJson) {
     // 把 props 拍平（bundle ud），这坨 JSON 会被原样 PUT 进 rs-iot——既撑大文档
     // （≤128 KiB 上限），又让下次加载读到陈旧数据。落库前复位（纯函数，lib/bi-sanitize.ts）。
     const clean = sanitizeBiProps(payload) as IExportJson
-    await sApi.put(slug.value, wrapDoc(clean, { name: meta.value.name ?? slug.value, group: meta.value.group }))
+    // if_version 乐观锁（P0）：防编辑器与 hmi-mcp AI 互相静默覆盖。
+    const r = await sApi.put(
+      slug.value,
+      wrapDoc(clean, { name: meta.value.name ?? slug.value, group: meta.value.group }),
+      version.value,
+    )
+    version.value = r.version // 判重命中时也是当前版本号
     ElMessage.success('已保存')
-  } catch {
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 409) {
+      // 版本冲突：他人/AI 已先写。三态保存锁语义不变——只加"重新加载"这一出路。
+      try {
+        await ElMessageBox.confirm(
+          `画面已被他人或 AI 修改（当前版本 ${typeof (e.body as { current_version?: number })?.current_version === 'number' ? (e.body as { current_version: number }).current_version : '?'}）。` +
+          '为避免覆盖对方的改动，请先加载最新内容，再重新应用你的修改。',
+          '版本冲突',
+          { confirmButtonText: '加载最新', cancelButtonText: '稍后', type: 'warning' },
+        )
+        await loadScreen()
+      } catch { /* 用户选择稍后——保留画布现状（下次保存仍会 409） */ }
+      return
+    }
     ElMessage.error('保存失败')
   }
+}
+
+/** 版本面板回滚完成 → 重载画布（回滚即新 head，version 随 loadScreen 更新） */
+async function onRollbackDone(): Promise<void> {
+  await loadScreen()
+  void loadSwitcherScreens()
 }
 </script>
 
@@ -203,6 +236,7 @@ async function save(payload: IExportJson) {
       <span class="screen-slug">{{ slug }}</span>
       <el-tag v-if="meta.group" size="small" type="info">{{ meta.group }}</el-tag>
       <span class="topbar-right">
+        <el-button size="small" text data-testid="version-btn" @click="verDrawer = true">版本</el-button>
         <span v-if="user" class="topbar-user">{{ user.user_id }}</span>
         <el-button size="small" text @click="doLogout">退出</el-button>
         <ThemeToggle />
@@ -244,6 +278,10 @@ async function save(payload: IExportJson) {
         <el-button type="primary" @click="create">创建</el-button>
       </template>
     </el-dialog>
+    <!-- P0 版本面板（v1 极简）：列表/预览/回滚 + AI 徽标 -->
+    <el-drawer v-model="verDrawer" title="版本历史" size="360px">
+      <VersionPanel :slug="slug" @rollback-done="onRollbackDone" />
+    </el-drawer>
   </div>
 </template>
 
