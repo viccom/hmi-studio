@@ -239,18 +239,20 @@ DOM 布局，svg 型承载不了图表）。
 | `ah-bi-alarms` | 告警统计 | **无 series**：宿主 fetchAlarms 拉活动告警快照写告警信封（总数/分级/来源 Top/最新列表）。后端无告警历史 → 不做趋势/发生率 |
 | `ah-bi-window` | 时间窗口切换器 | **无 series，上行控制**：点击发 DOM 事件 `ah-bi-window-change` → 宿主收集器 windowOverride 覆盖整屏窗口；宿主写回 `{activeSecs}` 回显 |
 
-**P3 扩展（10 个）——图元族扩容**（`ah-bi-bar` 已于 Grafana 视觉轮以 `ah-bi-bars` 交付）
-| id | 名称 | echarts 依赖 |
-|----|------|-------------|
-| `ah-bi-gauge` | 仪表盘 | GaugeChart |
-| `ah-bi-scatter` | 相关性散点 | ScatterChart |
-| `ah-bi-radar` | 多指标雷达 | RadarChart |
-| `ah-bi-boxplot` | 分布箱线 | BoxplotChart |
-| `ah-bi-sankey` | 能流桑基 | SankeyChart |
-| `ah-bi-calendar` | 日历热力 | HeatmapChart + CalendarComponent |
-| `ah-bi-progress` | 容量利用率条 | 自绘 |
-| `ah-bi-waterfall` | 增量贡献瀑布 | 自绘 + BarChart |
-| `ah-bi-sparkline` | 行内迷你趋势 | LineChart |
+**P3 扩展——图元族扩容**（`ah-bi-bar` 已于 Grafana 视觉轮以 `ah-bi-bars` 交付）——
+**7 个已交付（2026-10-29，commit ab29313）**；`ah-bi-sankey` 数据阻塞、`ah-bi-sparkline` 暂不独立（KPI 卡已内联 sparkline，待独立需求）
+
+| id | 名称 | echarts 依赖 | 状态 |
+|----|------|-------------|------|
+| `ah-bi-gauge` | 仪表盘 | GaugeChart | ✅ 已交付 |
+| `ah-bi-scatter` | 相关性散点 | ScatterChart | ✅ 已交付 |
+| `ah-bi-radar` | 多指标雷达 | RadarChart | ✅ 已交付 |
+| `ah-bi-boxplot` | 分布箱线 | BoxplotChart | ✅ 已交付 |
+| `ah-bi-sankey` | 能流桑基 | SankeyChart | ⛔ 阻塞：无拓扑/能流数据模型 |
+| `ah-bi-calendar` | 日历热力 | HeatmapChart + CalendarComponent | ✅ 已交付 |
+| `ah-bi-progress` | 容量利用率条 | 自绘 | ✅ 已交付 |
+| `ah-bi-waterfall` | 增量贡献瀑布 | 自绘 + BarChart | ✅ 已交付 |
+| `ah-bi-sparkline` | 行内迷你趋势 | LineChart | ⏸ 暂不独立（KPI 卡已内联） |
 
 **P4 候选（6 个）——依赖新数据源**
 | id | 名称 | 阻塞 |

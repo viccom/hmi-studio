@@ -54,7 +54,8 @@
 
 ## 3. 硬约束
 
-- 两仓根 `AGENTS.md` 的「部署与构建铁律」全部适用
+- 工作区根 `AGENTS.md`（`/root/myprojects/webhmi/AGENTS.md`）的「部署与构建铁律」+
+  两仓各自 `AGENTS.md` 的约定全部适用
 - **禁止删除任何长期资产画面**（slug 见 `hmi-studio/src/screen-assets/` 各文件 export 常量）
 - 不改既有测试的断言意图；新增测试只加不减
 - 提交信息不加任何 AI 署名尾注（无 `Co-Authored-By`）
@@ -95,6 +96,18 @@
 判据：你的改动完成后，上述项**保持与改动前完全相同的状态**即视为合格。
 **开工第一件事：先跑一遍基线门禁并把输出摘要写入 plan 文档**，收尾时对比。
 若基线出现本文未列的新红，按 §7 上报，不要自行判定为"环境问题"绕过。
+
+**2026-10-30 晚环境变更（任务书定稿后发生；不改门禁基线，但你要有预期，勿当异常上报）**：
+
+1. warden 拆成两套 systemd 实例：`warden-dev`（:8789，服务名 `dev-rs-iot`/`dev-gateway`/
+   `dev-history-monitor`，运行目录 `dist/run/dev/`）与 `warden-field`（:18789，现场模拟栈）。
+   重启 dev 服务用 `dev-*` 名，见 §6。
+2. **本机恒有 2 个 rs-iot 进程**（dev :8790 + field :18790，同一二进制）——这不是僵尸进程，
+   判别看 `--config` 参数（dev=`config.toml`，field=`config/config.toml`）。
+3. `rs-iot/config.toml` 已转为**本地实例配置并 gitignore**（模板 `config.example.toml` 入库）；
+   它仍在磁盘上，测试照常能读。工作区另有当日的 README/AGENTS/.gitignore 未提交改动，
+   属环境整理，不涉你要改的 Rust/前端代码。
+4. docs 档基线复核过仍绿（71 md，2026-10-30 晚实测）。
 
 ## 5. 门禁命令（权威入口 = justfile；两仓都有）
 
@@ -142,9 +155,15 @@ pnpm build
 cd /root/myprojects/webhmi/rs-iot
 cargo build --release -p rs-iot          # **单独**构建；勿与其他 crate 合并构建
                                          # （jsonwebtoken feature 冲突 → 运行时 panic）
-curl -X POST 127.0.0.1:8789/api/v1/services/rs-iot/restart
-pgrep -af "rs-iot "                      # 确认只有一个实例（曾发生 bind 失败僵尸进程）
+curl -X POST 127.0.0.1:8789/api/v1/services/dev-rs-iot/restart
+pgrep -af "rs-iot "     # 应恰好 2 个：dev（--config config.toml，8790）+ field
+                         # （--config config/config.toml，18790）——同一二进制两实例，
+                         # 不是僵尸；你只对 dev 那个负责，field 数量异常要报告但别去动它
 ```
+
+⚠️ **重编的连带影响（知道即可，不在本轮范围）**：`cargo build --release -p rs-iot`
+覆盖的 `target/release/rs-iot` 被 field 栈共用——field-rs-iot 下次重启（崩溃自愈/机器重启）
+会跟着换上新二进制。属预期耦合；若你在验证中发现 field 侧异常，报告即可，不要改 field 配置。
 
 重启后**实测新契约**（admin/admin 登录拿 JWT）：
 
@@ -215,4 +234,4 @@ P0 上线后 `w8` 等改内容的测试会产生少量版本条目——判重�
 |---|---|---|
 | 第 1 轮（本文） | P0 后端 + P0 消费侧 + P4 部署脚本 | 无外部依赖，可完全无人完成 |
 | 第 2 轮 | P1 hmi-mcp 读工具族 + P2 面板移植（mock e2e） | 第 1 轮产出（API 形状、测试基线） |
-| 第 3 轮 | P1 写工具族 + P3a/P3b 插件体系 | reasonix **部署完成**（二进制 v2.54.0 与源码已在 `webhmi/` 下，只差 warden 条目 + REASONIX_HOME 配置 + gateway `[reasonix]` 段，见主文档 §4.4）+ provider API key |
+| 第 3 轮 | P1 写工具族 + P3a/P3b 插件体系 | ~~reasonix 部署~~ **已完成**（2026-10-30 在 `field/` 现场模拟栈部署验证：warden-field 条目 + REASONIX_HOME + gateway `[reasonix]` 段 + vl-gateway provider，AI 读/写/审批链路实测通过，见 `field/README.md §5`）；剩余前置仅 dev 栈如需接入再配（主文档 §4.4 三步） |

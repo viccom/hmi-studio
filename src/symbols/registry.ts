@@ -1,7 +1,7 @@
 // 正式图元注册表（T11 起）：allSymbols() 是左面板注册与 lint 全量检查的唯一事实源。
 // 新图元 = 一个 ts 文件 export HmiSymbol + 在此追加，lint 全绿（symbol-lint.test 全量循环）即可注册。
 //
-// 图元目录（27 类，2026-10-25 图元批量轮 + P2 表计轮 + W11 设备选择器；id——能力）：
+// 图元目录（47 类 = 过程/操作 27 + BI 图表 20，截至 2026-10-29 P3；id——能力）：
 //   ah-dev-selector    设备选择器（vue，W11）——参数化画面设备上下文切换（@dev 前缀）
 //   ah-pump            离心泵——叶轮旋转动画 + fill 状态色
 //   ah-gate-valve      闸阀——领结阀体 + 手轮，fill 状态色
@@ -29,6 +29,28 @@
 //   ah-meter-panel     电表面板（vue，P2）——V/I/P/PF/Hz 五行数显 + 脉冲灯 + status 告警
 //   ah-water-meter     水表盘（custom-svg，P2）——机械字轮累计 + 瞬时小盘 + 逆向流标记
 //   ah-gas-meter       燃气表盘（custom-svg，P2）——字轮累计 + 余额预警 + 阀标 + 泄漏红闪
+// BI 图表族（vue 型，通道 B——宿主聚合收集器写 props.data.val，图元自身不发请求；
+// 数据契约见 lib/bi-contract.ts，设计见 docs/plans/2026-10-29-bi-monitoring-dashboard-design.md）：
+//   ah-bi-kpi        KPI 数字卡——大数字 + 单位 + 内联 SVG sparkline
+//   ah-bi-trend      多序列趋势——折线/面积（echarts）
+//   ah-bi-rank       排名条形——横向条形 TopN
+//   ah-bi-pie        占比环——环形占比
+//   ah-bi-stack      状态时长条——百分比堆叠横条
+//   ah-bi-heat       时段热力——星期×时段热力矩阵
+//   ah-bi-table      明细表格——序列 KPI 表格（自绘，无 echarts）
+//   ah-bi-matrix     设备×指标热点矩阵
+//   ah-bi-stack-area 堆叠面积——多序列堆叠趋势
+//   ah-bi-bars       分组柱图——多序列分组柱
+//   ah-bi-spike      尖峰柱图——P90/均值倍数/固定三档尖峰着色 + 阈值虚线
+//   ah-bi-alarms     告警统计——活动告警快照（无 series，宿主 fetchAlarms 通道）
+//   ah-bi-window     时间窗口切换器——上行控制切宿主统计窗（无 series）
+//   ah-bi-gauge      仪表盘——多 dial 数值盘（echarts）
+//   ah-bi-scatter    相关性散点——两序列 X×Y 按 ts 配对
+//   ah-bi-radar      多指标雷达——≥3 轴（不足回落读数列表）
+//   ah-bi-boxplot    分布箱线——整窗五数概括
+//   ah-bi-calendar   日历热力——按日聚合热力格
+//   ah-bi-progress   容量利用率条——单值进度 + 越限红显
+//   ah-bi-waterfall  增量瀑布——透明基座 + 增量段 + 合计列
 import type { HmiSymbol } from './types'
 import { pumpCentrifugal } from './pump-centrifugal'
 import { gateValve } from './gate-valve'
