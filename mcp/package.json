@@ -1,0 +1,26 @@
+{
+  "name": "hmi-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "hmi-studio MCP 工具层（读工具族）——画面/图元词典/校验/设备/点表/历史/告警/截图",
+  "bin": { "hmi-mcp": "dist/index.js" },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --format=esm --packages=external --banner:js=\"#!/usr/bin/env node\" --outfile=dist/index.js",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "esbuild": "^0.25.0",
+    "maotu": "0.6.5",
+    "playwright-core": "^1.64.1",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}
