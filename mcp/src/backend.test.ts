@@ -61,4 +61,21 @@ describe('HmiBackend', () => {
     const e = new HmiApiError(500, 'x'.repeat(500))
     expect(e.message.length).toBeLessThan(300)
   })
+
+  it('attaches an AbortSignal timeout to every request（rs-iot 僵死不无限挂起）', async () => {
+    const f = fetchJson({})
+    const b = new HmiBackend({ fetchImpl: f })
+    await b.get('/api/v1/screens')
+    const [, init] = (f as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit]
+    expect(init.signal).toBeInstanceOf(AbortSignal)
+    expect((init.signal as AbortSignal).aborted).toBe(false)
+  })
+
+  it('timeoutMs is injectable（单测可控 + 工具场景默认 30s）', async () => {
+    const f = fetchJson({})
+    const b = new HmiBackend({ fetchImpl: f, timeoutMs: 60_000 })
+    expect(b.timeoutMs).toBe(60_000)
+    const b2 = new HmiBackend({ fetchImpl: f })
+    expect(b2.timeoutMs).toBe(30_000)
+  })
 })
