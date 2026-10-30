@@ -37,6 +37,11 @@
 > 9. **截图工具前置条件**：需登录态注入 cookie（`/hmi/view/:id` 有路由守卫），
 >    playwright/chromium 本机已核实可用
 > 10. **mcp 单源引用的实现约束**（tsconfig 排除 `*.test.ts`、maotu 作 devDep 仅取类型）
+> 11. **作废一条错误判断**（2026-10-30 复测）：早前称"`--all-features` 因 tsink 漂移
+>     必失败、故任务书禁用该档"——实测为误判。tsink_fork 的 6 个符号在多行
+>     `pub use storage::{…}` 重导出块内，单行 grep 漏判；`cargo check`/`clippy`
+>     `--all-features` 均通过、`just check` 全过。任务书已改回 `just check` 为权威入口。
+>     **tsink_fork 与本设计的 AI 助手无任何关系**（仅 rs-iot history feature 的 path 依赖）。
 
 ---
 
@@ -264,16 +269,35 @@ mcp 直接 `import { PROTECTED_SLUGS }`（纯 TS、零依赖，符合 §4.1 单�
 
 ### 4.4 reasonix 部署（P1 硬前置，用户侧 checklist）
 
-代码零改动，环境侧三步（本机现状均缺，2026-10-30 核实）：
+**本机现状（2026-10-30 实测更新）**：二进制与源码**已就位**，但**未部署运行**——
 
-1. warden 加服务条目（services.toml）：reasonix serve，`REASONIX_HOME` 指向专用目录，
-   监听 127.0.0.1:8787 → `POST /api/v1/config/reload`
-2. `REASONIX_HOME/config.toml`：`[[providers]]`（OpenAI 兼容或 Anthropic 面，密钥进
-   `.env` 不进 git）+ `[[plugins]]`：rsiot-mcp（已有形态）与 hmi-mcp **各一条**
-   （spawn 命令分别指向两仓产物；工具目录 25+N 在同一会话共存，MCP 协议原生支持）
-3. rs-iot `gateway.toml` 补 `[reasonix]` 段（home_dir/warden_url/service_name/
-   workspace_dir——gateway `config.rs` 已定义这些键，缺省时 providers 端点 503）→
-   warden 重启 rsiot-gateway
+| 项 | 实测结果 |
+|---|---|
+| 发行二进制 | `webhmi/reasonix-linux-amd64.tar.gz`（39MB，含 `reasonix` + `frontend-next/dist` + pdfjs）→ 解出后 `reasonix v2.54.0` 可执行，`serve` 子命令全参数可用（`-addr`/`-auth`/`-dir`/`-page`） |
+| 源码仓 | `webhmi/DeepSeek-Reasonix`（git，`studio-v2.55.0-21-g396b2c6b6`；含 `cmd/reasonix-studio-host`） |
+| 运行态 | **8787 未监听**；`gateway.toml` **无 `[reasonix]` 段**；warden `services.toml` **无 reasonix 条目** |
+| 配置 | `~/.reasonix/`（REASONIX_HOME）**不存在**；仓内只有 `.reasonix/commands/review.md` 与 `reasonix.example.toml` |
+
+结论：P1/P2 的**代码开发与 mock e2e 不受阻**（可全程进行），只有"真实对话联调"需下面三步完成。
+代码零改动，三步 checklist：
+
+1. **解出二进制并建 REASONIX_HOME**：`tar -xzf reasonix-linux-amd64.tar.gz -C <部署目录> reasonix`
+   → 建 `REASONIX_HOME`（默认 `~/.reasonix`）→ 以 `reasonix.example.toml` 为模板写
+   `$REASONIX_HOME/config.toml`
+2. **warden 加服务条目**（`warden-*/config/services.toml`，格式照 rs-iot 条目）：命令
+   `reasonix serve -addr 127.0.0.1:8787 -auth token -token <TOKEN> -dir <工作目录>`
+   （`-auth token` 必须：serve 默认生成 token，gateway 侧要用同一 `serve_token`）
+   → `POST /api/v1/config/reload`。同一步在 `config.toml` 配 `[[providers]]`
+   （OpenAI 兼容或 Anthropic 面，密钥进 `.env` 不进 git——`api_key_env` 引用）
+   + `[[plugins]]`：rsiot-mcp 与 hmi-mcp **各一条**（spawn 命令分别指向两仓产物；
+   25+N 工具在同一会话共存，MCP 协议原生支持）
+3. **rs-iot `gateway.toml` 补 `[reasonix]` 段**（home_dir/warden_url/service_name/
+   workspace_dir——gateway `config.rs` 已定义这些键，缺省时 providers/attachments 端点
+   503）→ warden 重启 rsiot-gateway → `curl 127.0.0.1:8787` 与
+   `GET /api/agent/status`（带 JWT）双通即部署成功
+
+**注意**：`-page` 参数用于挂 Studio 页面（`/_studio/`），本设计不需要——面板用自己的
+Vue 实现；`frontend-next/dist` 可不解出。
 
 ## 5. P2 AI 面板移植
 
@@ -436,7 +460,7 @@ lux SAVE 不覆盖它——备份纪律必须显式包含**（否则换机恢复
 
 | 风险 | 等级 | 对策 |
 |---|---|---|
-| reasonix 部署是外部依赖（P1 前置不可控） | 高（进度） | P0/P3a/P4 全部不依赖它，可先行；部署 checklist 已列（§4.4） |
+| reasonix 部署未完成（P1 真实联调前置） | 中（进度） | 二进制 v2.54.0 + 源码均已就位（`webhmi/` 下），只差 warden 条目 + REASONIX_HOME 配置 + gateway `[reasonix]` 段；P0/P1 代码开发、单测、mock e2e 全部不受阻（§4.4） |
 | maotu reg-combin 行为未实证 | 中 | P3a 探针先行，结论落 docs/ 再定实现；探针失败则该子项降级重估 |
 | 工厂注入契约对 AI 作者的心智成本 | 中 | scaffold 模板 + example 插件 + describe_widget_kit 词典喂给 LLM |
 | 目录插件的 symbol-lint 无法覆盖运行时行为（lint 绿但渲染坏） | 中 | screenshot 工具闭环（AI 自检）+ 陈列室式 smoke（example 插件进 e2e） |

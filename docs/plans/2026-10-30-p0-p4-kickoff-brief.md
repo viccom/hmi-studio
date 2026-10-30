@@ -64,31 +64,56 @@
 
 ## 4. 已知红（pre-existing，不要修、不算你的失败）
 
-1. rs-iot `cargo clippy --all-features` / `cargo test --all-features`：
-   `../tsink_fork` 缺 6 个 rs-iot 引用的符号（`Aggregation`/`QueryOptions`/`Storage`/
-   `StorageBuilder`/`TimestampPrecision`/`Value`）→ **必失败**（E0432×3）。
-   跨仓 API 漂移，不在本轮范围。**不要修改 tsink_fork 或 engine.rs 去消除它。**
-2. rs-iot `lua_north_e2e::north_lifecycle_running_stats_stop`：
+**2026-10-30 实测基线（本机，任务书定稿时逐条跑过，非推断）**：
+
+| 门禁 | 结果 |
+|---|---|
+| rs-iot `just check`（fmt + docs + lint 三档含 all-features + 全 tests + s7/eip） | ✅ **全过**（输出 `✅ rs-iot 本地门禁全过`） |
+| rs-iot `cargo test --lib` | ✅ 670 passed, 0 failed, 9 ignored |
+| rs-iot `python3 scripts/check_docs.py` | ✅ 71 md 全过 |
+| hmi-studio `vue-tsc --noEmit` | ✅ |
+| hmi-studio `eslint .` | ✅ 0 errors（1 个 pre-existing warning：`e2e/probe-bi.spec.ts:22` 多余 disable 指令，**不要顺手修**） |
+| hmi-studio `check-layers.mjs` | ✅ 分层通过 |
+| hmi-studio `vitest` | ✅ 620 passed |
+
+**两条此前的误判，已作废，勿再传播**：
+1. ~~"`--all-features` 因 tsink 漂移必失败"~~ —— 错。实测 `cargo check --all-features`
+   与 `cargo clippy --all-features -- -D warnings` 均通过；tsink_fork 的 6 个符号在
+   **多行 `pub use storage::{…}` 重导出块**里，早先的单行 grep 漏判。
+2. **tsink_fork 与 HMI AI 助手无任何关系**——它只是 rs-iot `history` feature 的 path
+   依赖，`--all-features` 时连带编译；AI 助手走 gateway `/api/agent/*` 反代 + MCP，
+   全程不碰时序库。**不要因为提到 AI 就去动 tsink/lux。**
+
+真实存在的已知红仅 2 项（都是 flaky/环境，不是缺陷）：
+
+1. rs-iot `lua_north_e2e::north_lifecycle_running_stats_stop`：
    需本地 MQTT broker（`127.0.0.1:1883`），本机无 → SKIP/degraded 是正确行为。
-   `docs/guides/testing-and-verification.md` §三 有记载，不是缺陷。
-3. hmi-studio e2e 段 2 `el-select` 时序偶发：已知 flaky，重跑通过即可，不要改测试。
+   `docs/guides/testing-and-verification.md` §三 有记载。
+2. hmi-studio e2e 段 2 `el-select` 时序偶发；rs-iot `tests/events_e2e.rs` 并发时序偶发。
+   重跑通过即可，**不要改测试断言**。
 
-判据：你的改动完成后，上述 3 项**保持与改动前完全相同的状态**即视为合格。
-**开工第一件事：先跑一遍基线门禁并记录结果**（写入 plan 文档），收尾时对比。
+判据：你的改动完成后，上述项**保持与改动前完全相同的状态**即视为合格。
+**开工第一件事：先跑一遍基线门禁并把输出摘要写入 plan 文档**，收尾时对比。
+若基线出现本文未列的新红，按 §7 上报，不要自行判定为"环境问题"绕过。
 
-## 5. 门禁命令（精确；不要用 `just check` / `just lint`——含 all-features 档，见 §4）
+## 5. 门禁命令（权威入口 = justfile；两仓都有）
 
 **rs-iot**（工作目录 `/root/myprojects/webhmi/rs-iot`）：
 
 ```bash
+just check            # ← 首选：fmt + docs + lint(三档含 all-features) + test + s7/eip
+just check-ws         # 全 workspace（含 rsiot-mcp / rsiot-gateway）
+# 需要单跑某道门时：
 cargo fmt --all --check
+python3 scripts/check_docs.py            # 改了 docs/ 必跑（状态块/索引/代码路径引用）
 cargo clippy --all-targets -- -D warnings
-cargo clippy --workspace --all-targets -- -D warnings
 cargo test --lib
 cargo test --tests --no-default-features --features lua -- --test-threads=4
-python3 scripts/check_docs.py          # 改了 docs/ 必跑
-# 禁用：cargo * --all-features（见 §4 已知红 1）
 ```
+
+**注意**：`just check` 里 `docs` 档会校验设计文档的状态块与索引登记
+（`docs/README.md` 必须加独立索引行）——新增 designs/ 文档时先照着办，
+否则整条门禁红在这一档。
 
 **hmi-studio**（`/root/myprojects/webhmi/hmi-studio`）：
 
@@ -171,4 +196,4 @@ P0 上线后 `w8` 等改内容的测试会产生少量版本条目——判重�
 |---|---|---|
 | 第 1 轮（本文） | P0 后端 + P0 消费侧 + P4 部署脚本 | 无外部依赖，可完全无人完成 |
 | 第 2 轮 | P1 hmi-mcp 读工具族 + P2 面板移植（mock e2e） | 第 1 轮产出（API 形状、测试基线） |
-| 第 3 轮 | P1 写工具族 + P3a/P3b 插件体系 | **reasonix 运行时部署**（用户侧动作，见主文档 §4.4）+ API key |
+| 第 3 轮 | P1 写工具族 + P3a/P3b 插件体系 | reasonix **部署完成**（二进制 v2.54.0 与源码已在 `webhmi/` 下，只差 warden 条目 + REASONIX_HOME 配置 + gateway `[reasonix]` 段，见主文档 §4.4）+ provider API key |
