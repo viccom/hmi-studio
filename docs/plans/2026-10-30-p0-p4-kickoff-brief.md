@@ -71,10 +71,11 @@
 | rs-iot `just check`（fmt + docs + lint 三档含 all-features + 全 tests + s7/eip） | ✅ **全过**（输出 `✅ rs-iot 本地门禁全过`） |
 | rs-iot `cargo test --lib` | ✅ 670 passed, 0 failed, 9 ignored |
 | rs-iot `python3 scripts/check_docs.py` | ✅ 71 md 全过 |
-| hmi-studio `vue-tsc --noEmit` | ✅ |
+| hmi-studio `just fe-quality`（typecheck + eslint + layers + vitest + e2e + build） | ✅ **全过**（输出 `✅ fe-quality: 前端全部门禁通过`；含真实 e2e 打 8790） |
+| hmi-studio `vitest` 单跑 | ✅ 620 passed |
 | hmi-studio `eslint .` | ✅ 0 errors（1 个 pre-existing warning：`e2e/probe-bi.spec.ts:22` 多余 disable 指令，**不要顺手修**） |
-| hmi-studio `check-layers.mjs` | ✅ 分层通过 |
-| hmi-studio `vitest` | ✅ 620 passed |
+
+结论：**两仓门禁此刻全绿，无既存红**。真实风险只有 2 项 flaky（下），出现时重跑即可。
 
 **两条此前的误判，已作废，勿再传播**：
 1. ~~"`--all-features` 因 tsink 漂移必失败"~~ —— 错。实测 `cargo check --all-features`
@@ -84,13 +85,12 @@
    依赖，`--all-features` 时连带编译；AI 助手走 gateway `/api/agent/*` 反代 + MCP，
    全程不碰时序库。**不要因为提到 AI 就去动 tsink/lux。**
 
-真实存在的已知红仅 2 项（都是 flaky/环境，不是缺陷）：
+真实风险仅 2 项 flaky（不是缺陷；出现即重跑，**不要改测试断言**）：
 
 1. rs-iot `lua_north_e2e::north_lifecycle_running_stats_stop`：
    需本地 MQTT broker（`127.0.0.1:1883`），本机无 → SKIP/degraded 是正确行为。
    `docs/guides/testing-and-verification.md` §三 有记载。
 2. hmi-studio e2e 段 2 `el-select` 时序偶发；rs-iot `tests/events_e2e.rs` 并发时序偶发。
-   重跑通过即可，**不要改测试断言**。
 
 判据：你的改动完成后，上述项**保持与改动前完全相同的状态**即视为合格。
 **开工第一件事：先跑一遍基线门禁并把输出摘要写入 plan 文档**，收尾时对比。
@@ -111,13 +111,19 @@ cargo test --lib
 cargo test --tests --no-default-features --features lua -- --test-threads=4
 ```
 
-**注意**：`just check` 里 `docs` 档会校验设计文档的状态块与索引登记
-（`docs/README.md` 必须加独立索引行）——新增 designs/ 文档时先照着办，
-否则整条门禁红在这一档。
+**注意（2026-10-30 亲历，别重蹈）**：`just check` 的 `docs` 档会校验
+**新增 designs/ 文档的三件事**，缺一即整条门禁红在 docs 档：
+1. 头部完整状态块（`> **状态**：` + 日期/实施/代码/测试/遗留 五字段，见
+   `docs/conventions/documentation.md` §3）
+2. `docs/README.md` 里**以文件名链接开头的独立索引行**（主题链路行不算）
+3. 正文引用的 `src/` `tests/` 路径必须真实存在（计划稿写"计划新增 `tests/x.rs`"
+   这类措辞可豁免）
 
 **hmi-studio**（`/root/myprojects/webhmi/hmi-studio`）：
 
 ```bash
+just fe-quality   # ← 首选：typecheck + eslint + layers + vitest + e2e + build
+# 需要单跑某道门时：
 pnpm run typecheck
 pnpm exec eslint .
 node scripts/check-layers.mjs
@@ -125,6 +131,10 @@ pnpm test
 pnpm e2e        # 需 rs-iot 8790 存活；先 curl 127.0.0.1:8790 确认有响应
 pnpm build
 ```
+
+**注意**：hmi-studio 的 `docs/` 没有机械文档检查（`check-layers` 只管 src 分层），
+但 `docs/standards.md` §4.1 要求 plan 文档的任务表是"任务状态真相源"——
+完成即勾选 + 同 commit 回填，这是人工约定，你自己守。
 
 ## 6. 服务运维（P0 后端改完必走，否则消费侧 e2e 打的是旧二进制）
 
@@ -153,9 +163,13 @@ P0 上线后 `w8` 等改内容的测试会产生少量版本条目——判重�
 
 **立即停止**并在报告里写明的条件：
 
+- **基线漂移**：开工基线与你实测结果**不一致**（§4 说全绿却出红、测试数明显不同、
+  已有未提交改动涉及你要改的文件）→ 先报告差异再等指示，**不要**自行判断
+  "可能是环境问题"然后硬推。依据：§4 基线是任务书定稿时（2026-10-30）的快照，
+  若 rs-iot/hmi-studio 工作区在此期间被他人改动，基线失效
 - 设计文档契约无法实现（lux 命令不满足、幂等语义矛盾）
 - 需要改动 §3 禁改对象（maotu / tsink_fork / lux / 其他仓）
-- 需要外部资源（reasonix、API key、MQTT broker、真实设备）
+- 需要外部资源（reasonix 部署、provider API key、MQTT broker、真实设备）
 - 同一测试连续 3 轮修复失败 → 停止改代码，点名最可疑假设 + 用一条诊断命令证伪它
 - 门禁出现 §4 未列出的新红，且 2 轮内无法判定是否自己引入
 
@@ -172,6 +186,11 @@ P0 上线后 `w8` 等改内容的测试会产生少量版本条目——判重�
 
    格式参照两仓既有 `*-plan.md`：任务表（ID / 内容 / 依赖 / **验证命令** / 状态），
    状态 `☐ ⏳ ✅`。每个任务必须标注**它自己的验证命令**，不要只写"跑测试"。
+
+   ⚠️ **rs-iot 那份 plan 文档本身也要过 docs 门禁**（§5 注意三条）：状态块
+   （状态取 `draft`，收尾改 `partially-implemented`/`implemented` 并按规范填
+   实施/代码/测试/遗留）+ `docs/README.md` 独立索引行。**这份文档是新建的，
+   最容易漏**——建完立刻单独跑 `python3 scripts/check_docs.py` 验证。
 
 2. **代码 + 测试**（TDD：先写失败测试再实现；测试验证意图，不追行数）
 3. **提交**：按逻辑单元分笔（建议：存储层 / 契约端点 / SSE+指标 / 文档 / 消费侧 /
