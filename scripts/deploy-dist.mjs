@@ -58,22 +58,34 @@ const builtAt = new Date().toISOString()
 mkdirSync(ROLLBACK_DIR, { recursive: true })
 mkdirSync(join(DIST, 'assets'), { recursive: true })
 
-// 3a. 备份旧 index（回滚源）——备份名含 sha 与序号，rollback-dist.mjs 消费
+// 3a. 备份旧 index + 写本次构建资产清单（回滚与 prune 的依据）。
+// **清单是构建级完备集**：一次 vite build 的全部 chunk 相互引用（index → main →
+// import() 的懒加载 chunk），prune 若只扫 index.html 直接引用会误删懒加载 chunk
+// （2026-10-30 实测事故：EditView/ViewView 404 白屏）——清单与 index 备份同基名。
 let oldSha = null
 try {
   const prev = JSON.parse(readFileSync(join(DIST, 'version.json'), 'utf8'))
   oldSha = prev.gitSha ?? null
 } catch { /* 首次部署无 version.json */ }
+const stamp = Date.now()
 try {
   const old = readFileSync(join(DIST, 'index.html'))
-  const stamp = Date.now()
   writeFileSync(join(ROLLBACK_DIR, `index-${stamp}-${oldSha ?? 'unknown'}.html`), old)
-  // 只保留最近 KEEP 份 index 备份
-  const backups = readdirSync(ROLLBACK_DIR).filter((f) => f.startsWith('index-')).sort()
-  for (const f of backups.slice(0, Math.max(0, backups.length - KEEP))) {
-    rmSync(join(ROLLBACK_DIR, f))
-  }
 } catch { /* 首次部署无旧 index */ }
+writeFileSync(
+  join(ROLLBACK_DIR, `build-${stamp}-${gitSha}.files`),
+  `${readdirSync(join(DIST_NEXT, 'assets')).join('\n')}\n`,
+)
+// 只保留最近 KEEP 组备份（index-*.html 与 build-*.files 按同组时间戳滚动）
+const groups = new Set(
+  readdirSync(ROLLBACK_DIR)
+    .filter((f) => /^(index|build)-/.test(f))
+    .map((f) => f.replace(/^(index|build)-(\d+)-.*$/, '$2'))
+    .sort(),
+)
+for (const g of [...groups].slice(0, Math.max(0, groups.size - KEEP))) {
+  for (const f of readdirSync(ROLLBACK_DIR)) if (f.includes(`-${g}-`)) rmSync(join(ROLLBACK_DIR, f))
+}
 
 // 3b. assets 增量并入（不清空——旧 index 的引用继续有效）
 let added = 0

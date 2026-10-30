@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 /**
- * prune-assets.mjs — P4 清理：删当前 index 未引用的 hash 资产（防 dist/assets 无限累积）。
+ * prune-assets.mjs — P4 清理：删不再被任何保留构建引用的 hash 资产（防 dist/assets 无限累积）。
  *
- * **保留集 = 当前 index 引用 ∪ 全部回滚备份引用**（回滚可用性优先于磁盘洁癖——
- * 被 prune 删掉的版再 rollback 会缺资产，deploy-dist 输出已提示该交互）。
+ * **保留集 = 当前 index 引用 ∪ 全部构建清单（.rollback/build-*.files）∪ 旧制
+ * index 备份直接引用**。构建清单是构建级完备集（一次 vite build 的全部 chunk
+ * 含 import() 懒加载块——index.html 扫不出它们）；只扫 index 引用会误删懒加载
+ * chunk 致白屏（2026-10-30 实测事故，已修）。回滚可用性优先于磁盘洁癖。
  *
  * 用法：
  *   node scripts/prune-assets.mjs --dry-run   # 先看后删（推荐第一步）
@@ -30,9 +32,17 @@ try {
 let backupCount = 0
 try {
   for (const f of readdirSync(join(DIST, '.rollback'))) {
-    if (!f.startsWith('index-')) continue
-    backupCount += 1
-    for (const r of refsOf(readFileSync(join(DIST, '.rollback', f), 'utf8'))) keep.add(r)
+    // build-*.files = 构建级完备清单（含懒加载 chunk——index.html 扫不出它们，
+    // 2026-10-30 实测曾因此误删 EditView/ViewView 致白屏）
+    if (f.startsWith('build-') && f.endsWith('.files')) {
+      backupCount += 1
+      for (const line of readFileSync(join(DIST, '.rollback', f), 'utf8').split('\n')) {
+        if (line.trim()) keep.add(line.trim())
+      }
+    } else if (f.startsWith('index-')) {
+      // 旧制备份（无清单时代）兜底：至少保住其直接引用
+      for (const r of refsOf(readFileSync(join(DIST, '.rollback', f), 'utf8'))) keep.add(r)
+    }
   }
 } catch { /* 无备份目录 */ }
 
