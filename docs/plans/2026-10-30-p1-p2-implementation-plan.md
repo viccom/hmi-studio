@@ -85,7 +85,7 @@ rollback/delete/install_plugin——第 3 轮，挂 P0 治理 + 审批闸）；r
 | mcp 类型 | `pnpm -C mcp exec tsc -p tsconfig.json` | 0 error |
 | mcp 构建+握手 | `pnpm -C mcp run build` + stdio initialize/tools-list 冒烟 | dist/index.js 113.7kb；`TOOLS: hmi_list_screens, … hmi_screenshot` 9 个 |
 | mcp 真链路 | tools/call（dev 8790 + admin JWT） | `SCREENS: 11`；`WIDGETS: 47 groups: 6` |
-| src 单测 | `pnpm test` | **667 passed (45 files)** |
+| src 单测 | `pnpm test` | **667 passed (45 files)**（第 1 轮 P0 后基线 626，本轮净增 41：protected 4 + sanitize 5 + agent-context 8 + agent store 24） |
 | 类型 | `pnpm run typecheck` | 0 error |
 | eslint | `pnpm exec eslint .` | 0 errors（1 pre-existing warning：probe-bi disable，任务书 §4 原样） |
 | 分层 | `node scripts/check-layers.mjs` | 通过 |
@@ -105,3 +105,15 @@ rollback/delete/install_plugin——第 3 轮，挂 P0 治理 + 审批闸）；r
 > **遗留**：① 选中图元 id 上下文注入（K6，待 maotu 选中态低成本的读取口）；② 真实 reasonix 链路
 > 联调（dev 栈接 reasonix + 签发 sub=hmi-mcp JWT 后验收「读画面+查历史+截图」三件套）；
 > ③ javascript: 链接向量两仓加固（§4）；④ 写工具族 + 审批闸 + 保护 slug 硬拒（第 3 轮）
+
+## 7. 实施后审查修复（2026-10-30 第 2 轮深度审查）
+
+| # | 严重度 | 发现 | 修复 | 验证 |
+|---|---|---|---|---|
+| H1 | 高 | 登录路径 AI 入口死区：AiDrawerHost 探测只在 onMounted 跑一次，App 根组件路由切换不重挂载——从 /login 登录成功后 available 恒 false，按钮永不出现（实证：真实登录 + status mock 200 → count=0；既有 e2e 预注入 token 恰好绕过该路径） | probe() 收敛 + `watch(route.path)` 离开 /login 且有 token 时重探测；顺手收 L2（tokenStore.get() 双调用） | 新增 e2e「真实登录路径 → 入口经重探测出现」红→绿；ai-panel 全 5 例绿 |
+| M1 | 中 | just fe-quality 不含 mcp 门禁（mcp test/typecheck 靠手跑——机械检查缺位） | justfile 增 mcp-typecheck/mcp-test 两档并挂进 fe-quality 链 | `just mcp-typecheck` ✓ + `just mcp-test` 40/40 ✓ |
+| M2 | 中 | mcp backend REST 无超时——rs-iot 僵死时工具调用无限挂起 | `AbortSignal.timeout`（DEFAULT_TIMEOUT_MS=30s，可注入；超时 AbortError 经 MCP isError 可操作返回） | backend.test 新增 2 例（signal 传递 + 默认值/注入）红→绿；mcp 40/40 |
+| L1 | 低 | agent store start() 的 loadHistory 覆盖竞态（SSE 帧先到后 history 覆盖丢帧） | **登记不修**（控制台同款既有行为，修需两仓同步帧缓冲） | — |
+| L3 | 低 | e2e mock 重连 handler 永久挂起模式（依赖 page.close 清理） | 登记不修（playwright 语义变化时再议） | — |
+| L5 | 低 | hmi_list_points 全量模式透传整张 devreg（设备上规模后 token 膨胀） | 登记不修（当前 8 设备；届时加投影） | — |
+| L4 | 低 | 本文档 §5 数字口径混入第 1 轮 P0 的 +6 | §5 改为「基线 626，本轮净增 41」 | 本行 |
