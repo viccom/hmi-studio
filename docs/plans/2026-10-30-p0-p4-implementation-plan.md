@@ -1,11 +1,11 @@
 # P0 消费侧 + P4 部署脚本实施计划（第 1 轮）
 
-> **状态**：partially-implemented（B1~B6 + C1~C3 完成；C4 部署实测进行中——脏拒 ✅，全绿换装/回滚/清理实测随收尾）
+> **状态**：implemented（B1~B6 + C1~C4 全部完成——fe-quality 全绿、C4 四实测全过）
 > **日期**：2026-10-30
 > **实施**：2026-10-30 d24cc12（消费侧）/2610329（部署脚本）/e2e 加固——两轮全量 e2e 66/66、fe-quality 全绿
 > **代码**：`src/lib/screens.ts`、`src/views/EditView.vue`、`src/lib/alarms.ts`、`src/views/ViewView.vue`、`src/components/VersionPanel.vue`（新增）、`e2e/screen-versioning.spec.ts`（新增）、`scripts/{deploy,rollback,prune}-dist.mjs`（新增）
 > **测试**：`e2e/screen-versioning.spec.ts` 三组用例 + `src/lib/screens.test.ts`/`alarms.test.ts` 增量；基线 620 vitest + 60 e2e 不回归
-> **遗留**：全部（见任务表）
+> **遗留**：无（ScreenList 实时刷新为设计明确排除的可选项非遗漏；e2e 播种产生的版本条目由判重+TTL 消化——任务书 §6 既定口径）
 
 上游：总体设计 `docs/plans/2026-10-30-ai-assistant-and-extension-system-design.md` §3（P0 消费侧）+ §7（P4）；
 后端权威源 rs-iot `docs/designs/2026-10-30-screen-versioning-design.md`；任务书
@@ -58,7 +58,7 @@
 | C1 | `scripts/deploy-dist.mjs`：门禁（`git status --porcelain` 非空即拒 → typecheck → vitest → `--e2e` 旗标选跑 → build）→ vite 构建到 `dist-next/` → assets 增量并入 `dist/`（不清空）→ `index.html`+`version.json`（gitSha/builtAt）最后落位 | — | 脏工作区拒部署 / 全绿换装 两实测（`node scripts/deploy-dist.mjs` 真跑，验证 dist/ 新旧资产共存与 version.json 内容） | ☐✅ |
 | C2 | `scripts/rollback-dist.mjs`：保留最近 N 份 index（默认 5），`--to` 选目标版换回 | C1 | deploy 两次 → rollback 回第 1 份 → `curl` 验 index 内容回到旧版 | ☐✅ |
 | C3 | `scripts/prune-assets.mjs`：删当前 index 未引用的 hash 资产（防无限累积；`--dry-run` 先列后删） | C1 | 造孤儿资产 → dry-run 列出 → 执行删除 → dist/assets 只剩被引用者 | ☐✅ |
-| C4 | 三脚本收口实测（对齐总体设计 §7 验收：脏拒/全绿换装/回滚） | C1~C3 | `node scripts/deploy-dist.mjs` ×2 + `rollback` + `prune` 全链一遍，输出摘要留档本文件 | ☐⏳ |
+| C4 | 三脚本收口实测（对齐总体设计 §7 验收：脏拒/全绿换装/回滚） | C1~C3 | `node scripts/deploy-dist.mjs` ×2 + `rollback` + `prune` 全链一遍，输出摘要留档本文件 | ☐⏳✅ |
 
 ## 3. 实施偏差记录（相对总体设计 §3/§7）
 
