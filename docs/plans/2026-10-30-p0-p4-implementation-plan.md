@@ -72,6 +72,11 @@
    完备），prune 保留集 = 构建清单 ∪ index 引用 ∪ 旧制备份兜底；复验口径改为
    响应体检查（gateway SPA fallback 会把 assets 404 伪装成 200/HTML）。
    修复后全链实测：prune 零误删、20 资产响应体全部真实内容。
+3. **deploy 构建入口修正（LAN 实测发现，当日修复）**：v1 裸调 `vite build` 绕过
+   package.json 的 `VITE_API_BASE=/api/rsiot` 前缀 → 线上 chunk 落到 dev 形态，
+   浏览器打 gateway 未代理的 `/api/v1/*` → 画面列表恒空。修复：deploy 改走
+   `pnpm build`（env 单源，尾部参数透传 outDir）；复验口径加「chunk 内含
+   api/rsiot」与「经 gateway /api/gw/login → /api/rsiot/api/v1/screens 取列表」。
 
 ## 4. 完成判据（任务书 §9 摘要）
 
