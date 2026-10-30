@@ -83,3 +83,37 @@
 - `just fe-quality` 全绿（§4 已知红保持原状；`e2e/probe-bi.spec.ts:22` warning 不顺手修）
 - 三组新 e2e 全过且既有 60 e2e 零回归；播种幂等断言固化
 - C4 三脚本实测通过；版本面板/409/横幅在 LAN 档真实 rs-iot 上可用
+
+## 5. 实施后复审修复（2026-10-30）
+
+对第 1 轮 P0/P4 代码做深度复审后的修复（不改 B/C 任务契约）：
+
+### 5.1 P0 消费侧
+
+| 发现 | 修复 | 验证 |
+|---|---|---|
+| L1 刷新横幅对参数化画面重置设备（`mountScreen(done,'')` 跳过 `?dev=` 并改写 URL） | reload 改 `mountScreen(done)`（深链路径读 `route.query.dev`）；失败保留横幅可重试 | `pnpm e2e` 全量 66 passed（含 w11 faceplate 三例） |
+| L2 reload 无代际守卫（GET 在飞时跳转会挂错画面） | 捕获 target，await 后校验 `disposed \|\| currentSlug !== target` | 同上 |
+| L3 版本面板无 slug 守卫（切画面时旧列表可对新画面回滚） | load/preview/rollback 全部捕获 slug 校验；loading 期间禁用行内按钮；确认框后二次校验 | `pnpm e2e`（版本面板三例） |
+| L6-UI 面板把最新历史行标绿为 current（head 不在列表） | 移除 current 高亮与 CSS | typecheck/eslint |
+| L7 delete 帧被忽略（画面被删无感知） | 横幅区分 `updated`/`deleted`；删除态点击回画面列表 | e2e 全量零回归 |
+| L8 保存响应回写 version 无路由守卫 | save 捕获 reqSlug，迟到响应/错误不落到新画面 | 同上 |
+| L9 新前端配旧 rs-iot 时 version 静默丢失 | `typeof r.version === 'number'` 才回写；面板对 404 提示"服务端未启用版本管理" | 同上 |
+| L12 e2e 用 800ms 猜 SSE 就绪 | 改 `waitForResponse('/api/v1/events')` 就绪信号（goto 前挂等待） | 全量 e2e 66 passed（53.1s） |
+
+### 5.2 P4 脚本
+
+| 发现 | 修复 | 验证 |
+|---|---|---|
+| D1 无 env 烘焙机械门禁（列表全空事故可复发） | deploy 构建后断言 index.html 直接引用的 chunk 必须含 `api/rsiot` + `api/gw/login`，缺失即拒换装 | `node --check`；live dist 入口 chunk 两标记实测均=1 |
+| D2 `dist-next/` 未 gitignore（失败构建致脏树门禁永久拒绝） | `.gitignore` 增 `dist-next/` | — |
+| D3/D4 默认回滚目标就是"漏烘 env"坏版本；旧制备份懒加载 chunk 已失 | rollback 换装前预检：引用资产必须存在 + 入口 chunk 必须含 `api/rsiot`，失败拒绝（`--force` 放行）；`--list` 逐份标注 | `--list` 实测 3 份坏备份标 ⚠；无参回滚 exit=1 且 `dist/index.html` md5 不变 |
+| D5 `.rollback` 不存在时 ENOENT | readdirSync try/catch → 友好"无备份" | `--list` 实测 |
+| D6 deploy 门禁缺 lint/layers | 门禁补齐 `eslint .` + `check-layers.mjs`（对齐 `just fe-quality` 六道门） | 两道命令单独验证过；deploy 全链未实跑（需干净树，见 §6） |
+| D7 assets 子目录会导致 cpSync EISDIR | 构建后显式检查 `dist-next/assets` 无子目录，有则 fail 并提示扩展脚本 | `node --check` |
+
+## 6. 复审修复的验证口径（显式声明）
+
+- 已实跑：`cargo test --test meta_versioning` 14/14（rs-iot）、`cargo test --lib` 673/673、`pnpm run typecheck`、`eslint`（改动的 4 文件）、`pnpm e2e` 全量 66/66、`rollback-dist.mjs --list` 与无参回滚预检（拒绝且不改线上）。
+- **未实跑**：`deploy-dist.mjs` 全链（需干净工作区且会改线上 dist）；其新增断言按同一 dist 产物人工抽检（入口 chunk 双标记=1）验证逻辑，`node --check` 验证语法。
+- 后端代码修复后**未重编 release、未重启 dev-rs-iot**——线上仍跑修复前二进制；本轮只做代码与测试收口，部署/重编留待用户裁决（`cargo build --release -p rs-iot --features history` 单独构建 + warden restart）。

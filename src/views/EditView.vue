@@ -174,6 +174,7 @@ async function save(payload: IExportJson) {
     ElMessage.error('画面加载中，已禁止保存（加载完成前保存会覆盖目标画面）')
     return
   }
+  const reqSlug = slug.value // 竞态守卫基准：PUT 在飞时可能已切画面
   try {
     // BI 图元的 props.data 是**运行态聚合数据**（通道 B 由宿主写回）：maotu 保存时
     // 把 props 拍平（bundle ud），这坨 JSON 会被原样 PUT 进 rs-iot——既撑大文档
@@ -181,13 +182,17 @@ async function save(payload: IExportJson) {
     const clean = sanitizeBiProps(payload) as IExportJson
     // if_version 乐观锁（P0）：防编辑器与 hmi-mcp AI 互相静默覆盖。
     const r = await sApi.put(
-      slug.value,
-      wrapDoc(clean, { name: meta.value.name ?? slug.value, group: meta.value.group }),
+      reqSlug,
+      wrapDoc(clean, { name: meta.value.name ?? reqSlug, group: meta.value.group }),
       version.value,
     )
-    version.value = r.version // 判重命中时也是当前版本号
+    if (slug.value !== reqSlug) return // 迟到响应：已切画面，勿污染新画面的 version
+    // 判重命中时也是当前版本号；旧版服务端（无 version 字段）保持原值，
+    // 避免 undefined 让后续保存退化为无条件写（复审 L9）。
+    if (typeof r.version === 'number') version.value = r.version
     ElMessage.success('已保存')
   } catch (e) {
+    if (slug.value !== reqSlug) return // 旧画面的失败/冲突不打扰新画面
     if (e instanceof ApiError && e.status === 409) {
       // 版本冲突：他人/AI 已先写。三态保存锁语义不变——只加"重新加载"这一出路。
       try {

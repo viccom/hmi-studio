@@ -17,7 +17,7 @@
  * 环境变量：KEEP_ROLLBACKS（默认 5）。
  */
 import { execFileSync } from 'node:child_process'
-import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { join, basename } from 'node:path'
 
 const ROOT = new URL('..', import.meta.url).pathname
@@ -34,6 +34,11 @@ const run = (cmd, args, opts = {}) => {
 
 const fail = (msg) => { console.error(`✗ ${msg}`); process.exit(1) }
 
+/** index.html 直接引用的 assets 文件名（deploy 断言与 rollback 预检共用；base=/hmi/）。 */
+const refsOf = (html) => [...html.matchAll(/assets\/([A-Za-z0-9._-]+)/g)].map((m) => m[1])
+/** 入口 chunk 必须烘入的部署标记（package.json build 脚本的 env 单源）。 */
+const REQUIRED_MARKERS = ['api/rsiot', 'api/gw/login']
+
 // ---------- 1. 门禁 ----------
 
 const dirty = execFileSync('git', ['status', '--porcelain'], { cwd: ROOT }).toString().trim()
@@ -41,7 +46,11 @@ if (dirty) {
   fail(`工作区非干净，拒绝部署（部署必须可回答"线上跑的是什么"）：\n${dirty}\n先提交或 stash 后重试`)
 }
 
+// 门禁 = `just fe-quality` 的六道门（typecheck/lint/layers/test/e2e/build）——
+// 「工具不绿不给换 index」不能只覆盖其中四道（复审 D6）。
 run('pnpm', ['run', 'typecheck'])
+run('pnpm', ['exec', 'eslint', '.'])
+run('node', ['scripts/check-layers.mjs'])
 run('pnpm', ['test'])
 if (WITH_E2E) run('pnpm', ['e2e'])
 
@@ -52,6 +61,29 @@ if (WITH_E2E) run('pnpm', ['e2e'])
 // pnpm 把尾部参数追加到 script 命令，outDir 覆盖不碰线上 dist/。
 rmSync(DIST_NEXT, { recursive: true, force: true })
 run('pnpm', ['build', '--outDir', 'dist-next', '--emptyOutDir'])
+
+// 2b. 产物断言（同日事故的机械门禁；复审 D1）：**任一构建 chunk** 缺部署标记即
+// 拒绝换装。扫全量 chunk（而非只扫 index 直接引用）避免将来代码分割把 env 常量
+// 挪进懒加载 chunk 时误报；坏构建（裸 vite build）下全量 chunk 都不含该串。
+const builtIndex = join(DIST_NEXT, 'index.html')
+if (!existsSync(builtIndex)) fail('构建产物缺 dist-next/index.html')
+const nextAssets = join(DIST_NEXT, 'assets')
+const nested = readdirSync(nextAssets).filter((f) => statSync(join(nextAssets, f)).isDirectory())
+if (nested.length) {
+  fail(`vite 输出含子目录（${nested.join(', ')}）——deploy/prune 只支持平面 assets，先扩展脚本再部署`)
+}
+const missingRefs = refsOf(readFileSync(builtIndex, 'utf8'))
+  .filter((f) => f.endsWith('.js'))
+  .filter((f) => !existsSync(join(nextAssets, f)))
+if (missingRefs.length) fail(`index.html 引用的 chunk 不存在（${missingRefs.join(', ')}）——构建产物不完整`)
+const jsSources = readdirSync(nextAssets)
+  .filter((f) => f.endsWith('.js'))
+  .map((f) => readFileSync(join(nextAssets, f), 'utf8'))
+for (const marker of REQUIRED_MARKERS) {
+  if (!jsSources.some((s) => s.includes(marker))) {
+    fail(`构建产物不含 ${marker}——VITE_API_BASE/VITE_LOGIN_PATH 未烘入（列表全空事故同款），拒绝换装`)
+  }
+}
 
 // ---------- 3. 原子换装 ----------
 

@@ -67,25 +67,42 @@ const drawerOpen = ref(false)
 let alarmStream: ReturnType<typeof createAlarmStream> | undefined
 
 // ---- P0 画面变更感知：复用告警 EventSource（types=alarm,screen 单连接双事件） ----
-/** 本画面收到 put/rollback → 横幅提示（画面文档在别处被编辑器/AI 改了） */
-const screenStale = ref(false)
+/** 本画面收到 put/rollback/delete → 横幅提示（'' = 无提示；delete 与 updated 文案不同） */
+const screenStale = ref<'' | 'updated' | 'deleted'>('')
 function onScreenEvent(e: { id: string; resource: string; action: string }): void {
   if (e.resource !== 'screen') return
   if (e.id !== currentSlug.value) return
-  if (e.action !== 'put' && e.action !== 'rollback') return
-  screenStale.value = true
+  if (e.action === 'delete') screenStale.value = 'deleted'
+  else if (e.action === 'put' || e.action === 'rollback') screenStale.value = 'updated'
 }
-/** 横幅「点击刷新」：重拉当前画面 doc 并重挂（jump 对同 slug 会拒绝，走独立 reload） */
+/** 横幅点击：updated → 重拉并重挂；deleted → 回画面列表（目标已不存在，刷新无意义） */
+function onStaleClick(): void {
+  if (screenStale.value === 'deleted') {
+    void router.push('/')
+    return
+  }
+  void reloadCurrentScreen()
+}
+/** 横幅「点击刷新」：重拉当前画面 doc 并重挂（jump 对同 slug 会拒绝，走独立 reload）。
+ *  两条纪律：
+ *  1. **代际守卫**：GET 在飞时用户已跳转 → 迟到响应必须丢弃（否则旧画面会挂到新
+ *     URL 上；jump 有 jumpSeq，reload 同款）。
+ *  2. **设备上下文**：同画面 reload 不传 devOverride——让 mountScreen 读
+ *     route.query.dev；传 '' 是 jump 的「新画面不继承旧 dev」语义，用在这里会把
+ *     参数化画面重置回默认设备并改写 URL。 */
 async function reloadCurrentScreen(): Promise<void> {
-  screenStale.value = false
+  const target = currentSlug.value
   try {
-    const { doc } = await sApi.get(currentSlug.value)
-    if (disposed) return
+    const { doc } = await sApi.get(target)
+    if (disposed || currentSlug.value !== target) return
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
     templateDone.value = done
-    await mountScreen(done, '')
+    await mountScreen(done)
+    screenStale.value = ''
   } catch {
+    if (disposed || currentSlug.value !== target) return
+    // 失败保留横幅（用户可再点重试；画面内容仍是旧的）
     ElMessage.error('画面刷新失败')
   }
 }
@@ -316,7 +333,7 @@ const jump = async (target: string): Promise<boolean> => {
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
     currentSlug.value = target
-    screenStale.value = false // 跳到新画面：旧画面的"已更新"横幅不再适用
+    screenStale.value = '' // 跳到新画面：旧画面的"已更新/已删除"横幅不再适用
     void router.replace(`/view/${target}`)
     await mountScreen(done, '')
     return true
@@ -427,9 +444,9 @@ onUnmounted(() => {
 <template>
   <main class="view-page">
     <AlarmBanner :alarm="currentAlarm" @open="drawerOpen = true" />
-    <!-- P0 画面变更感知横幅：screen 事件（编辑器/AI 改了本画面）→ 提示刷新 -->
-    <div v-if="screenStale" class="stale-banner" data-testid="screen-stale-banner" @click="reloadCurrentScreen">
-      画面已更新（他人或 AI 修改）——点击刷新
+    <!-- P0 画面变更感知横幅：screen 事件（编辑器/AI 改了本画面 / 删除了本画面）→ 提示 -->
+    <div v-if="screenStale" class="stale-banner" data-testid="screen-stale-banner" @click="onStaleClick">
+      {{ screenStale === 'deleted' ? '画面已被删除——点击返回画面列表' : '画面已更新（他人或 AI 修改）——点击刷新' }}
     </div>
     <div ref="viewportRef" class="fit-viewport">
       <div class="fit-stage" :style="stageStyle" :data-fit="fit.toFixed(4)">

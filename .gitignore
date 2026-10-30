@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# deploy 的中转构建目录：构建失败/中断留下残留时，不能让脏树门禁永久拒绝后续部署
+dist-next/
 *.local
 test-results/
 playwright-report/

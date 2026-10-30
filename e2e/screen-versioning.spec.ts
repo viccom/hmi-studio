@@ -94,10 +94,12 @@ test.describe('P0 画面版本管理（真实 rs-iot）', () => {
   test('单连接双事件：运行页收到本画面 put → 刷新横幅', async ({ page }) => {
     await seedScreen(SLUG_SSE)
     await loginAsAdmin(page)
+    // SSE 订阅就绪信号：EventSource 的响应头到达 = 服务端已进入订阅（不猜定时器；
+    // 全量并发下固定 waitForTimeout(800) 可能不够，改画面的事件会在订阅前发出而丢失）
+    const sseReady = page.waitForResponse((r) => r.url().includes('/api/v1/events'), { timeout: 15_000 })
     await page.goto(`/view/${SLUG_SSE}`)
     await page.locator('.view-statusbar').waitFor({ timeout: 15_000 })
-    // SSE 已建立（alarm,screen 双 types 单连接）：稍等订阅就绪再从外部改画面
-    await page.waitForTimeout(800)
+    await sseReady
     await rsiotPutScreen(SLUG_SSE, doc(2)) // 服务端发 screen 帧（put, version 2）
     await expect(page.getByTestId('screen-stale-banner')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByTestId('screen-stale-banner')).toContainText('画面已更新')
