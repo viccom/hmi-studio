@@ -70,6 +70,19 @@ test.describe('AI 面板（mock /api/agent/*）', () => {
     await expect(page.getByRole('button', { name: '打开 AI 助手' })).toHaveCount(0)
   })
 
+  // H1 回归（审查修复固化）：真实登录路径——未登录进 /login（此时 onMounted 无 token 短路），
+  // 登录成功 replace('/') 不重挂载 App——入口必须经路由 watch 重探测才出现。
+  // loginAsAdmin 预注入 token 的其他用例覆盖不了这条路径。
+  test('真实登录路径：/login 登录成功 → 入口经重探测出现（H1 回归）', async ({ page }) => {
+    await mockAgent(page) // status=200（模拟 reasonix 已部署）
+    await page.goto('/login') // 未登录——AiDrawerHost onMounted 在此短路（无 token）
+    await page.getByPlaceholder('用户名').fill('admin')
+    await page.getByPlaceholder('密码').fill('admin')
+    await page.getByPlaceholder('密码').press('Enter')
+    await expect(page).toHaveURL(/\/$|\/\?/) // 登录成功跳列表页（真实 rs-iot）
+    await expect(page.getByRole('button', { name: '打开 AI 助手' })).toBeVisible({ timeout: 5_000 })
+  })
+
   test('入口开合：点击 → 抽屉就绪 + 控件工具栏 + ⚙（providers 可用）', async ({ page }) => {
     await mockAgent(page)
     await loginAsAdmin(page)

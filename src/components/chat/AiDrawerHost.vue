@@ -8,7 +8,7 @@
   3. 路由可见性：/login（未登录）与 /dev/*（研究资产）不显示
 -->
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted, ref } from 'vue'
+import { defineAsyncComponent, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { tokenStore } from '../../lib/api'
 
@@ -16,20 +16,33 @@ const AgentDrawer = defineAsyncComponent(() => import('./AgentDrawer.vue'))
 
 const route = useRoute()
 const drawerOpen = ref(false)
-/** status 探测通过才显示入口（探测一次；面板内 start() 各端点自容错）。 */
+/** status 探测通过才显示入口（面板内 start() 各端点自容错）。 */
 const available = ref(false)
 
-onMounted(async () => {
-  if (!tokenStore.get()) return
+/** 探测一次 status：无 token（未登录）直接判不可用；fetch 异常按不可用（不抛）。 */
+async function probe(): Promise<void> {
+  const token = tokenStore.get()
+  if (!token) {
+    available.value = false
+    return
+  }
   try {
-    const token = tokenStore.get()
     const res = await fetch('/api/agent/status', {
-      headers: token ? { authorization: `Bearer ${token}` } : {},
+      headers: { authorization: `Bearer ${token}` },
     })
     available.value = res.ok
   } catch {
     available.value = false
   }
+}
+
+onMounted(probe)
+
+// 登录路径重探测（H1）：App 是根组件，路由切换不重挂载——用户从 /login 登录成功
+// replace('/') 后 onMounted 已在无 token 时短路过，必须在此重探。登出回 /login 由
+// 模板 v-if 隐藏（available 无须清）；再登录会再次触发本 watch（token 已换新）。
+watch(() => route.path, (to, from) => {
+  if (from === '/login' && to !== '/login' && tokenStore.get()) void probe()
 })
 </script>
 
