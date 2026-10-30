@@ -80,7 +80,7 @@ describe('screensApi CRUD 薄封装（mock fetch）', () => {
   })
 
   it('versions/versionDoc/rollback（P0 版本三端点）：URL 与响应形状', async () => {
-    const fetchMock = vi.fn(async (url: string) => new Response(
+    const fetchMock = vi.fn(async (url: string, _init?: RequestInit) => new Response(
       url.includes('/versions/7') ? '{"id":"a","seq":7,"ts":1,"author":"admin","doc":{"name":"A"}}'
       : url.includes('/versions') ? '{"versions":[{"seq":7,"ts":1,"author":"hmi-mcp","size":120,"sha":"ab","expired":false}]}'
       : '{"status":"ok","version":8}',

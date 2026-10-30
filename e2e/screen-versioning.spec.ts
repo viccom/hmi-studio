@@ -42,6 +42,10 @@ test.describe('P0 画面版本管理（真实 rs-iot）', () => {
     })
     await page.goto(`/edit/${SLUG_409}`)
     await page.locator('.edit-page').waitFor({ timeout: 15_000 })
+    // **画面加载完成信号**（loadScreen 置 meta.name → 顶栏画面名就位）：全量并发下
+    // 8790 GET 慢，进页即点保存会被三态锁拦（"画面加载中"早退，不走 409 分支）。
+    // 顶栏 screen-name 等到播种画面名 = loaded=true 的可观察信号。
+    await expect(page.locator('.screen-name')).toContainText('E2E-T6 数据驱动', { timeout: 20_000 })
     // 触发保存（maotu 顶栏保存钮——w8 同款锚点）
     await page.locator('button .el-icon[title="保存"]').click()
     const box = page.locator('.el-message-box')

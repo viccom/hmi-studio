@@ -47,8 +47,8 @@ export async function rsiotPutScreen(id: string, doc: unknown): Promise<void> {
   if (!res.ok) throw new Error(`rsiotPutScreen: rs-iot ${res.status}`)
 }
 
-/** 直接打 rs-iot 取画面 doc（{id,doc}） */
-export async function rsiotGetScreen(id: string): Promise<{ id: string; doc: Record<string, unknown> }> {
+/** 直接打 rs-iot 取画面 doc（{id,doc,version}——version 为 P0 版本号） */
+export async function rsiotGetScreen(id: string): Promise<{ id: string; doc: Record<string, unknown>; version: number }> {
   const res = await authedFetch(`/api/v1/screens/${id}`)
   if (!res.ok) throw new Error(`rsiotGetScreen: rs-iot ${res.status}`)
   return res.json()
