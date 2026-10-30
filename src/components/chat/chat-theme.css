@@ -1,0 +1,75 @@
+/*
+ * AI 面板主题变量（P2 移植）：chat 组件族消费的是控制台 main.css 的自绘变量盘，
+ * hmi-studio 只有 element-plus 桥（--el-*）——此处按 AgentDrawer 族 grep 实测清单
+ * （28 个 + 补 2 个未定义映射）移植，作用域限 .agent-drawer（弹窗是其 DOM 子元素，
+ * position:fixed 不改变继承），不污染全站。深浅两块与控制台同值——两前端视觉单点统一。
+ * 控制台 main.css 改色时同步这里（登记在 hmi-studio plan §4 风险）。
+ */
+.agent-drawer {
+  --color-primary: #146a9a;
+  --color-primary-strong: #0d5279;
+  --color-primary-hover: #2b81b4;
+  --color-surface: #eef3f8;
+  --color-surface-raised: rgba(255, 255, 255, 0.9);
+  --color-surface-hover: rgba(214, 226, 239, 0.82);
+  --color-surface-active: rgba(196, 214, 233, 0.94);
+  --color-divider: rgba(104, 129, 155, 0.18);
+  --color-divider-strong: rgba(20, 106, 154, 0.26);
+  --color-ink: #132235;
+  --color-ink-secondary: #20324a;
+  --color-ink-muted: #50657d;
+  --color-ink-dim: #6f8297;
+  --color-warning: #ba7a14;
+  --color-danger: #c25353;
+  --shadow-soft: 0 16px 40px rgba(17, 33, 52, 0.08);
+  --page-bg:
+    radial-gradient(circle at 16% 12%, rgba(20, 106, 154, 0.1), transparent 24%),
+    radial-gradient(circle at 82% 10%, rgba(95, 103, 216, 0.08), transparent 26%),
+    linear-gradient(140deg, #f5f8fb 0%, #eef3f8 44%, #e7eef6 100%);
+  --panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 246, 251, 0.9));
+  --panel-border: rgba(104, 129, 155, 0.14);
+  --panel-highlight: rgba(20, 106, 154, 0.08);
+  --card-bg: linear-gradient(180deg, rgba(248, 251, 255, 0.92), rgba(238, 244, 249, 0.96));
+  --card-border: rgba(104, 129, 155, 0.14);
+  --chip-bg: rgba(20, 106, 154, 0.08);
+  --chip-border: rgba(20, 106, 154, 0.12);
+  --chip-ink: #1a6b98;
+  --soft-overlay: rgba(255, 255, 255, 0.04);
+  --shell-theme-active-ink: #f8fbff;
+  /* 控制台模板用了但 main.css 未定义的两个变量（latent bug）——此处补上合理映射 */
+  --color-ink-primary: var(--color-ink);
+  --color-ink-tertiary: var(--color-ink-dim);
+}
+
+html.dark .agent-drawer {
+  --color-primary: #72ddff;
+  --color-primary-strong: #1fb9ea;
+  --color-primary-hover: #a5e9ff;
+  --color-surface: #040b16;
+  --color-surface-raised: rgba(15, 27, 46, 0.84);
+  --color-surface-hover: rgba(23, 39, 65, 0.96);
+  --color-surface-active: rgba(31, 58, 94, 0.94);
+  --color-divider: rgba(146, 176, 218, 0.18);
+  --color-divider-strong: rgba(114, 221, 255, 0.28);
+  --color-ink: #edf6ff;
+  --color-ink-secondary: #d5e3f3;
+  --color-ink-muted: #97aac4;
+  --color-ink-dim: #7389a7;
+  --color-warning: #ffb84d;
+  --color-danger: #ff7f7f;
+  --shadow-soft: 0 20px 55px rgba(1, 7, 18, 0.32);
+  --page-bg:
+    radial-gradient(circle at 18% 18%, rgba(31, 185, 234, 0.14), transparent 24%),
+    radial-gradient(circle at 82% 12%, rgba(124, 134, 255, 0.12), transparent 28%),
+    linear-gradient(140deg, #040b16 0%, #06111f 38%, #081424 100%);
+  --panel-bg: linear-gradient(180deg, rgba(10, 20, 35, 0.88), rgba(8, 16, 29, 0.76));
+  --panel-border: rgba(146, 176, 218, 0.12);
+  --panel-highlight: rgba(114, 221, 255, 0.08);
+  --card-bg: linear-gradient(180deg, rgba(15, 24, 42, 0.72), rgba(10, 18, 31, 0.92));
+  --card-border: rgba(146, 176, 218, 0.12);
+  --chip-bg: rgba(114, 221, 255, 0.08);
+  --chip-border: rgba(114, 221, 255, 0.14);
+  --chip-ink: #a5e9ff;
+  --soft-overlay: rgba(255, 255, 255, 0.04);
+  --shell-theme-active-ink: #03111d;
+}

@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import { router } from './router'
 import { setOnUnauthorized } from './lib/api'
@@ -26,5 +27,6 @@ bootstrapCookieSession()
 // registerSymbols()（registerConfig），maotu bs(tag) 拖入/渲染时可达（见 symbols/index.ts）
 const app = createApp(App)
 registerSymbolComponents(app)
-app.use(router).use(ElementPlus).mount('#app')
+// pinia（P2 AI 面板）：agent store 依赖；面板本体 defineAsyncComponent 懒加载（AiDrawerHost）
+app.use(router).use(ElementPlus).use(createPinia()).mount('#app')
 
