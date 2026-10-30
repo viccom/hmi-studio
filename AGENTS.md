@@ -12,17 +12,32 @@
 | `pnpm run typecheck` | vue-tsc --noEmit（每任务必跑） |
 | `pnpm build` | 产物 dist/ → 交 gateway `hmi_dist` 挂 `/hmi`（T18） |
 | `just fe-quality` | 全套门禁：typecheck + eslint + 分层检查 + 单测 + e2e + build |
+| `pnpm -C mcp test` | hmi-mcp 单测（独立包；配套 `pnpm -C mcp run typecheck`、`pnpm -C mcp run build`） |
 
 ## 地图
 
 - `src/lib/` 纯逻辑层（api/screens/binds/sse/command/alarms/nav…，同名 .test.ts 伴生）
   - **BI 契约层**：`bi-contract.ts`（载荷形状单点事实源）+ `bi-collector.ts`（宿主聚合收集器）+ `bi-sanitize.ts`（保存态复位）——见 docs/plans/2026-10-29-bi-monitoring-dashboard-design.md
+  - `agent-context.ts`（AI 面板页面上下文）+ `sanitizeMarkdown.ts`（AI 输出 XSS 消毒）——P2
 - `src/views/` 四业务页（Login/ScreenList/Edit/View）+ `src/components/` 骨架层组件
+  - **`src/components/chat/`** AI 面板（P2 移植自 rs-iot 控制台，复制优先不抽包）：`agent.ts`
+    store（serve SSE 裸 NDJSON 分发）+ AgentDrawer 族；入口 `AiDrawerHost` 挂 App.vue——
+    **懒加载**（defineAsyncComponent 首点才拉 chunk）+ **降级**（GET /api/agent/status 非 2xx
+    → 入口不出现；providers 503 → ⚙ 隐藏）。样式变量在 `chat-theme.css`（作用域
+    .agent-drawer，与控制台 main.css 同值，改色需两仓同步）
+- **`mcp/`** hmi-mcp 工具层（P1，独立 npm 包**不转 monorepo**，根 vitest/tsconfig 均不含它）：
+  9 个读工具（list/get/validate/describe/devices/points/history/alarms/screenshot），
+  单源相对 import src/symbols+bi-contract（校验器所见 = 编辑器所认）；写工具族第 3 轮。
+  运行配置全走环境变量：`HMI_BASE_URL`（默认 127.0.0.1:8790）/ `HMI_JWT`（sub=hmi-mcp）/
+  `HMI_VIEW_ORIGIN`（截图 origin）。构建 = esbuild bundle（`pnpm -C mcp run build` → dist/index.js）
+- `src/screen-assets/` 画面资产层（预组态画面生成器：demo/home-*/bi-screen）
+  - **`protected.ts`**：PROTECTED_SLUGS 长期资产 slug 单一权威源（11 项）——hmi-mcp 删除拒绝闸
+    与 e2e 清扫守卫的唯一 import 面；新增画面生成器必须登记
 - `src/symbols/` 手工重建图元（一图元一 ts，export ILeftAsideConfigItemPublic；权威 id 集合 = groups.ts SYMBOL_GROUP_DEFS，registry.ts 头注释为导览快照；约定 lint 见 symbols/symbol-lint；开发宪法 docs/maotu-symbol-development-guide.md）
   - **BI 图元族**（`ah-bi-*`，20 个，全量 id 清单以 `groups.ts` SYMBOL_GROUP_DEFS「BI 数据图表」组为准）走**通道 B**（宿主聚合写 props.data.val），底座 `bi-chart-kit.ts`；window/alarms 无 series（上行控制/告警信封，不吃历史查询）
 - `src/screen-assets/` 画面资产层（预组态画面生成器：demo/home-*/bi-screen）
 - `src/dev/` 研究资产（spike/probe），不进导航不进守卫
-- `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7-w11 / alarm-drawer / screen-versioning（P0 版本面板/409/SSE 双事件，打真实 8790）/ home-meters / bi-dashboard（G 门 + 图元轮 + 用户反馈轮 + BI 通道 B 门）/ probe-bi（大 JSON 写入探针，打 /dev 页），webServer 自动起 5290
+- `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7-w11 / alarm-drawer / screen-versioning（P0 版本面板/409/SSE 双事件，打真实 8790）/ home-meters / bi-dashboard（G 门 + 图元轮 + 用户反馈轮 + BI 通道 B 门）/ probe-bi（大 JSON 写入探针，打 /dev 页）/ ai-panel（mock /api/agent/*——面板开合/上下文注入/审批契约，不打真实 reasonix），webServer 自动起 5290
 - `scripts/check-layers.mjs` 分层依赖方向门禁（just layers）
 
 ## 文档

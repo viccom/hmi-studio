@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import pluginVue from 'eslint-plugin-vue'
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**', 'src/dev/**'] },
+  { ignores: ['dist/**', 'node_modules/**', 'src/dev/**', 'mcp/dist/**'] },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/essential'],
