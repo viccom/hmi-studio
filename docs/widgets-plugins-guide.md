@@ -1,6 +1,7 @@
-# HMI 图元与插件体系——分类与开发指南（v1.0）
+# HMI 图元与插件体系——分类与开发指南（v1.1）
 
-> 定位：本仓**图元 / 组合与符号 / 插件 / 画面数据契约**的分类总览与开发入口。文档分工：
+> 定位：**面向 AI Agent 的自包含开发手册**——开发图元/插件/画面只需本文 + maotu 宪法，
+> 不必回读 AGENTS.md。文档分工：
 >
 > | 主题 | 权威文档（本文不重复，只引用） |
 > |---|---|
@@ -10,8 +11,35 @@
 > | BI 大屏内容分区/数据映射/累计量口径 | docs/plans/2026-10-29-bi-monitoring-dashboard-design.md |
 >
 > 本文管：**分类总表、开发工作流、组合/符号/插件体系、画面数据契约**。
-> 计数时点 **2026-10-31（master f2a9318）**；id 权威源 = `src/symbols/groups.ts`（分组展示）
+> 计数时点 **2026-10-31（master 040e148）**；id 权威源 = `src/symbols/groups.ts`（分组展示）
 > 与 `src/symbols/registry.ts`（扁平全量）——本文表格是导览，漂移以代码为准。
+> v1.1（2026-10-31）：吸收 AGENTS.md 图元域全部细节（hmi-mcp 工具面/运行配置、symbols-api、
+> 保护清单登记纪律），新增 §0 快速上手——AGENTS.md 回归纯地图。
+
+## 0. AI Agent 快速上手（先读这节）
+
+按任务取节，改完跑门禁：
+
+| 任务 | 读哪节 | 落点文件 |
+|---|---|---|
+| 加一个内置图元（`ah-*`） | §2 看邻居写法 + §3 工作流 | `src/symbols/<kebab>.ts`（+`Ah*.vue`）+ registry/groups/index 四处登记 |
+| 写 / 装一个插件 | §5（契约 → 装载 → 降级 → §5.6 走查） | `widgets-example/<id>/` 源 → `scripts/install-plugin.mjs` 安装 |
+| 建预组态画面 / 生成器 | §6（数据契约 + §6.4 保护纪律） | `src/screen-assets/<name>.ts` + **protected.ts 必登记** |
+| 排查「图元变占位框」 | §5.4–5.5 | plugin-loader / plugin-fallback / `BUILTIN_TAGS` 漏枚举 |
+| 查图元目录与绑定惯例 | §2，或运行时问 `hmi_describe_widget_kit` | 权威 = `src/symbols/groups.ts` |
+| AI 改画面 | §6.1–6.2 + §6.4 保护闸 | hmi-mcp 写工具（if_version / 保护 slug 硬拒） |
+
+**门禁速查**（e2e 需 rs-iot :8790 存活）：
+
+```bash
+just fe-quality                                  # 全套：typecheck + eslint + layers + 单测 + e2e + build
+pnpm -C mcp run typecheck && pnpm -C mcp test    # 动了 mcp/ 或 src/symbols 单源引用面（mcp 相对 import 它们）
+node scripts/check-layers.mjs                    # 分层方向（图元域常踩：lib 禁 import symbols）
+```
+
+**五条红线**（违反即 review 阻断，全文 docs/standards.md §5）：maotu 零改动；纯逻辑 TDD 先行；
+实测不符即停（先核实回填文档再写码）；在线原则（不引入 mock 设备数据路径）；分层方向
+（lib 禁 import symbols——新豁免必须登记 `scripts/check-layers.mjs` 并写明理由）。
 
 ## 1. 体系总览
 
@@ -210,6 +238,8 @@ SSE 数据且 `setItemAttrByID` 只按顶层 id 定位（§4.1）。
 - **入口**：编辑器框选 → 组合（Ctrl+G）→ 绑定面板「存为符号」→ `buildSymbolDoc(item,name)`
   （仅接受 `type:'group'`，否则提示先组合）→ `symbols-api.put(id, doc, ifVersion)` 存
   rs-iot `/api/v1/symbols`（同名覆盖复用 id + 乐观锁）。
+- **存储封装**：`src/lib/symbols-api.ts` REST 薄封装（rs-iot 第三资源族 MetaKind SYMBOLS；
+  list / get / put 全量带 if_version）。
 - **id 规则**：前缀 `sym-`（与编译期 `ah-` 族隔离；已带 `sym-` 不再叠加，`my-symbols.ts:65-71`）。
 - **模板展开语义**：拖入画布 = children 提升为顶层**独立图元**（binds 原样保留、逐项可改），
   **不是持久组合**——组合内收不到数据的限制因此绕开。
@@ -272,7 +302,8 @@ node scripts/install-plugin.mjs --list         # HMI_WIDGETS_DIR 可覆盖目录
 分发：prod 由 gateway `hmi_widgets_dir` 挂 `/hmi/widgets`（**全量 no-cache**——插件非哈希名，
 靠 entry URL 的 `?v=<version>` bust）；dev 由 vite 中间件把 `/widgets/*` 重写到仓库 `widgets/`，
 安装器与 dev server 同目录（`vite.config.ts:11-18`）。`widgets/index.json` 形状：
-`{ plugins: [{id,name,version,entry}] }`。
+`{ plugins: [{id,name,version,entry}] }`。`widgets/` 是 **gitignore 的运行时目录**——安装产物
+不入库，入库的是 `widgets-example/` 下的 scaffold（兼 e2e fixture）。
 
 ### 5.4 运行时装载（`src/symbols/plugin-loader.ts`）
 
@@ -310,12 +341,28 @@ await——插件缺席不得阻断画面渲染。
 4. 验收（对标 `e2e/plugin-dir.spec.ts` 三态）：装后可拖可渲染；卸载后既有画面占位框 + 保存
    不丢原数据；lint 不过的插件装得上但**装载被拒且通知可见**。
 
-### 5.7 AI 通路（hmi-mcp）
+### 5.7 AI 通路（hmi-mcp，独立 npm 包）
 
+- **包边界**：`mcp/` 是独立 npm 包，**不转 monorepo**——根 tsconfig/vitest 不含它，门禁单独跑
+  （`pnpm -C mcp run typecheck` / `pnpm -C mcp test`）。
+- **工具面 16 个**——读 9：`hmi_list_screens / hmi_get_screen / hmi_validate_screen /
+  hmi_describe_widget_kit / hmi_list_devices / hmi_list_points / hmi_query_history /
+  hmi_list_alarms / hmi_screenshot`；写 7：`hmi_create_screen / hmi_put_screen /
+  hmi_put_protected_screen / hmi_rename_group / hmi_rollback_screen / hmi_delete_screen /
+  hmi_install_plugin`。写链纪律：`hmi_put_screen` 必带 if_version（409 = 他人/AI 已先写）、
+  `hmi_validate_screen` error 级前置（id 词法 / 128KiB / JSON 语法——后端将拒）、保护 slug
+  硬拒且无 force、落库前 BI 运行态复位（与编辑器保存链同款 sanitize）。
+- **单源引用**：mcp 相对 import `src/symbols`（registry/groups/lint）+ `src/lib/bi-contract` +
+  `src/screen-assets/protected`——**校验器所见 = 编辑器所认**（两处永不漂移；这也是
+  protected.ts 必须保持零依赖的原因）。
+- **运行配置全走环境变量**：`HMI_BASE_URL`（默认 `127.0.0.1:8790`）/ `HMI_JWT`（sub=hmi-mcp）/
+  `HMI_VIEW_ORIGIN`（截图 origin）。
+- **构建**：esbuild bundle（`pnpm -C mcp run build` → dist/index.js）——bundle 摊平模块层级，
+  `import.meta.url` 相对推导（repoRoot 探测）须**双候选**（源码/束布局，`mcp/src/tools/writes.ts`）。
 - `hmi_install_plugin {source_dir}`：spawn 安装器（与人类同款命令，60s 超时），**CriticalWrite
   审批档**（destructiveHint=true）；失败返回 `{ok:false, code:'install_failed', stdout/stderr 尾 2000 字}`。
-- `hmi_describe_widget_kit`：registry+groups 单源投影 → `{count, groups, widgets[...], builtin_tags,
-  bind_convention}`——AI 看到的目录 = 编辑器真实目录。
+- `hmi_describe_widget_kit`：registry+groups 单源投影 → `{count, groups, widgets[...],
+  builtin_tags, bind_convention}`——AI 看到的目录 = 编辑器真实目录。
 - 全工具经 `withToolLogging` 审计（`mcp/src/logging.ts`：`{ts, tool, tier, ok, ms, err?}` 结构化
   stderr 日志）。
 
@@ -360,6 +407,9 @@ AI 页面上下文保护标注、e2e 清扫守卫唯一 import 面）：`water-d
 `catalog-demo`、`home-meter-power|water|gas`、`home-meter-power-tabs|water-tabs|gas-tabs`、
 `home-meter-power-faceplate`、`bi-station`。**禁止删除**；AI 修改只能走 `hmi_put_protected_screen`
 （最高档审批）。
+
+登记纪律：**新增画面生成器必须把产出的长期资产 slug 登记进 protected.ts**；protected.ts 保持
+**零依赖**（hmi-mcp 与 AI 上下文单源引用它——拖进生成器的 lib/symbols 依赖链会污染 mcp 侧）。
 
 e2e 种子：`global-setup.ts` 全量 PUT 幂等播种；临时画面用 `e2e-t3-*` 前缀 afterAll 正则清扫，
 长期资产无清扫。
