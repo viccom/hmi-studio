@@ -11,6 +11,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { MtEdit } from 'maotu'
 import type { IExportJson, IDoneJson } from 'maotu'
 import { screensApi, unwrapDoc, wrapDoc } from '../lib/screens'
+import { setAgentPageScreenInfo } from '../lib/agent-context'
 import { ApiError } from '../lib/api'
 import { sanitizeBiProps } from '../lib/bi-sanitize'
 import { loadScreenCards, groupSections, type ScreenCard } from '../lib/screen-list'
@@ -46,7 +47,10 @@ const verDrawer = ref(false)
 
 // D6 编辑态守卫：编辑页同注入 $rsiot，send 确认框按钮为「取消/真实下发」
 const bridge = installBridge({ mode: 'edit', router })
-onUnmounted(() => bridge.uninstall())
+onUnmounted(() => {
+  bridge.uninstall()
+  setAgentPageScreenInfo(undefined) // 离开编辑页：不把旧画面元数据带进下一次提问
+})
 
 const loadFailed = ref(false)
 /** 保存三态锁（P1）：加载成功才放开保存。loadFailed 只覆盖"加载失败"，
@@ -65,6 +69,8 @@ async function loadScreen(pluginsReady?: Promise<unknown>) {
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
     version.value = ver
+    // AI 页面上下文（[页面上下文] 块）：画面名/组/版本注入（保护状态由 slug 判定）
+    setAgentPageScreenInfo({ name: m.name, group: m.group, version: ver })
     upgradeNavTargets(done) // 存量跳转按钮 input→select（拖入为注册项深拷贝，旧实例需就地升级）
     // 插件装载汇合点：降级判定（knownTags）须含已装载插件 tag——GET 期间装载大多已完成。
     // catch 兜底：插件装载失败 = 无插件（相关图元走降级占位），不得阻断画面加载
@@ -83,6 +89,7 @@ async function loadScreen(pluginsReady?: Promise<unknown>) {
     if (slug.value !== reqSlug) return
     loadFailed.value = true // 加载失败置锁：空画布+陈旧 meta 下保存=用空 doc 覆盖画面
     loaded.value = false
+    setAgentPageScreenInfo(undefined) // 无画面元数据可报，避免把上一画面的信息带进提问
     ElMessage.error('画面加载失败——已禁止保存，请刷新重试')
   }
 }

@@ -27,6 +27,15 @@ const SYMBOLS_LIB_ALLOWLIST = new Set([
   'src/lib/bi-contract.ts',
 ])
 
+// lib → assets 的**单文件**豁免（2026-10-31，AI 页面上下文）：
+// src/screen-assets/protected.ts 是长期资产 slug 的零依赖单一权威源（hmi-mcp 同引）；
+// lib/agent-context.ts 据 isProtectedSlug 在 [页面上下文] 标注「保护画面」——复制
+// 清单必然漂移。只放行这一个零依赖文件：lib 其余模块仍禁止依赖 assets（assets → lib
+// 已存在，反向只允许此叶子文件，不成环）。
+const LIB_ASSETS_ALLOWLIST = new Set([
+  'src/screen-assets/protected.ts',
+])
+
 function layerOf(rel) {
   if (rel.startsWith('src/lib/')) return 'lib'
   if (rel.startsWith('src/screen-assets/')) return 'assets'
@@ -94,6 +103,8 @@ for (const file of walk(SRC)) {
     if (!ok && layer === 'lib' && tLayer === 'symbols' && LIB_SYMBOLS_ALLOWLIST.has(rel)) ok = true
     // symbols → lib 单点豁免（BI 契约层：载荷形状单点事实源）
     if (!ok && layer === 'symbols' && tLayer === 'lib' && SYMBOLS_LIB_ALLOWLIST.has(target)) ok = true
+    // lib → assets 单点豁免（保护清单：零依赖单一权威源）
+    if (!ok && layer === 'lib' && tLayer === 'assets' && LIB_ASSETS_ALLOWLIST.has(target)) ok = true
     if (!ok) violations.push(`${rel} → ${target}：${layer} 禁止依赖 ${tLayer}（architecture §2）`)
   }
 }

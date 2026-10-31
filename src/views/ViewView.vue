@@ -12,6 +12,7 @@ import { ElMessage } from 'element-plus'
 import { MtPreview } from 'maotu'
 import type { IExportJson } from 'maotu'
 import { screensApi, unwrapDoc, type ScreenMeta } from '../lib/screens'
+import { setAgentPageScreenInfo } from '../lib/agent-context'
 import { collectBinds } from '../lib/binds'
 import { createRtdataStream, type RtPoint, type StreamState } from '../lib/sse'
 import { api, tokenStore } from '../lib/api'
@@ -95,10 +96,11 @@ function onStaleClick(): void {
 async function reloadCurrentScreen(): Promise<void> {
   const target = currentSlug.value
   try {
-    const { doc } = await sApi.get(target)
+    const { doc, version } = await sApi.get(target)
     if (disposed || currentSlug.value !== target) return
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
+    setAgentPageScreenInfo({ name: m.name, group: m.group, version })
     templateDone.value = done
     await mountScreen(done)
     screenStale.value = ''
@@ -332,10 +334,11 @@ const jump = async (target: string): Promise<boolean> => {
   const seq = ++jumpSeq
   const prev = currentSlug.value
   try {
-    const { doc } = await sApi.get(target)
+    const { doc, version } = await sApi.get(target)
     if (disposed || seq !== jumpSeq) return false
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
+    setAgentPageScreenInfo({ name: m.name, group: m.group, version })
     currentSlug.value = target
     screenStale.value = '' // 跳到新画面：旧画面的"已更新/已删除"横幅不再适用
     void router.replace(`/view/${target}`)
@@ -428,10 +431,12 @@ onMounted(async () => {
 
   let done: IExportJson
   try {
-    const { doc } = await sApi.get(slug)
+    const { doc, version } = await sApi.get(slug)
     const unwrapped = unwrapDoc(doc)
     done = unwrapped.done
     meta.value = unwrapped.meta
+    // AI 页面上下文（[页面上下文] 块）：画面名/组/版本注入（保护状态由 slug 判定）
+    setAgentPageScreenInfo({ name: unwrapped.meta.name, group: unwrapped.meta.group, version })
   } catch {
     ElMessage.error('画面加载失败')
     return
@@ -445,6 +450,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   disposed = true
+  setAgentPageScreenInfo(undefined) // 离开画面页：不把旧画面元数据带进下一次提问
   resizeObs?.disconnect()
   window.removeEventListener(BI_WINDOW_EVENT, onBiWindowChange)
   stream?.close()

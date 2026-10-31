@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   buildAgentContextBlock,
   parseHmiLocation,
+  setAgentPageScreenInfo,
   setAgentPageSelection,
 } from './agent-context'
 
@@ -69,6 +70,43 @@ describe('buildAgentContextBlock', () => {
 
   it('renders empty string without any context', () => {
     expect(buildAgentContextBlock(null)).toBe('')
+  })
+})
+
+/** 画面元数据注入（2026-10-31）：views 层 GET 成功后 set，块内给名称/组/版本。 */
+describe('setAgentPageScreenInfo', () => {
+  afterEach(() => {
+    setAgentPageScreenInfo(undefined)
+    setAgentPageSelection(undefined)
+  })
+
+  it('renders name/group/version lines right after the slug line', () => {
+    setAgentPageScreenInfo({ name: '取水泵房（M3 演示）', group: '水处理演示', version: 87 })
+    const lines = buildAgentContextBlock({ mode: 'view', slug: 'water-demo-m3', path: '/view/water-demo-m3' }).split('\n')
+    expect(lines).toContain('画面名称: 取水泵房（M3 演示）')
+    expect(lines).toContain('分组: 水处理演示')
+    expect(lines).toContain('版本: 87')
+    expect(lines.indexOf('画面: water-demo-m3')).toBeLessThan(lines.indexOf('画面名称: 取水泵房（M3 演示）'))
+    expect(lines.indexOf('画面名称: 取水泵房（M3 演示）')).toBeLessThan(lines.indexOf('分组: 水处理演示'))
+  })
+
+  it('omits metadata lines when nothing injected', () => {
+    const block = buildAgentContextBlock({ mode: 'view', slug: 'x', path: '/view/x' })
+    expect(block).not.toContain('画面名称')
+    expect(block).not.toContain('分组')
+    expect(block).not.toContain('版本')
+  })
+
+  it('marks protected screens from the single-source slug list', () => {
+    // bi-station 是保护清单成员（src/screen-assets/protected.ts 单一权威源）
+    const block = buildAgentContextBlock({ mode: 'view', slug: 'bi-station', path: '/view/bi-station' })
+    expect(block).toContain('保护画面: 是')
+    expect(block).toContain('hmi_put_protected_screen')
+  })
+
+  it('omits protected line for ordinary screens', () => {
+    const block = buildAgentContextBlock({ mode: 'edit', slug: 'my-screen', path: '/edit/my-screen' })
+    expect(block).not.toContain('保护画面')
   })
 })
 

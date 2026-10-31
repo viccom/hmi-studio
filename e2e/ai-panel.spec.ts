@@ -136,6 +136,11 @@ test.describe('AI 面板（mock /api/agent/*）', () => {
     expect(input).toContain('模式: view')
     expect(input).toContain('画面: water-demo-m3')
     expect(input).toContain('页面路径: /view/water-demo-m3')
+    // 画面元数据（2026-10-31 补齐）：GET doc 的 name/group/version + 保护清单判定
+    expect(input).toContain('画面名称: 取水泵房（M3 演示）')
+    expect(input).toContain('分组: 水处理演示')
+    expect(input).toMatch(/版本: \d+/)
+    expect(input).toContain('保护画面: 是')
 
     // 用户气泡即时出现；放行 SSE 帧后 assistant 文本 + 工具卡渲染
     await expect(drawer.getByText('给 2# 泵加运行状态色绑定').first()).toBeVisible()
