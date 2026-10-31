@@ -1,0 +1,7 @@
+{
+  "id": "hello-card",
+  "name": "Hello 卡片",
+  "version": "0.1.0",
+  "entry": "dist.js",
+  "description": "P3b 插件目录 scaffold（兼 e2e fixture）：宿主注入 vue，h() 渲染函数书写，禁裸 import"
+}

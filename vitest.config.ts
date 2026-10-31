@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   test: {
     environment: 'jsdom',
-    include: ['src/**/*.test.ts'],
+    // scripts 面：install-plugin 的 lint/合并纯函数单测（P3b，2026-10-31）
+    include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'],
   },
 })

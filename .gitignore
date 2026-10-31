@@ -5,3 +5,6 @@ dist-next/
 *.local
 test-results/
 playwright-report/
+
+# P3b 插件目录运行时产物（站点工件：install-plugin.mjs 维护；scaffold 在 widgets-example/ 入库）
+/widgets/
