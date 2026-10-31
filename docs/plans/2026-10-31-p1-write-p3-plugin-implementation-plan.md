@@ -132,3 +132,36 @@
 > **遗留**：① hmi 写工具弹窗单点截图（本轮权限模式为放行未截到，引擎同 bash 已实证）；
 > ② CLI 直通行为（登记）；③ vitest include 扩至 scripts 面（install-plugin 单测落位）；
 > ④ 真实对话三场景中场景 2/3（建 KPI 大屏/跨域查数）未走（LLM 质量波动，链路已由场景 1 子集证明）
+
+## 7. 深度审查修复（2026-10-31，两轮 review 后）
+
+第一轮审查 11 条 + 第二轮复核新增 7 条，已修复 12 条（剩余为登记项，见末尾）：
+
+| # | 问题 | 修法 | 证据 |
+|---|---|---|---|
+| N2 | `hmi_rename_group` 可改保护清单画面（W 档绕过） | 保护成员过滤为 `protected_skipped`，不 PUT | `writes.test.ts` 新增保护用例；fe-quality 全绿 |
+| #2 | `hmi_rename_group` 无乐观锁（GET 的 version 被丢弃） | PUT 带 `?if_version=`；409 计入 `conflicts`（fail 不含） | 既有 3 例 mock 路径同步带 if_version + 2 新例 |
+| #1 | 安装器 entry 相对穿越（可读源目录外文件、覆盖 widgets 外既有文件） | `entryIsSafe`（相对、无 `..`）+ 源/目标 resolve 包含性双检 | 攻击复现：修复前覆盖 victim.js，修复后 exit 1 内容不变 |
+| N3 | index.json 半写/损坏 → 静默抹掉已装表项 | `parseIndex` 损坏返回 null → 中止操作；`writeIndex` 改 tmp+rename 原子写 | 截断 fixture 实测：修复前表项全丢，修复后中止且文件未动 |
+| N4 | lint 允许相对 import，但安装只复制 entry 单文件 | lint 增 `findRelativeImports` 拒装 | helper.js fixture 实测 exit 1；hello-card 照常安装 |
+| N1 | 缺 id 图元绕过 lint → `s.id.startsWith` TypeError → 编辑器整页拒载 | `lintSymbol` 增 `ID_MISSING`；`loadPlugins` 逐插件 try 隔离 | 单测 2 例（lint/装载器）；坏插件只记 failed |
+| — | 多插件逐插件 `registerConfig` 互相覆盖（只剩最后一个） | 收集后聚合一次注册 | 新增多插件聚合单测（2 插件 → 一次注册含 2 图元） |
+| #8 | 每次挂载重注册 → maotu「已存在，已覆盖」info 刷屏 | 内容签名（JSON of symbols）未变跳过 registerConfig | 新增去重单测；maotu bundle `registerConfig` 实证 `Vs.info` |
+| #3 | 「我的符号」签名只含 id:name → 同名更新后面板拖出旧组合 | 签名含 version（EditView 从 GET 带出） | 新增 version 变化重注册单测 |
+| #4 | 未知 props 清洗后提前 return，跳过 children 递归 | 改 fall-through（`out` 变量 + 统一递归） | 新增「插件组合 + 子级未知 tag」单测 |
+| #6 | `BUILTIN_TAGS` 双源漂移（mcp 漏 group → 组合项恒报 unknown_tag） | 抽出 `src/symbols/builtin-tags.ts` 单源，两处 import | mcp 单测：group 项 warnings=[] |
+| #7 | 占位框上移动/缩放被整项还原丢弃 | 还原时 `binfo` 取当前 payload，身份字段取存档 | 新增几何保留单测 |
+| #5 | 写工具零审计日志（设计 §4.3） | `mcp/src/logging.ts` 装饰器单点埋点（tool/tier/ok/ms，含结构化 ok:false + code）；screenshot 自埋点移除 | 4 例单测（成功/档位/结构化拒绝/抛错） |
+| N6 | 畸形符号文档抛错 → 整组「我的符号」静默消失 | 逐条过滤 + console.warn | 新增隔离单测 |
+| N7 | 注册项 id `sym-sym-…` 双前缀 | 已带 `sym-` 不再叠加 | 单测补两例 |
+| N5 | 「存为符号」未做 BI 运行态复位（与保存链不对称） | onSaveSymbol 走 `sanitizeBiProps({json:[combin_json]})` | ViewView/EditView 逻辑；e2e my-symbols 绿 |
+| #9 | 保护清单文案硬编码「11 个」 | 改 `PROTECTED_SLUGS.length` | — |
+| — | 插件装载失败阻断画面（EditView try 内 await / ViewView try 外） | 两处 `await pluginsReady.catch(() => {})` | e2e screen-versioning/plugin-dir 绿 |
+
+**门禁（修复后）**：`just fe-quality` 全过——typecheck / eslint 0 error / layers / **707 单测**（+12）/
+**e2e 80 passed** / build / **mcp 67 passed**（+7）；rs-iot 侧无代码改动（审查结论：SSE/MetaKind/gateway 面无疑点）。
+
+**登记未修（低风险/设计权衡）**：
+- 写工具 `HmiApiError(status=200)` 语义倒挂（2xx 非 JSON），无实害；
+- `refreshMySymbols`/`onSaveSymbol` 无并发 cap、同名查找 N+1（符号量级小，机制与 rename 的 cap4 不一致）；
+- 复制「插件缺席占位框」后保存会把占位 tag 固化（数据已丢的复制语义，需产品决策）。

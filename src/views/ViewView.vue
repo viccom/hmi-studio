@@ -436,7 +436,9 @@ onMounted(async () => {
     ElMessage.error('画面加载失败')
     return
   }
-  await pluginsReady
+  // 插件装载汇合（P3b）：与 GET 并行（上面已发起），挂画面前收口；插件面是可选增强——
+  // 任何失败都不得阻断画面渲染（loadPlugins 已按插件隔离，此处 catch 是最后兜底）
+  await pluginsReady.catch(() => { /* 降级 = 无插件，画面照挂 */ })
   await mountScreen(done)
   navStack.nav(slug) // 历史栈起点（back 弹空 → '/' 画面列表）
 })

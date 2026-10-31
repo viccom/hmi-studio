@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { findBareImports, lintManifest, mergeIndex, entryUrl, ID_RE } from './install-plugin.mjs'
+import {
+  findBareImports, findRelativeImports, lintManifest, mergeIndex, entryUrl, ID_RE, entryIsSafe, parseIndex,
+} from './install-plugin.mjs'
 
 const ok = { id: 'hello-card', name: 'Hello 卡片', version: '0.1.0', entry: 'dist.js' }
 
@@ -18,6 +20,26 @@ describe('lintManifest（安装闸）', () => {
     expect(lintManifest({ ...ok, name: '' }).join()).toMatch(/name/)
     expect(lintManifest({ ...ok, version: '1.2' }).join()).toMatch(/version/)
     expect(lintManifest(ok, { entryMissing: 'dist.js' }).join()).toMatch(/entry/)
+  })
+
+  it('rejects entry traversal / absolute entry（读源目录、写 widgets/<id> 两次解析各自越界）', () => {
+    expect(lintManifest({ ...ok, entry: '../../escape.js' }).join()).toMatch(/entry 非法/)
+    expect(lintManifest({ ...ok, entry: '/etc/hostname' }).join()).toMatch(/entry 非法/)
+    expect(lintManifest({ ...ok, entry: 'sub/dist.js' })).toEqual([]) // 子目录相对路径合法
+    expect(entryIsSafe('dist.js')).toBe(true)
+    expect(entryIsSafe('a/b/c.js')).toBe(true)
+    expect(entryIsSafe('a/../b.js')).toBe(false)
+    expect(entryIsSafe('C:/x.js')).toBe(false)
+    expect(entryIsSafe('')).toBe(false)
+  })
+
+  it('rejects relative imports（安装只复制 entry 单文件，相对依赖装后必丢）', () => {
+    expect(findRelativeImports("import './a.js'\nimport x from '../y.js'").sort()).toEqual(['../y.js', './a.js'])
+    const errs = lintManifest(ok, { entryText: "import './helper.js'\nimport x from '../y.js'" })
+    expect(errs.join('\n')).toMatch(/相对 import/)
+    // 无 import 的 entry 不受影响；裸 import 仍按原规则拒
+    expect(lintManifest(ok, { entryText: 'export default (h) => {}' })).toEqual([])
+    expect(lintManifest(ok, { entryText: "import { h } from 'vue'" }).join()).toMatch(/裸 import/)
   })
 })
 
@@ -58,6 +80,17 @@ describe('mergeIndex / entryUrl', () => {
 
   it('entryUrl carries version query（非哈希名的缓存 bust）', () => {
     expect(entryUrl(ok)).toBe('widgets/hello-card/dist.js?v=0.1.0')
+  })
+})
+
+describe('parseIndex（损坏绝不当作空清单）', () => {
+  it('missing = empty; corrupt / non-array = null（拒绝写入，防抹掉已装表项）', () => {
+    expect(parseIndex(null)).toEqual({ plugins: [] })
+    expect(parseIndex('{ "plugins": [] }')).toEqual({ plugins: [] })
+    expect(parseIndex('{"plugins": [{"id":"a"}]}')).toEqual({ plugins: [{ id: 'a' }] })
+    expect(parseIndex('{ "plugins": [ {"id":"old-a"}')).toBeNull() // 半写截断
+    expect(parseIndex('null')).toBeNull()
+    expect(parseIndex('{"plugins": "x"}')).toBeNull()
   })
 })
 

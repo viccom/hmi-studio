@@ -62,11 +62,13 @@ export function buildSymbolDoc(item: IDoneJson, name: string): StoredSymbolDoc {
   }
 }
 
-/** 存储文档 → 左面板 reg-combin 注册项（编辑器启动 list 后逐项转换） */
+/** 存储文档 → 左面板 reg-combin 注册项（编辑器启动 list 后逐项转换）。
+ *  id 已带 `sym-` 时不再叠加（2026-10-31 审查：存储 id 由 EditView 生成为 `sym-<uid>`，
+ *  旧逻辑注册项变 `sym-sym-…`）；`ah-` 等其它前缀仍走 REG_ID_PREFIX 隔离。 */
 export function toRegistrationItem(id: string, doc: StoredSymbolDoc): RegCombinItem {
   const binfo = (doc.combin_json.binfo ?? {}) as { width?: number; height?: number }
   return {
-    id: REG_ID_PREFIX + id,
+    id: id.startsWith(REG_ID_PREFIX) ? id : REG_ID_PREFIX + id,
     title: doc.name || id,
     type: 'reg-combin',
     thumbnail: '',
@@ -81,12 +83,28 @@ export function toRegistrationItem(id: string, doc: StoredSymbolDoc): RegCombinI
 let lastSignature = ''
 
 /** 注册/刷新「我的符号」组（registerConfig 同名覆盖语义，F9）；空清单跳过（不留空组头）；
- *  清单未变跳过（覆盖提示只在真变化时出现一次）。 */
-export function registerMySymbols(docs: Array<{ id: string; doc: StoredSymbolDoc }>): number {
+ *  清单未变跳过（覆盖提示只在真变化时出现一次）。
+ *
+ *  签名含 **version**（2026-10-31 审查）：同名覆盖复用 id + name，只认 id:name 会漏掉
+ *  「同名更新」→ 左面板继续拖出旧 combin_json。version 由调用方从 GET 带出。
+ *  畸形文档逐条跳过（缺 combin_json 曾让整组注册抛错、整组静默消失）。 */
+export function registerMySymbols(docs: Array<{ id: string; doc: StoredSymbolDoc; version?: number }>): number {
   if (docs.length === 0) return 0
-  const signature = docs.map(({ id, doc }) => `${id}:${doc.name}`).join('|')
-  if (signature === lastSignature) return docs.length
+  const valid: Array<{ id: string; doc: StoredSymbolDoc; version?: number }> = []
+  for (const d of docs) {
+    try {
+      const cj = d?.doc?.combin_json
+      if (typeof cj !== 'object' || cj === null || Array.isArray(cj)) throw new Error('combin_json 缺失或非对象')
+      if (typeof d.doc.name !== 'string') throw new Error('name 缺失')
+      valid.push(d)
+    } catch (e) {
+      console.warn('[my-symbols] 跳过畸形符号文档', d?.id, e instanceof Error ? e.message : String(e))
+    }
+  }
+  if (valid.length === 0) return 0
+  const signature = valid.map(({ id, doc, version }) => `${id}:${doc.name}:${version ?? ''}`).join('|')
+  if (signature === lastSignature) return valid.length
   lastSignature = signature
-  leftAsideStore.registerConfig(MY_SYMBOLS_GROUP, docs.map(({ id, doc }) => toRegistrationItem(id, doc)))
-  return docs.length
+  leftAsideStore.registerConfig(MY_SYMBOLS_GROUP, valid.map(({ id, doc }) => toRegistrationItem(id, doc)))
+  return valid.length
 }

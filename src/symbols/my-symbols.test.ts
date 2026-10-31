@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
-import { buildSymbolDoc, toRegistrationItem, MY_SYMBOLS_GROUP } from './my-symbols'
+import { describe, expect, it, vi } from 'vitest'
+import { leftAsideStore } from 'maotu'
+import { buildSymbolDoc, toRegistrationItem, registerMySymbols, MY_SYMBOLS_GROUP } from './my-symbols'
 
 /** 探针报告 §1 的 group 项最小形状（children 内存形态省略内部字段） */
 function groupItem(): Record<string, unknown> {
@@ -57,5 +58,50 @@ describe('toRegistrationItem（启动注册）', () => {
 
   it('group name is stable（左面板组名单源）', () => {
     expect(MY_SYMBOLS_GROUP).toBe('我的符号')
+  })
+
+  it('sym- 存储 id 不再双前缀；其它前缀仍隔离到 sym-（审查 N7）', () => {
+    const doc = buildSymbolDoc(groupItem() as never, 'X')
+    expect(toRegistrationItem('sym-abc', doc).id).toBe('sym-abc')
+    expect(toRegistrationItem('ah-legacy', doc).id).toBe('sym-ah-legacy')
+  })
+})
+
+describe('registerMySymbols（同名更新刷新 + 畸形条目隔离）', () => {
+  /** 临时替换 maotu 全局 registerConfig（不触真实左面板）。 */
+  async function withReg(fn: (reg: ReturnType<typeof vi.fn>) => void | Promise<void>) {
+    const reg = vi.fn()
+    const orig = leftAsideStore.registerConfig
+    leftAsideStore.registerConfig = reg as unknown as typeof leftAsideStore.registerConfig
+    try {
+      await fn(reg)
+    } finally {
+      leftAsideStore.registerConfig = orig
+    }
+  }
+
+  it('version 变化触发重新注册（同名覆盖复用 id+name——只认 id:name 会拖出旧 combin_json）', async () => {
+    await withReg((reg) => {
+      const doc = buildSymbolDoc(groupItem() as never, '同名符号-版本去重')
+      expect(registerMySymbols([{ id: 'sym-v', doc, version: 1 }])).toBe(1)
+      registerMySymbols([{ id: 'sym-v', doc, version: 1 }]) // 内容未变 → 跳过
+      expect(reg).toHaveBeenCalledOnce()
+      registerMySymbols([{ id: 'sym-v', doc, version: 2 }]) // 内容变了 → 重注册
+      expect(reg).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  it('畸形符号文档逐条跳过，不连坐整组（缺 combin_json 曾致整组静默消失）', async () => {
+    await withReg((reg) => {
+      const good = buildSymbolDoc(groupItem() as never, '好符号-隔离')
+      const n = registerMySymbols([
+        { id: 'sym-bad', doc: { name: '坏' } as never, version: 1 },
+        { id: 'sym-good', doc: good, version: 1 },
+      ])
+      expect(n).toBe(1)
+      expect(reg).toHaveBeenCalledOnce()
+      const items = reg.mock.calls[0][1] as Array<{ id: string }>
+      expect(items.map((i) => i.id)).toEqual(['sym-good'])
+    })
   })
 })

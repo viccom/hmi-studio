@@ -23,6 +23,9 @@ const PORT_POSITIONS = new Set(['leftTop', 'leftBottom', 'rightTop'])
 
 export function lintSymbol(s: ILeftAsideConfigItemPublic): string[] {
   const errs = new Set<string>()
+  // ID_MISSING（2026-10-31 审查修复）：id 是 loader 命名空间检查与拖入建元的唯一键——
+  // 缺 id 曾让 `s.id.startsWith` 抛 TypeError，击穿单图元隔离（编辑器整页拒载）。
+  if (typeof s?.id !== 'string' || !s.id) errs.add('ID_MISSING')
   const fill = s.props?.fill
   if (!fill || fill.type !== 'color') errs.add('FILL_MISSING')
   for (const p of s.ports ?? []) {

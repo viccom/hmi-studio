@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { applyFallback, restoreStashed, MISSING_TAG, knownTags } from './plugin-fallback'
+import { pluginSymbols } from './plugin-loader'
 
 function tankItem(id = 't1', extraProps: Record<string, unknown> = { fill: '#52c41a' }): Record<string, unknown> {
   return { id, title: '罐', type: 'svg', tag: 'ah-tank', binfo: { left: 10, top: 10, width: 80, height: 90 }, props: extraProps, binds: [], events: [] }
@@ -59,6 +60,25 @@ describe('applyFallback（未知 props 键剔除）', () => {
     expect(item.props).toEqual({ fill: '#fff' })
     expect(r.stashed.size).toBe(0) // 剔键不存档（非破坏性替换）
   })
+
+  it('清洗未知 props 后仍递归 children（旧实现提前 return，子树未知 tag 漏降级）', () => {
+    pluginSymbols().set('plug-box', new Set(['fill']))
+    try {
+      const g = {
+        id: 'pg', title: '插件组合', type: 'vue', tag: 'plug-box', binfo: {},
+        props: { fill: { val: '#fff' }, old_key: { val: 1 } },
+        children: [{ id: 'c9', title: '子', type: 'svg', tag: 'gone-plugin', binfo: {} }],
+      }
+      const r = applyFallback(done([g]))
+      expect(r.degraded.map((d) => `${d.id}:${d.reason}`)).toEqual(['pg:unknown_props', 'c9:unknown_tag'])
+      const top = (r.done.json as Array<Record<string, unknown>>)[0]
+      expect(top.props).toEqual({ fill: { val: '#fff' } })
+      expect((top.children as Array<Record<string, unknown>>)[0].tag).toBe(MISSING_TAG)
+      expect(r.stashed.get('c9')).toBeDefined()
+    } finally {
+      pluginSymbols().delete('plug-box')
+    }
+  })
 })
 
 describe('restoreStashed（编辑侧保存不丢数据）', () => {
@@ -79,6 +99,18 @@ describe('restoreStashed（编辑侧保存不丢数据）', () => {
   it('no stash = passthrough（零开销路径）', () => {
     const payload = done([tankItem()])
     expect(restoreStashed(payload, new Map())).toBe(payload)
+  })
+
+  it('占位框上的移动/缩放（binfo）保留，数据字段以存档为准（审查 #7）', () => {
+    const orig: Record<string, unknown> = { ...tankItem('p3'), tag: 'hello-card', binfo: { left: 10, top: 10, width: 80, height: 90 } }
+    const fb = applyFallback(done([orig]))
+    const moved = { left: 99, top: 88, width: 120, height: 60 }
+    const payload = { ...fb.done, json: (fb.done.json as unknown[]).map((i) => ({ ...(i as Rec), binfo: moved })) }
+    const restored = restoreStashed(payload as Rec2, fb.stashed)
+    const item = (restored.json as Array<Record<string, unknown>>)[0]
+    expect(item.tag).toBe('hello-card')
+    expect(item.binfo).toEqual(moved) // 用户编辑保留
+    expect(item.props).toEqual(orig.props) // 原数据不丢
   })
 })
 

@@ -66,8 +66,9 @@ async function loadScreen(pluginsReady?: Promise<unknown>) {
     meta.value = m
     version.value = ver
     upgradeNavTargets(done) // 存量跳转按钮 input→select（拖入为注册项深拷贝，旧实例需就地升级）
-    // 插件装载汇合点：降级判定（knownTags）须含已装载插件 tag——GET 期间装载大多已完成
-    if (pluginsReady) await pluginsReady
+    // 插件装载汇合点：降级判定（knownTags）须含已装载插件 tag——GET 期间装载大多已完成。
+    // catch 兜底：插件装载失败 = 无插件（相关图元走降级占位），不得阻断画面加载
+    if (pluginsReady) await pluginsReady.catch(() => { /* 降级路径见 applyFallback */ })
     // 插件缺席降级（P3b）：未知 tag → 占位框（原项存档，保存还原）；未知 props 键剔除
     const fb = applyFallback(done as unknown as Record<string, unknown>)
     stashedItems = fb.stashed
@@ -102,11 +103,14 @@ onMounted(async () => {
   void refreshMySymbols()
 })
 
-/** list + get 全量符号 → registerConfig「我的符号」组（同名覆盖语义刷新）。 */
+/** list + get 全量符号 → registerConfig「我的符号」组（同名覆盖语义刷新；version 参与去重签名）。 */
 async function refreshMySymbols(): Promise<void> {
   try {
     const sApi = symbolsApi()
-    const docs = await Promise.all((await sApi.list()).map(async (id) => ({ id, doc: (await sApi.get(id)).doc })))
+    const docs = await Promise.all((await sApi.list()).map(async (id) => {
+      const g = await sApi.get(id)
+      return { id, doc: g.doc, version: g.version }
+    }))
     registerMySymbols(docs)
   } catch { /* 无符号服务面不阻塞编辑器 */ }
 }
@@ -124,7 +128,12 @@ async function onSaveSymbol(item: IDoneJson): Promise<void> {
   } catch { return /* 用户取消 */ }
   try {
     const sApi = symbolsApi()
-    const doc = buildSymbolDoc(item, name)
+    const raw = buildSymbolDoc(item, name)
+    // BI 运行态复位（与画面保存同款）：组合里可能有 BI 图元，props.data 是宿主聚合的
+    // 运行态快照——入库既撑大 128KiB 配额，拖入时还会带出陈旧数据（2026-10-31 审查补齐）。
+    // symbols 层不得依赖 lib（check-layers），故 sanitize 放在本层做。
+    const clean = sanitizeBiProps({ json: [raw.combin_json] }) as { json: Array<Record<string, unknown>> }
+    const doc = { ...raw, combin_json: clean.json[0] ?? raw.combin_json }
     let id = ''
     let ifVersion: number | undefined
     for (const sid of await sApi.list()) {

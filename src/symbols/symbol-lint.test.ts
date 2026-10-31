@@ -26,6 +26,12 @@ describe('lintSymbol 五规则', () => {
     for (const s of allSymbols()) expect(lintSymbol(s), s.id).toEqual([])
   })
 
+  it('ID_MISSING：id 缺失/非字符串 → 拒载（loader 的 ah- 命名空间检查依赖 id 为字符串）', () => {
+    expect(lintSymbol(broken({ id: undefined }))).toContain('ID_MISSING')
+    expect(lintSymbol(broken({ id: 42 }))).toContain('ID_MISSING')
+    expect(lintSymbol(OK)).not.toContain('ID_MISSING')
+  })
+
   it('缺 fill 色属性 → FILL_MISSING（状态色绑定 props.fill.val 的前提）', () => {
     const noFill = broken({ props: { label: { title: '标签', type: 'input', val: 'x' } } })
     expect(lintSymbol(noFill)).toContain('FILL_MISSING')

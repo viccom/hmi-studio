@@ -11,15 +11,11 @@
  * 运行侧（ViewView）只渲染不保存，替换即终态。
  */
 import { allSymbols } from './registry'
+import { BUILTIN_TAGS } from './builtin-tags'
 import { pluginSymbols } from './plugin-loader'
 
 /** 占位图元 tag（AhPluginMissing.vue 全局注册名 = vueTagFor('ah-plugin-missing')） */
 export const MISSING_TAG = 'ah-plugin-missing'
-
-/** maotu 内置标签白名单（bundle 全量枚举 sys 族与 text-vue；与 mcp/tools/screens.ts
- *  BUILTIN_TAGS 同源约定；group = 组合项 tag（探针报告 §1），非插件面。
- *  漏枚举 = 内置图元被误降级成占位——w10 页签屏 sys-button-vue 实测踩到） */
-const BUILTIN_TAGS = new Set(['text-vue', 'group', 'sys-button-vue', 'sys-line', 'sys-line-vertical'])
 
 export interface FallbackResult {
   /** 替换/清洗后的 done（可直接 setImportJson） */
@@ -74,7 +70,10 @@ export function applyFallback(done: Rec): FallbackResult {
         props: { missing_tag: { title: '原 tag', type: 'input', val: tag } },
       }
     }
-    // 已知 tag：剔除未知 props 键（归一化抛错面）——平面值形态与描述符形态都兼容
+    // 已知 tag：剔除未知 props 键（归一化抛错面）——平面值形态与描述符形态都兼容。
+    // 注意：清洗后**继续走 children 递归**（审查修复：旧实现此处提前 return，
+    // 有 children 的插件图元升级后，其子树里的未知 tag 不再降级）
+    let out: Rec = item
     const allowed = tag ? propKeysOf(tag, propKeys) : undefined
     const props = asRec(item.props)
     if (allowed && props) {
@@ -84,25 +83,31 @@ export function applyFallback(done: Rec): FallbackResult {
         for (const k of unknown) console.warn('[plugin-fallback] 剔除未知 props 键', item.id, tag, k)
         const cleaned: Rec = {}
         for (const [k, v] of Object.entries(props)) if (allowed.has(k)) cleaned[k] = v
-        return { ...item, props: cleaned }
+        out = { ...item, props: cleaned }
       }
     }
-    if (Array.isArray(item.children)) {
-      return { ...item, children: (item.children as unknown[]).map((c) => (asRec(c) ? fixItem(c as Rec) : c)) }
+    if (Array.isArray(out.children)) {
+      return { ...out, children: (out.children as unknown[]).map((c) => (asRec(c) ? fixItem(c as Rec) : c)) }
     }
-    return item
+    return out
   }
 
   const json = Array.isArray(done.json) ? (done.json as unknown[]).map((c) => (asRec(c) ? fixItem(c as Rec) : c)) : done.json
   return { done: { ...done, json }, stashed, degraded }
 }
 
-/** 保存前还原：把 applyFallback 存档的原项按 id 合并回 payload（占位不入库）。 */
+/** 保存前还原：把 applyFallback 存档的原项按 id 合并回 payload（占位不入库）。
+ *  几何（binfo）取**当前 payload**——用户在占位框上的移动/缩放是有效编辑；
+ *  身份/数据字段（tag/type/props/binds/symbol/children）以存档为准（审查修复）。 */
 export function restoreStashed(payload: Rec, stashed: Map<string, Rec>): Rec {
   if (stashed.size === 0) return payload
   const restore = (item: Rec): Rec => {
     const orig = stashed.get(String(item.id))
-    if (orig && item.tag === MISSING_TAG) return JSON.parse(JSON.stringify(orig)) as Rec
+    if (orig && item.tag === MISSING_TAG) {
+      const restored = JSON.parse(JSON.stringify(orig)) as Rec
+      if (item.binfo !== undefined) restored.binfo = item.binfo
+      return restored
+    }
     if (Array.isArray(item.children)) {
       return { ...item, children: (item.children as unknown[]).map((c) => (asRec(c) ? restore(c as Rec) : c)) }
     }

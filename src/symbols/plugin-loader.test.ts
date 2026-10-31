@@ -1,7 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
-import { loadPlugins, loadOne, PLUGIN_GROUP, type PluginFactory, type PluginHost } from './plugin-loader'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { loadPlugins, loadOne, __resetPluginLoaderState, PLUGIN_GROUP, type PluginFactory, type PluginHost } from './plugin-loader'
 import { leftAsideStore } from 'maotu'
 import type { HmiSymbol } from './types'
+
+beforeEach(() => __resetPluginLoaderState())
 
 /** 合法 vue 型 symbol（过 lintSymbol：fill(color) 必备 + props 描述符齐备） */
 function goodSymbol(id: string): HmiSymbol {
@@ -78,6 +80,18 @@ describe('loadOne（门禁与注册）', () => {
     expect(ok).toBe(false)
     expect(notify.mock.calls[0][0]).toMatch(/default/)
   })
+
+  it('缺 id 图元走 lint 拒绝（不再 TypeError 击穿装载链——审查 N1）', async () => {
+    const notify = vi.fn()
+    const bad = { ...goodSymbol('p-noid') } as Record<string, unknown>
+    delete bad.id
+    const ok = await loadOne(
+      { id: 'p-noid', name: 'P', version: '0.1.0', entry: 'dist.js' },
+      { fetchEntry: async () => entryOf((h) => h.registerSymbol(bad as unknown as HmiSymbol)), onNotify: notify },
+    )
+    expect(ok).toBe(false)
+    expect(notify.mock.calls[0][0]).toMatch(/lint/)
+  })
 })
 
 describe('loadPlugins（index 面）', () => {
@@ -106,5 +120,45 @@ describe('loadPlugins（index 面）', () => {
     )
     expect(r.loaded).toEqual(['p-ok2'])
     expect(r.failed.map((f) => f.id)).toEqual(['p-bad2'])
+  })
+
+  it('多插件聚合注册（registerConfig 同名覆盖——逐插件注册会只剩最后一个）', async () => {
+    const reg = vi.fn()
+    const orig = leftAsideStore.registerConfig
+    leftAsideStore.registerConfig = reg as unknown as typeof leftAsideStore.registerConfig
+    try {
+      const r = await loadPlugins(
+        async () => ({ plugins: [
+          { id: 'p-a', name: 'A', version: '1.0.0', entry: 'dist.js' },
+          { id: 'p-b', name: 'B', version: '1.0.0', entry: 'dist.js' },
+        ] }),
+        {
+          fetchEntry: async (url: string) =>
+            entryOf((h) => h.registerSymbol(goodSymbol(url.includes('p-a') ? 'p-a' : 'p-b'))),
+        },
+      )
+      expect(r.loaded).toEqual(['p-a', 'p-b'])
+      expect(reg).toHaveBeenCalledOnce()
+      const [group, items] = reg.mock.calls[0] as [string, HmiSymbol[]]
+      expect(group).toBe(PLUGIN_GROUP)
+      expect(items.map((s) => s.id)).toEqual(['p-a', 'p-b'])
+    } finally {
+      leftAsideStore.registerConfig = orig
+    }
+  })
+
+  it('内容未变重复装载只注册一次（maotu 覆盖提示去重——每次挂载不刷屏）', async () => {
+    const reg = vi.fn()
+    const orig = leftAsideStore.registerConfig
+    leftAsideStore.registerConfig = reg as unknown as typeof leftAsideStore.registerConfig
+    try {
+      const index = async () => ({ plugins: [{ id: 'p-same', name: 'S', version: '1.0.0', entry: 'dist.js' }] })
+      const opts = { fetchEntry: async () => entryOf((h: PluginHost) => h.registerSymbol(goodSymbol('p-same'))) }
+      await loadPlugins(index, opts)
+      await loadPlugins(index, opts)
+      expect(reg).toHaveBeenCalledOnce()
+    } finally {
+      leftAsideStore.registerConfig = orig
+    }
   })
 })
