@@ -66,6 +66,14 @@ export class HmiBackend {
   post(path: string, body: unknown): Promise<unknown> {
     return this.request('POST', path, body)
   }
+
+  put(path: string, body: unknown): Promise<unknown> {
+    return this.request('PUT', path, body)
+  }
+
+  del(path: string): Promise<unknown> {
+    return this.request('DELETE', path)
+  }
 }
 
 /** stderr 工具调用日志（设计 §4.3：tool/tier/ok/ms）。永不抛（日志面故障不影响工具）。 */

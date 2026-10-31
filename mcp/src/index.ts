@@ -1,11 +1,11 @@
 /**
  * hmi-mcp stdio 入口（设计 §4.1，形态对齐 rsiot-mcp main.rs）。
  *
- * 读工具族 9 个（本轮）：hmi_list_screens / hmi_get_screen / hmi_validate_screen /
+ * 读工具族 9 个（第 2 轮）：hmi_list_screens / hmi_get_screen / hmi_validate_screen /
  * hmi_describe_widget_kit / hmi_list_devices / hmi_list_points / hmi_query_history /
  * hmi_list_alarms / hmi_screenshot。
- * 写工具族（create/put/rename/rollback/delete/install）第 3 轮——挂 P0 乐观锁 +
- * 审批闸 + 保护 slug 硬拒后才交付。
+ * 写工具族 7 个（第 3 轮）：hmi_create_screen / hmi_put_screen / hmi_put_protected_screen /
+ * hmi_rename_group / hmi_rollback_screen / hmi_delete_screen / hmi_install_plugin。
  *
  * 配置（§4.3，全部环境变量）：HMI_BASE_URL（默认 127.0.0.1:8790）、HMI_JWT
  * （sub=hmi-mcp）、HMI_VIEW_ORIGIN（截图，默认 gateway /hmi）。reasonix 侧以
@@ -19,8 +19,9 @@ import { registerScreenTools } from './tools/screens'
 import { registerWidgetTools } from './tools/widgets'
 import { registerDataTools } from './tools/data'
 import { registerScreenshotTools } from './tools/screenshot'
+import { registerWriteTools } from './tools/writes'
 
-const VERSION = '0.1.0'
+const VERSION = '0.2.0'
 
 async function main(): Promise<void> {
   const server = new McpServer({ name: 'hmi-mcp', version: VERSION })
@@ -33,10 +34,11 @@ async function main(): Promise<void> {
   registerWidgetTools(registrar)
   registerDataTools(registrar, backend)
   registerScreenshotTools(registrar)
+  registerWriteTools(registrar, backend)
 
   await server.connect(new StdioServerTransport())
   // stderr 是日志面（stdout 是 MCP 协议面）——启动事实落 stderr
-  process.stderr.write(JSON.stringify({ ts: new Date().toISOString(), msg: 'hmi-mcp ready', tools: 9, version: VERSION }) + '\n')
+  process.stderr.write(JSON.stringify({ ts: new Date().toISOString(), msg: 'hmi-mcp ready', tools: 16, version: VERSION }) + '\n')
 }
 
 main().catch((e) => {

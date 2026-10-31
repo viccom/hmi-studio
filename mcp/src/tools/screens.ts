@@ -118,8 +118,9 @@ function collectItemWarnings(item: unknown, knownTags: Set<string>, warnings: Va
   }
 }
 
-/** maotu 内置标签白名单（本仓画面实证在用；registry 只含 ah-* 自建族）。 */
-const BUILTIN_TAGS = new Set(['text-vue'])
+/** maotu 内置标签白名单（bundle 全量枚举；registry 只含 ah-* 自建族）。
+ *  与 plugin-fallback.ts BUILTIN_TAGS 同源约定（2026-10-31 w10 教训补全）。 */
+const BUILTIN_TAGS = new Set(['text-vue', 'sys-button-vue', 'sys-line', 'sys-line-vertical'])
 
 /**
  * BI 图元契约校验：逐个 ah-bi-* 顶层元素走 collectBiPanels（单源解析）。
