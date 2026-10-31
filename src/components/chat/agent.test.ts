@@ -260,3 +260,50 @@ describe('供应商探测（⚙ 显隐降级）', () => {
     expect(s.providersAvailable).toBe(false)
   })
 })
+
+describe('附件与工作区（2026-10-31 功能对齐控制台）', () => {
+  it('uploadAttachment POST FormData → 返回 @ 引用路径', async () => {
+    let seenPath = ''
+    let seenForm = false
+    mockedApi.mockImplementation(async (path: string, opts?: RequestInit) => {
+      seenPath = String(path)
+      seenForm = typeof FormData !== 'undefined' && opts?.body instanceof FormData
+      return jsonResponse({ files: [{ path: '.reasonix/attachments/upload-1.txt' }] })
+    })
+    const s = useAgentStore()
+    const file = new File(['hi'], 'note.txt', { type: 'text/plain' })
+    await expect(s.uploadAttachment(file)).resolves.toBe('.reasonix/attachments/upload-1.txt')
+    expect(seenPath).toBe('/api/agent/attachments')
+    expect(seenForm).toBe(true)
+  })
+
+  it('uploadAttachment 失败（413）→ 抛错带状态码', async () => {
+    mockedApi.mockImplementation(async () => jsonResponse('too large', 413))
+    const s = useAgentStore()
+    await expect(s.uploadAttachment(new File(['x'], 'big.bin'))).rejects.toThrow(/413/)
+  })
+
+  it('uploadAttachment 响应缺 path → 抛错（不静默产出空 @ 引用）', async () => {
+    mockedApi.mockImplementation(async () => jsonResponse({ files: [{}] }))
+    const s = useAgentStore()
+    await expect(s.uploadAttachment(new File(['x'], 'x.txt'))).rejects.toThrow(/missing path/)
+  })
+
+  it('listWorkspace 编码路径并返回条目', async () => {
+    let seenPath = ''
+    mockedApi.mockImplementation(async (path: string) => {
+      seenPath = String(path)
+      return jsonResponse({ entries: [{ name: 'docs', is_dir: true }, { name: 'a.txt', is_dir: false }] })
+    })
+    const s = useAgentStore()
+    const entries = await s.listWorkspace('docs/sub dir')
+    expect(seenPath).toBe('/api/agent/workspace?path=docs%2Fsub%20dir')
+    expect(entries).toEqual([{ name: 'docs', is_dir: true }, { name: 'a.txt', is_dir: false }])
+  })
+
+  it('listWorkspace 503 → 抛错（选择器展示错误而非空目录）', async () => {
+    mockedApi.mockImplementation(async () => jsonResponse('no reasonix', 503))
+    const s = useAgentStore()
+    await expect(s.listWorkspace('')).rejects.toThrow(/503/)
+  })
+})

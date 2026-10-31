@@ -22,10 +22,12 @@ interface AgentMocks {
 async function mockAgent(page: Page, opts: AgentMocks = {}): Promise<{
   submitBodies: Array<Record<string, unknown>>
   approveBodies: Array<Record<string, unknown>>
+  workspaceCalls: string[]
   release: () => void
 }> {
   const submitBodies: Array<Record<string, unknown>> = []
   const approveBodies: Array<Record<string, unknown>> = []
+  const workspaceCalls: string[] = []
   let framesRequested = false
   let release: () => void = () => {}
   const gate = new Promise<void>((r) => { release = r })
@@ -40,6 +42,14 @@ async function mockAgent(page: Page, opts: AgentMocks = {}): Promise<{
   await page.route('**/api/agent/providers', (route) => route.fulfill({
     body: JSON.stringify({ providers: [{ name: 'deepseek', kind: 'openai', base_url: 'https://api.example.com', models: ['ds-v4'], api_key_env: 'K', has_key: true }], default_model: 'deepseek/ds-v4' }),
   }))
+  // 附件上传（2026-10-31 功能对齐）：gateway 返回落盘路径，前端以 @ 引用前置。
+  await page.route(/\/api\/agent\/attachments/, (route) =>
+    route.fulfill({ body: JSON.stringify({ files: [{ path: '.reasonix/attachments/upload-e2e.txt' }] }) }))
+  // 工作区目录（沙箱一层列表）。
+  await page.route(/\/api\/agent\/workspace/, (route) => {
+    workspaceCalls.push(route.request().url())
+    return route.fulfill({ body: JSON.stringify({ entries: [{ name: 'docs', is_dir: true }, { name: 'reasonix.toml', is_dir: false }] }) })
+  })
   await page.route('**/api/agent/submit', async (route) => {
     submitBodies.push(route.request().postDataJSON() as Record<string, unknown>)
     await route.fulfill({ status: 204, body: '' })
@@ -59,7 +69,7 @@ async function mockAgent(page: Page, opts: AgentMocks = {}): Promise<{
       await new Promise(() => {})
     }
   })
-  return { submitBodies, approveBodies, release: () => release() }
+  return { submitBodies, approveBodies, workspaceCalls, release: () => release() }
 }
 
 test.describe('AI 面板（mock /api/agent/*）', () => {
@@ -158,5 +168,69 @@ test.describe('AI 面板（mock /api/agent/*）', () => {
     await expect.poll(() => mocks.approveBodies.length).toBe(1)
     expect(mocks.approveBodies[0]).toEqual({ id: 'a1', allow: true })
     await expect(modal).toHaveCount(0)
+  })
+
+  // 2026-10-31 功能对齐（控制台面板 → hmi 面板）：附件上传 + 工作区 @ 引用。
+  test('📎 附件上传 → chip → 仅附件可发送（@ 引用前置）→ 发送后清空', async ({ page }) => {
+    const mocks = await mockAgent(page)
+    await loginAsAdmin(page)
+    await page.goto('/')
+    await page.getByRole('button', { name: '打开 AI 助手' }).click()
+    const drawer = page.getByRole('complementary', { name: 'AI 助手面板' })
+
+    await drawer.locator('input[type=file]').setInputFiles({
+      name: 'e2e-note.txt', mimeType: 'text/plain', buffer: Buffer.from('hello'),
+    })
+    const chip = drawer.locator('.attach-chip')
+    await expect(chip).toHaveCount(1)
+    await expect(chip).toContainText('e2e-note.txt')
+
+    // 仅附件（无文字）也可发送
+    const send = drawer.getByRole('button', { name: '发送' })
+    await expect(send).toBeEnabled()
+    await send.click()
+    await expect.poll(() => mocks.submitBodies.length).toBe(1)
+    const input = (mocks.submitBodies[0] as { input: string }).input
+    expect(input.startsWith('@.reasonix/attachments/upload-e2e.txt')).toBe(true)
+    await expect(chip).toHaveCount(0)
+  })
+
+  test('📎 chip 可移除（移除后无文字则发送禁用）', async ({ page }) => {
+    await mockAgent(page)
+    await loginAsAdmin(page)
+    await page.goto('/')
+    await page.getByRole('button', { name: '打开 AI 助手' }).click()
+    const drawer = page.getByRole('complementary', { name: 'AI 助手面板' })
+    await drawer.locator('input[type=file]').setInputFiles({
+      name: 'e2e-note.txt', mimeType: 'text/plain', buffer: Buffer.from('hello'),
+    })
+    await expect(drawer.locator('.attach-chip')).toHaveCount(1)
+    await drawer.getByRole('button', { name: '移除附件' }).click()
+    await expect(drawer.locator('.attach-chip')).toHaveCount(0)
+    await expect(drawer.getByRole('button', { name: '发送' })).toBeDisabled()
+  })
+
+  test('📁 工作区选择器：列目录 → 下钻 → 选文件插入 @ 引用', async ({ page }) => {
+    const mocks = await mockAgent(page)
+    await loginAsAdmin(page)
+    await page.goto('/')
+    await page.getByRole('button', { name: '打开 AI 助手' }).click()
+    const drawer = page.getByRole('complementary', { name: 'AI 助手面板' })
+
+    await drawer.getByTitle('引用文件或文件夹：从当前工作区选择上下文').click()
+    const picker = page.locator('.modal-mask').filter({ hasText: '引用文件或文件夹' })
+    await expect(picker).toBeVisible()
+    // 根目录一次列一层
+    await expect(picker.getByRole('button', { name: /reasonix\.toml/ })).toBeVisible()
+    expect(mocks.workspaceCalls.some((u) => u.includes('path='))).toBe(true)
+
+    // 目录下钻 → path=docs
+    await picker.getByRole('button', { name: /docs/ }).click()
+    await expect.poll(() => mocks.workspaceCalls.some((u) => u.includes('path=docs'))).toBe(true)
+    // 返回根 → 选文件 → 插入 @ 引用并关闭
+    await picker.getByRole('button', { name: '工作区' }).click()
+    await picker.getByRole('button', { name: /reasonix\.toml/ }).click()
+    await expect(picker).toHaveCount(0)
+    await expect(drawer.locator('textarea')).toHaveValue(/@reasonix\.toml/)
   })
 })

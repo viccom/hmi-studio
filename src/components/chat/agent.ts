@@ -1,6 +1,6 @@
 // src/components/chat/agent.ts —— 移植自控制台 frontend/src/stores/agent.ts（P2，设计 §5.1）
 // 适配三处：api → 本仓 agent-api（同源 /api/agent/*，无 /api/v1 前缀）；页面上下文 →
-// lib/agent-context（hmi 形态：route/slug/mode）；裁掉附件与工作区（设计 v1 裁决）。
+// lib/agent-context（hmi 形态：route/slug/mode）；附件/工作区引用已对齐控制台（2026-10-31）。
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type {
@@ -14,6 +14,7 @@ import type {
   ServeSession,
   ServeStatus,
   ToolApprovalMode,
+  WorkspaceEntry,
 } from './types'
 import { agentApi } from './agent-api'
 import { buildAgentContextBlock, parseHmiLocation } from '../../lib/agent-context'
@@ -644,11 +645,33 @@ export const useAgentStore = defineStore('agent', () => {
   /** 当前活动模型 ref（模型下拉绑定）。 */
   const activeModelRef = computed(() => models.value.find(m => m.active)?.ref ?? '')
 
+  /** 上传附件到 reasonix 工作区（gateway 落 `.reasonix/attachments/`），返回 @ 引用路径。
+   *  发送时把路径以 `@` 前缀写进消息文本，serve 提交时解析内容/图片输入。 */
+  async function uploadAttachment(file: File) {
+    const fd = new FormData()
+    fd.append('file', file, file.name)
+    const r = await agentApi('/api/agent/attachments', { method: 'POST', body: fd })
+    if (!r.ok) throw new Error(`upload failed: ${r.status} ${await r.text().catch(() => '')}`.trim())
+    const data = await r.json()
+    const f = data.files?.[0]
+    if (!f?.path) throw new Error('upload response missing path')
+    return f.path as string
+  }
+
+  /** 列工作区一层目录（gateway 沙箱 + 噪音过滤），@ 引用选择器数据源。 */
+  async function listWorkspace(path: string) {
+    const r = await agentApi(`/api/agent/workspace?path=${encodeURIComponent(path)}`)
+    if (!r.ok) throw new Error(`list workspace failed: ${r.status} ${await r.text().catch(() => '')}`.trim())
+    const data = await r.json()
+    return (data.entries ?? []) as WorkspaceEntry[]
+  }
+
   return {
     messages, running, approval, ask,
     sessions, currentSession, models, status, sessionBusy, controlBusy, activeModelRef,
     providers, defaultModel, providerBusy, providersAvailable,
     loadProviders, saveProvider, deleteProvider, setDefaultModel, fetchUpstreamModels, probeProviders,
+    uploadAttachment, listWorkspace,
     onEvent, submit, approve, cancel, answer,
     loadSessions, loadHistory, loadModels, loadStatus,
     newSession, switchSession, deleteSession,

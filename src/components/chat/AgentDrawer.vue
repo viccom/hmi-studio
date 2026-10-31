@@ -1,24 +1,25 @@
 <!-- src/components/chat/AgentDrawer.vue —— 移植自控制台（P2，设计 §5.1 复制优先）。
   差异（相对控制台原版，其余逐行同源）：
-  - 裁掉 📎 附件上传与 📁 工作区 @ 引用（设计 v1 裁决：workspace 语义对 hmi 场景不合）
+  - 附件上传 📎 与工作区 @ 引用 📁 已对齐控制台（2026-10-31 功能对齐；gateway 端点同源）
   - ⚙ 供应商管理入口按 agent.providersAvailable 显隐（gateway 未配 [reasonix] → 503 → 隐藏）
   - 空态占位文案 hmi 化（画面/设备/历史语境）
   - 主题变量经 chat-theme.css 注入（hmi-studio 无控制台变量盘）
   AI 面板容器（右侧抽屉 570px，可拖宽 400-800）：
   - 头部：会话下拉 + 状态（思考中/就绪） + ⚙ + 关闭
   - 消息流：MessageItem 列表（user 右对齐 / assistant 思考折叠 + 流式文本 + 工具卡）
-  - 输入框：控件工具栏（模型/effort/执行方式/权限）+ textarea + 发送（Enter 发送）
+  - 输入框：附件/引用行（📎 上传 + 📁 工作区）+ 控件工具栏（模型/effort/执行方式/权限）+ textarea + 发送
   - 权限弹窗：approval_request 触发 PermissionModal
 -->
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
-import { useAgentStore, effortLevelsFor } from './agent'
+import { computed, nextTick, onMounted, onUnmounted, provide, ref, watch } from 'vue'
+import { useAgentStore, effortLevelsFor, escapeRefPath } from './agent'
 import './chat-theme.css'
 import { useChatScroll } from './composables/useChatScroll'
 import MessageItem, { runningKey } from './MessageItem.vue'
 import PermissionModal from './PermissionModal.vue'
 import AskModal from './AskModal.vue'
 import ProviderModal from './ProviderModal.vue'
+import WorkspacePicker from './WorkspacePicker.vue'
 import type { ToolApprovalMode } from './types'
 
 const agent = useAgentStore()
@@ -49,6 +50,16 @@ const sessionMenuOpen = ref(false)
 const sessionMenuRef = ref<HTMLElement | null>(null)
 /** LLM 供应商管理弹窗。 */
 const providerModalOpen = ref(false)
+/** 工作区引用选择器弹窗。 */
+const workspacePickerOpen = ref(false)
+/** 已上传待发送附件（chips 展示原名；发送时以 @ 引用前置进消息）。 */
+const attachments = ref<{ name: string; token: string }[]>([])
+/** 附件上传中（逐个上传期间禁发送按钮）。 */
+const uploading = ref(false)
+/** 隐藏 file input（📎 按钮触发）。 */
+const fileInput = ref<HTMLInputElement | null>(null)
+/** composer textarea（@ 引用光标插入用）。 */
+const textareaEl = ref<HTMLTextAreaElement | null>(null)
 
 const emit = defineEmits<{ close: [] }>()
 
@@ -162,23 +173,83 @@ function onEnterKey(e: KeyboardEvent) {
   void send()
 }
 
+/** 组装提交文本：附件以 @ 引用前置（serve 提交时解析为内容/图片输入，
+ *  对标 Reasonix desktop 把 @token 直接写进 composer 文本的语义）。 */
+function composeInput(text: string) {
+  const refs = attachments.value.map((a) => `@${a.token}`).join(' ')
+  return refs ? (text ? `${refs} ${text}` : refs) : text
+}
+
 /** 发送：目标 draft 态提交为目标（POST /goal），否则普通 submit。失败给 UI 反馈。 */
 async function send() {
   const text = input.value.trim()
-  if (!text || agent.running) return
+  if ((!text && !attachments.value.length) || agent.running || uploading.value) return
   errorMsg.value = ''
+  const composed = composeInput(text)
   try {
     if (goalDraftMode.value && !agent.status?.goal) {
-      await agent.setGoal(text)
+      await agent.setGoal(composed)
       goalDraftMode.value = false  // 目标已提交，输入框回归补充指令
     } else {
-      await agent.submit(text)
+      await agent.submit(composed)
     }
     input.value = ''
+    attachments.value = []
     snapToBottom()
   } catch (e) {
     errorMsg.value = e instanceof Error ? e.message : '发送失败'
   }
+}
+
+/** 📎 选本机文件 → gateway 落 reasonix 工作区 `.reasonix/attachments/` → chips 待发送。 */
+function pickFiles() {
+  fileInput.value?.click()
+}
+
+async function onFilesChosen(e: Event) {
+  const el = e.target as HTMLInputElement
+  const files = Array.from(el.files ?? [])
+  el.value = ''  // 清空以允许重复选择同一文件
+  if (!files.length) return
+  errorMsg.value = ''
+  uploading.value = true
+  try {
+    for (const f of files) {
+      attachments.value.push({ name: f.name, token: await agent.uploadAttachment(f) })
+    }
+  } catch (e) {
+    errorMsg.value = e instanceof Error ? e.message : '附件上传失败'
+  } finally {
+    uploading.value = false
+  }
+}
+
+function removeAttachment(i: number) {
+  attachments.value.splice(i, 1)
+}
+
+/** 把 @ 引用插入 textarea 光标处（路径含空格按 Reasonix EscapeRefPath 转义）。 */
+function insertRef(path: string) {
+  const token = `@${escapeRefPath(path)} `
+  const ta = textareaEl.value
+  if (!ta) {
+    input.value = input.value ? `${input.value} ${token}`.trimEnd() : token
+    return
+  }
+  const start = ta.selectionStart ?? input.value.length
+  const end = ta.selectionEnd ?? start
+  input.value = input.value.slice(0, start) + token + input.value.slice(end)
+  // 光标移到 token 之后并聚焦，便于继续输入
+  void nextTick(() => {
+    ta.focus()
+    ta.selectionStart = ta.selectionEnd = start + token.length
+  })
+}
+
+/** 工作区选择器选中路径 → 插入 @ 引用并关闭弹窗。 */
+function onWorkspaceSelect(path: string) {
+  workspacePickerOpen.value = false
+  insertRef(path)
 }
 
 /** 取消当前 turn。 */
@@ -482,8 +553,29 @@ async function onApprovalModeChange(e: Event) {
           @click="onClearGoal"
         >✕</button>
       </div>
+      <!-- 附件/引用工具行：📎 本机文件上传（chips 待发送）+ 📁 工作区 @ 引用选择。 -->
+      <div class="attach-row">
+        <button
+          class="attach-btn"
+          :disabled="agent.running || agent.sessionBusy || uploading"
+          title="添加文件或图片：上传到工作区后以 @ 引用附加到消息（图片≤10MB，文件≤25MB）"
+          @click="pickFiles"
+        >📎</button>
+        <button
+          class="attach-btn"
+          :disabled="agent.running || agent.sessionBusy"
+          title="引用文件或文件夹：从当前工作区选择上下文"
+          @click="workspacePickerOpen = true"
+        >📁</button>
+        <span v-for="(a, i) in attachments" :key="a.token" class="attach-chip" :title="a.token">
+          <span class="chip-name">{{ a.name }}</span>
+          <button class="chip-x" aria-label="移除附件" @click="removeAttachment(i)">✕</button>
+        </span>
+        <span v-if="uploading" class="uploading-hint">上传中…</span>
+      </div>
       <div class="input-row">
         <textarea
+          ref="textareaEl"
           v-model="input"
           class="textarea"
           rows="2"
@@ -493,11 +585,12 @@ async function onApprovalModeChange(e: Event) {
         />
         <button
           class="btn-send"
-          :disabled="!input.trim() || agent.running || agent.sessionBusy"
+          :disabled="(!input.trim() && !attachments.length) || agent.running || agent.sessionBusy || uploading"
           @click="send"
         >{{ goalDraftMode && !agent.status?.goal ? '设目标' : '发送' }}</button>
       </div>
     </div>
+    <input ref="fileInput" type="file" multiple hidden @change="onFilesChosen" />
 
     <PermissionModal v-if="agent.approval" :approval="agent.approval" @approve="onApprove" />
     <AskModal
@@ -507,6 +600,7 @@ async function onApprovalModeChange(e: Event) {
       @close="askDismissed = true"
     />
     <ProviderModal v-if="providerModalOpen" @close="providerModalOpen = false" />
+    <WorkspacePicker v-if="workspacePickerOpen" @select="onWorkspaceSelect" @close="workspacePickerOpen = false" />
   </aside>
 </template>
 
@@ -619,6 +713,34 @@ async function onApprovalModeChange(e: Event) {
   background: rgba(220, 38, 38, 0.06);
   border-bottom: 1px solid rgba(220, 38, 38, 0.15);
 }
+/* 附件/引用工具行（输入区上方）：📎 上传 + 📁 工作区引用 + 待发送附件 chips。 */
+.attach-row {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  padding: 8px 10px 0;
+}
+.attach-btn {
+  font-size: 14px; line-height: 1;
+  background: var(--color-surface-hover);
+  border: none; border-radius: 8px;
+  padding: 6px 9px; cursor: pointer;
+}
+.attach-btn:hover:not(:disabled) { background: var(--color-surface); outline: 1px solid var(--card-border); }
+.attach-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.attach-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  max-width: 220px;
+  font-size: 12px;
+  background: var(--chip-bg); color: var(--chip-ink);
+  border-radius: 999px; padding: 3px 4px 3px 10px;
+}
+.chip-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-x {
+  background: transparent; border: none; cursor: pointer;
+  font-size: 11px; color: var(--chip-ink); opacity: 0.7;
+  padding: 0 4px; border-radius: 999px;
+}
+.chip-x:hover { opacity: 1; background: rgba(15, 23, 42, 0.08); }
+.uploading-hint { font-size: 12px; color: var(--color-ink-muted); }
 .input-row { display: flex; gap: 8px; padding: 10px; padding-top: 0; }
 .textarea {
   flex: 1; resize: none;

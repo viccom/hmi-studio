@@ -23,8 +23,10 @@
   - **`src/components/chat/`** AI 面板（P2 移植自 rs-iot 控制台，复制优先不抽包）：`agent.ts`
     store（serve SSE 裸 NDJSON 分发）+ AgentDrawer 族；入口 `AiDrawerHost` 挂 App.vue——
     **懒加载**（defineAsyncComponent 首点才拉 chunk）+ **降级**（GET /api/agent/status 非 2xx
-    → 入口不出现；providers 503 → ⚙ 隐藏）。样式变量在 `chat-theme.css`（作用域
-    .agent-drawer，与控制台 main.css 同值，改色需两仓同步）
+    → 入口不出现；providers 503 → ⚙ 隐藏）。附件 📎 上传与工作区 📁 @ 引用已对齐控制台
+    （2026-10-31：gateway `/api/agent/attachments|workspace` 同源，上传以 @token 前置进
+    submit 文本）。样式变量在 `chat-theme.css`（作用域 .agent-drawer，与控制台 main.css
+    同值，改色需两仓同步）
 - **`mcp/`** hmi-mcp 工具层（P1，独立 npm 包**不转 monorepo**，根 vitest/tsconfig 均不含它）：
   9 读工具（list/get/validate/describe/devices/points/history/alarms/screenshot）+
   7 写工具（create/put/put_protected/rename_group/rollback/delete/install_plugin——

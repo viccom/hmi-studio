@@ -10,10 +10,13 @@ import { tokenStore } from '../../lib/api'
 
 export async function agentApi(path: string, opts: RequestInit = {}): Promise<Response> {
   const token = tokenStore.get()
+  // FormData 不设 Content-Type：浏览器需自动生成含 boundary 的 multipart 头
+  //（附件上传 /api/agent/attachments 走此分支；显式 json 头会让后端解析失败）。
+  const isForm = typeof FormData !== 'undefined' && opts.body instanceof FormData
   return fetch(path, {
     ...opts,
     headers: {
-      ...(opts.body !== undefined ? { 'content-type': 'application/json' } : {}),
+      ...(opts.body !== undefined && !isForm ? { 'content-type': 'application/json' } : {}),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
       ...opts.headers,
     },

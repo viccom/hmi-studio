@@ -165,3 +165,18 @@
 - 写工具 `HmiApiError(status=200)` 语义倒挂（2xx 非 JSON），无实害；
 - `refreshMySymbols`/`onSaveSymbol` 无并发 cap、同名查找 N+1（符号量级小，机制与 rename 的 cap4 不一致）；
 - 复制「插件缺席占位框」后保存会把占位 tag 固化（数据已丢的复制语义，需产品决策）。
+
+## 8. AI 面板功能对齐（2026-10-31，控制台 → hmi）
+
+背景：两面板同源移植，但 hmi 侧 P2 裁决裁掉了附件/工作区引用，与控制台形成功能差。
+本次对齐（方案 A）：
+
+| 能力 | 修法 | 证据 |
+|---|---|---|
+| 📎 本机文件上传 | hmi `AgentDrawer` 增 attach-row（chips/上传中态/发送前 @token 前置）；store 增 `uploadAttachment`（FormData → `/api/agent/attachments`） | `agent.test.ts` 5 例（FormData/413/缺 path/路径编码/503）；e2e 附件上传+移除 3 例 |
+| 📁 工作区 @ 引用 | 移植 `WorkspacePicker.vue`（gateway `/api/agent/workspace` 一层列表 + 面包屑下钻）；选中路径经 `escapeRefPath` 插入 textarea 光标处 | e2e 选择器下钻+插入引用；live e2e 列真实 dev 工作区 |
+| 发送/禁用条件 | 文本**或**附件任一非空；上传中禁发；发送后清空 chips | e2e「仅附件可发送」断言 submit body 以 `@path` 开头 |
+| agent-api FormData | 不设 `content-type: application/json`（浏览器自动生成 multipart boundary） | 上传 200 + 落盘断言 |
+
+**门禁**：typecheck / eslint 0 error / 单测 712（707+5）/ e2e 84（80+3 mock + 1 live）/ build 全绿。
+**live e2e**：`e2e/ai-panel-live.spec.ts` 打真实 dev gateway，上传落 `dist/run/dev/reasonix/work/.reasonix/attachments/`，测试后按前后差集清理。

@@ -150,3 +150,9 @@ export interface ServeHistoryMessage {
   toolCallId?: string
   toolName?: string
 }
+
+/** 工作区目录项（gateway /api/agent/workspace，@ 引用选择器数据源）。 */
+export interface WorkspaceEntry {
+  name: string
+  is_dir: boolean
+}
