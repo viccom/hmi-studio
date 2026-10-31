@@ -47,6 +47,7 @@ import AhBiBoxplot from './AhBiBoxplot.vue'
 import AhBiCalendar from './AhBiCalendar.vue'
 import AhBiProgress from './AhBiProgress.vue'
 import AhBiWaterfall from './AhBiWaterfall.vue'
+import AhPluginMissing from './AhPluginMissing.vue'
 
 /**
  * 图元目录分组（定义在 groups.ts——纯 ts 无 .vue 依赖，e2e 可直接 import；
@@ -95,6 +96,9 @@ export const VUE_SYMBOL_COMPONENTS: Record<string, Component> = {
   [vueTagFor('ah-bi-calendar')]: AhBiCalendar,
   [vueTagFor('ah-bi-progress')]: AhBiProgress,
   [vueTagFor('ah-bi-waterfall')]: AhBiWaterfall,
+  // P3b 降级占位（plugin-fallback.ts 的渲染面）：必须启动期就注册——插件缺席时
+  // 画面里出现 ah-plugin-missing 项，此组件是它们唯一的渲染出口
+  [vueTagFor('ah-plugin-missing')]: AhPluginMissing,
 }
 
 /** 全局组件注册（main.ts createApp 后调用一次；app.component 幂等覆盖） */

@@ -6,10 +6,10 @@
 // 见 lib/screens.ts）。
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { MtEdit } from 'maotu'
-import type { IExportJson } from 'maotu'
+import type { IExportJson, IDoneJson } from 'maotu'
 import { screensApi, unwrapDoc, wrapDoc } from '../lib/screens'
 import { ApiError } from '../lib/api'
 import { sanitizeBiProps } from '../lib/bi-sanitize'
@@ -19,6 +19,11 @@ import { fetchDeviceTree, type IDeviceInfo } from '../lib/device-tree'
 import { getAuthedUser, logout } from '../lib/auth'
 import { installBridge } from '../lib/bridge'
 import { registerSymbols, setNavTargetOptions, upgradeNavTargets, flattenNavSections } from '../symbols'
+import { buildSymbolDoc, registerMySymbols } from '../symbols/my-symbols'
+import { loadPlugins } from '../symbols/plugin-loader'
+import { applyFallback, restoreStashed } from '../symbols/plugin-fallback'
+import { symbolsApi } from '../lib/symbols-api'
+import { uid } from '../lib/uid'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import BindPanel from '../components/BindPanel.vue'
 import VersionPanel from '../components/VersionPanel.vue'
@@ -48,8 +53,11 @@ const loadFailed = ref(false)
  *  "加载在飞"（首载 loadSwitcherScreens 期间 / 切换器换画面 GET 未返）同样必须拦——
  *  否则空白画布 + 陈旧 meta 下的保存 = 全量 PUT 覆盖目标画面（唯一数据丢失路径）。 */
 const loaded = ref(false)
+/** 降级存档（P3b plugin-fallback）：未知 tag 项被占位替换时的原项（id → 原项）——
+ *  保存时还原（占位不入库，插件缺席不丢数据）。 */
+let stashedItems = new Map<string, Record<string, unknown>>()
 
-async function loadScreen() {
+async function loadScreen(pluginsReady?: Promise<unknown>) {
   const reqSlug = slug.value
   try {
     const { doc, version: ver } = await sApi.get(reqSlug)
@@ -58,7 +66,16 @@ async function loadScreen() {
     meta.value = m
     version.value = ver
     upgradeNavTargets(done) // 存量跳转按钮 input→select（拖入为注册项深拷贝，旧实例需就地升级）
-    editRef.value?.setImportJson(done)
+    // 插件装载汇合点：降级判定（knownTags）须含已装载插件 tag——GET 期间装载大多已完成
+    if (pluginsReady) await pluginsReady
+    // 插件缺席降级（P3b）：未知 tag → 占位框（原项存档，保存还原）；未知 props 键剔除
+    const fb = applyFallback(done as unknown as Record<string, unknown>)
+    stashedItems = fb.stashed
+    if (fb.degraded.length) {
+      console.warn('[edit] 图元降级', fb.degraded)
+      ElMessage.warning(`本画面 ${fb.degraded.length} 处图元降级显示（插件缺席或版本不符），保存不丢失原数据`)
+    }
+    editRef.value?.setImportJson(fb.done as unknown as IExportJson)
     loaded.value = true
     loadFailed.value = false
   } catch {
@@ -71,11 +88,57 @@ async function loadScreen() {
 
 onMounted(async () => {
   registerSymbols()
+  // 插件目录装载（P3b）——与画面加载解耦并行：loadScreen 内部在降级判定前
+  // await pluginsReady（插件 tag 面；装载完才算「已知 tag」）。lint 拒载经
+  // ElNotification 可见（不静默）；index 缺席 = 无插件面，内部自吞不阻塞。
+  const pluginsReady = loadPlugins(undefined, {
+    onNotify: (msg) => ElNotification.warning({ title: '图元插件', message: msg, duration: 6000 }),
+  })
   await loadSwitcherScreens() // 先于 loadScreen：nav-button options 注入后，存量实例升级才带得上列表
-  await loadScreen()
+  await loadScreen(pluginsReady)
   // 在线设备树（失败静默为空——离线仍可组态，绑定列表面板为空）；与主加载无依赖，并行不串行
   void fetchDeviceTree().then((t) => { deviceInfo.value = t })
+  // 「我的符号」注册（P3a）：失败静默为无符号（rs-iot 缺 symbol 端点时不阻塞编辑）
+  void refreshMySymbols()
 })
+
+/** list + get 全量符号 → registerConfig「我的符号」组（同名覆盖语义刷新）。 */
+async function refreshMySymbols(): Promise<void> {
+  try {
+    const sApi = symbolsApi()
+    const docs = await Promise.all((await sApi.list()).map(async (id) => ({ id, doc: (await sApi.get(id)).doc })))
+    registerMySymbols(docs)
+  } catch { /* 无符号服务面不阻塞编辑器 */ }
+}
+
+/** BindPanel「存为符号」（P3a）：槽位项是画布内存形态 group——克隆即合法 combin_json。
+ *  同名符号覆盖（list 找 name 命中 → 复用 id + if_version），新名生成 sym-<uid>。 */
+async function onSaveSymbol(item: IDoneJson): Promise<void> {
+  let name: string
+  try {
+    const r = await ElMessageBox.prompt('符号显示名（左面板「我的符号」组；拖入画布即展开这组图元）', '存为符号', {
+      inputValue: typeof item.title === 'string' ? item.title : '',
+      inputValidator: (v: string) => (v.trim() ? true : '必填'),
+    })
+    name = r.value.trim()
+  } catch { return /* 用户取消 */ }
+  try {
+    const sApi = symbolsApi()
+    const doc = buildSymbolDoc(item, name)
+    let id = ''
+    let ifVersion: number | undefined
+    for (const sid of await sApi.list()) {
+      const g = await sApi.get(sid)
+      if (g.doc.name === name) { id = sid; ifVersion = g.version; break }
+    }
+    if (!id) id = `sym-${uid()}`
+    await sApi.put(id, doc, ifVersion)
+    await refreshMySymbols()
+    ElMessage.success(`已存为符号「${name}」——左面板「我的符号」组可拖用`)
+  } catch (e) {
+    ElMessage.error(e instanceof Error ? e.message : '存为符号失败')
+  }
+}
 
 // W7 画面切换：/edit/a → /edit/b 组件被 vue-router 复用，onMounted 不再跑——
 // watch 重载数据 + MtEdit :key 强制重挂画布（清选中态/undo 栈）。比在 App.vue
@@ -176,10 +239,12 @@ async function save(payload: IExportJson) {
   }
   const reqSlug = slug.value // 竞态守卫基准：PUT 在飞时可能已切画面
   try {
+    // 还原降级存档（P3B）：占位项换回原项（插件缺席不丢数据），再走 BI sanitize
+    const restored = restoreStashed(payload as unknown as Record<string, unknown>, stashedItems)
     // BI 图元的 props.data 是**运行态聚合数据**（通道 B 由宿主写回）：maotu 保存时
     // 把 props 拍平（bundle ud），这坨 JSON 会被原样 PUT 进 rs-iot——既撑大文档
     // （≤128 KiB 上限），又让下次加载读到陈旧数据。落库前复位（纯函数，lib/bi-sanitize.ts）。
-    const clean = sanitizeBiProps(payload) as IExportJson
+    const clean = sanitizeBiProps(restored) as IExportJson
     // if_version 乐观锁（P0）：防编辑器与 hmi-mcp AI 互相静默覆盖。
     const r = await sApi.put(
       reqSlug,
@@ -263,7 +328,7 @@ async function onRollbackDone(): Promise<void> {
       @on-preview-click="openPreview"
     >
       <template #deviceBind="{ item }">
-        <BindPanel :item="item" />
+        <BindPanel :item="item" @save-symbol="onSaveSymbol" />
       </template>
     </MtEdit>
     <el-dialog v-model="dlgVisible" title="新建画面" width="420px">

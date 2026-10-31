@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
@@ -5,7 +6,21 @@ import vue from '@vitejs/plugin-vue'
 // （router.ts 用 import.meta.env.BASE_URL 同源对齐）；dev/test 维持 '/'（e2e baseURL 不受影响）。
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? '/hmi/' : '/',
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    // P3b 插件目录 dev 面板（prod 由 gateway hmi_widgets_dir 挂 /hmi/widgets；dev base='/'
+    // → loader 取 /widgets/*，vite 静态服务仓根 widgets/，与 install-plugin.mjs 同一目录）
+    {
+      name: 'hmi-widgets-dev',
+      configureServer(server) {
+        const root = fileURLToPath(new URL('./widgets', import.meta.url))
+        server.middlewares.use((req, _res, next) => {
+          if (req.url?.startsWith('/widgets/')) req.url = `/@fs${root}${req.url.slice('/widgets'.length)}`
+          next()
+        })
+      },
+    },
+  ],
   server: {
     port: 5273,
     host: true,

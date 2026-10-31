@@ -22,6 +22,8 @@ import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
 import { createBiCollector } from '../lib/bi-collector'
 import { BI_WINDOW_EVENT, collectBiWindowControls } from '../lib/bi-contract'
 import { registerSymbols } from '../symbols'
+import { loadPlugins } from '../symbols/plugin-loader'
+import { applyFallback } from '../symbols/plugin-fallback'
 import { computeFitScale } from '../lib/fit-scale'
 import { applyDevContext, isDevParamScreen, META_DEV_FIELD } from '../lib/dev-context'
 import AlarmBanner from '../components/AlarmBanner.vue'
@@ -195,7 +197,9 @@ async function mountScreen(done: IExportJson, devOverride?: string): Promise<voi
   const qdev = devOverride ?? (typeof route.query.dev === 'string' ? route.query.dev : '')
   activeDev.value = param ? (qdev || faceplateDevs(done)[0]?.id || '') : ''
   const inst = param && activeDev.value ? applyDevContext(done, activeDev.value) : done
-  previewRef.value?.setImportJson(inst)
+  // 插件缺席降级（P3b）：未知 tag → 灰框占位（运行页无保存路径，替换即终态）
+  const fb = applyFallback(inst as unknown as Record<string, unknown>)
+  previewRef.value?.setImportJson(fb.done as unknown as IExportJson)
   if (param && activeDev.value) {
     // 深链缺省时把默认设备写回 URL（刷新/分享保持同一上下文）
     if (!qdev) void router.replace({ path: `/view/${currentSlug.value}`, query: { ...route.query, dev: activeDev.value } })
@@ -403,6 +407,12 @@ onMounted(async () => {
   window.addEventListener(BI_WINDOW_EVENT, onBiWindowChange)
   // 自绘图元注册（幂等）：MtPreview 渲染 svg 图元同样查注册表——不注册则自绘图元静默空白
   registerSymbols()
+  // 插件目录装载（P3b）——**不 await**：SSE/告警流必须先行（晚建流会漏 screen 帧，
+  // screen-versioning 双事件实测回归）；仅在 mountScreen 前 await pluginsReady
+  //（挂画面/降级判定需要插件 tag 面）
+  const pluginsReady = loadPlugins(undefined, {
+    onNotify: (msg) => ElMessage.warning(msg),
+  })
   // 告警双源（与画面加载独立——画面失败告警仍可见）：REST 快照 + events SSE 命名事件
   void api().get('/api/v1/alarms')
     .then((items) => { alarmStore.applySnapshot((items as AlarmItem[]) ?? []); refreshAlarms() })
@@ -426,6 +436,7 @@ onMounted(async () => {
     ElMessage.error('画面加载失败')
     return
   }
+  await pluginsReady
   await mountScreen(done)
   navStack.nav(slug) // 历史栈起点（back 弹空 → '/' 画面列表）
 })

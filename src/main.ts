@@ -6,6 +6,7 @@ import { setOnUnauthorized } from './lib/api'
 import { logout, bootstrapCookieSession } from './lib/auth'
 import { initTheme } from './lib/theme'
 import { registerSymbolComponents } from './symbols'
+import { setPluginHost } from './symbols/plugin-loader'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 // element-plus 深色变量（html.dark 挂载生效；T16 工业深色默认）
@@ -27,6 +28,8 @@ bootstrapCookieSession()
 // registerSymbols()（registerConfig），maotu bs(tag) 拖入/渲染时可达（见 symbols/index.ts）
 const app = createApp(App)
 registerSymbolComponents(app)
+// 插件宿主（P3b）：app.component 续注的持有者（loader 注册 vue 型插件组件用）
+setPluginHost(app)
 // pinia（P2 AI 面板）：agent store 依赖；面板本体 defineAsyncComponent 懒加载（AiDrawerHost）
 app.use(router).use(ElementPlus).use(createPinia()).mount('#app')
 
