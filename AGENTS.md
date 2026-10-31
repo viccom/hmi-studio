@@ -10,7 +10,7 @@
 | `pnpm test` | vitest 单测（jsdom，纯逻辑契约层——TDD 主战场） |
 | `pnpm e2e` | Playwright（webServer 自动起 5290，打真实 rs-iot，里程碑门禁） |
 | `pnpm run typecheck` | vue-tsc --noEmit（每任务必跑） |
-| `pnpm build` | 产物 dist/ → 交 gateway `hmi_dist` 挂 `/hmi`（T18） |
+| `pnpm build` | 产物 dist/ → 交 gateway `hmi_dist` 挂 `/hmi`（T18）。**会清空 dist/**（含 version.json 与 .rollback/）：仅 dev 自测用，本地验证建议 `--outDir dist-next`；上线一律 `node scripts/deploy-dist.mjs [--e2e]`（门禁 + 原子换装 + 版本记录） |
 | `just fe-quality` | 全套门禁：typecheck + eslint + 分层检查 + 单测 + e2e + build |
 | `pnpm -C mcp test` | hmi-mcp 单测（独立包；配套 `pnpm -C mcp run typecheck`、`pnpm -C mcp run build`） |
 
