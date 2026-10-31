@@ -10,6 +10,7 @@ const routes = [
   { path: '/dev/spike', component: () => import('./dev/SpikeEdit.vue') },
   { path: '/dev/probe', component: () => import('./dev/Probe.vue') },
   { path: '/dev/probe-bi', component: () => import('./dev/ProbeBi.vue') },
+  { path: '/dev/probe-combin', component: () => import('./dev/ProbeCombin.vue') },
 ]
 
 // BASE_URL 随部署形态：dev '/'；build '/hmi/'（gateway hmi_dist 前缀——T18 vite.config）

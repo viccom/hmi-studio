@@ -13,6 +13,10 @@ import { normalizeTriggerValue } from '../lib/trigger-value'
 
 const props = defineProps<{ item: IDoneJson }>()
 
+// P3a「存为符号」：仅组合项（group）出现入口；载荷构造与 REST 落库在 EditView
+// （components 层不得依赖 symbols 层——check-layers ALLOWED.components 无 symbols）。
+const emit = defineEmits<{ (e: 'save-symbol', item: IDoneJson): void }>()
+
 // —— 富点位树（devreg：设备 desc + 点位 desc/unit）——
 const tree = ref<RichDeviceNode[]>([])
 onMounted(async () => { tree.value = await fetchDeviceTreeRich() })
@@ -268,6 +272,14 @@ function trigDesc(t: IDoneJsonBindList['triggers'][number]): string {
     </section>
 
     <div class="bp-note">注：不提供 bind_mapping 映射规则；绑定变更不进 maotu 撤销历史。</div>
+    <!-- P3a 存为符号（组合项专属）：把整组图元存成「我的符号」模板（拖入即展开） -->
+    <el-button
+      v-if="item.type === 'group'"
+      size="small"
+      class="bp-save-symbol"
+      data-testid="save-symbol-btn"
+      @click="emit('save-symbol', item)"
+    >存为符号…</el-button>
   </div>
 </template>
 
