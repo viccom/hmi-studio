@@ -163,7 +163,7 @@ export function registerWriteTools(server: ToolRegistrar, backend: HmiBackend, o
     async (args) => {
       const { id, doc, if_version } = args as { id: string; doc: string | Record<string, unknown>; if_version: number }
       if (isProtectedSlug(id)) {
-        return textResult({ ok: false, code: 'protected', message: `${PUT_PROTECTED_MESSAGE_PREFIX}（11 个长期资产画面）。修改保护画面请用 hmi_put_protected_screen（最高档审批）。清单：${PROTECTED_SLUGS.join(', ')}` })
+        return textResult({ ok: false, code: 'protected', message: `${PUT_PROTECTED_MESSAGE_PREFIX}（${PROTECTED_SLUGS.length} 个长期资产画面）。修改保护画面请用 hmi_put_protected_screen（最高档审批）。清单：${PROTECTED_SLUGS.join(', ')}` })
       }
       return putScreen(backend, id, doc, if_version)
     },
@@ -194,7 +194,7 @@ export function registerWriteTools(server: ToolRegistrar, backend: HmiBackend, o
   server.registerTool(
     'hmi_rename_group',
     {
-      description: '画面组重命名（to 已存在即合并语义）：列出全部画面 → 组成员批量改 doc.group → PUT。画面级隔离（单幅失败计入 fail），cap 4 并发保护 rs-iot。',
+      description: '画面组重命名（to 已存在即合并语义）：列出全部画面 → 组成员批量改 doc.group → PUT（带 if_version 乐观锁）。长期资产画面（保护清单）不参与重命名、计入 protected_skipped；409 计入 conflicts。画面级隔离（单幅失败计入 fail），cap 4 并发保护 rs-iot。',
       inputSchema: {
         from: z.string().describe('原组名（须已存在）'),
         to: z.string().describe('新组名（与既有组同名 = 合并）'),
@@ -207,20 +207,34 @@ export function registerWriteTools(server: ToolRegistrar, backend: HmiBackend, o
       const ids = list.screens ?? []
       const docs = await mapBatched(ids, 4, async (id) => {
         try {
-          const g = await backend.get(`/api/v1/screens/${encodeURIComponent(id)}`) as { doc?: Record<string, unknown> }
-          return { id, doc: g.doc, group: g.doc?.group }
-        } catch { return { id, doc: undefined, group: undefined } }
+          const g = await backend.get(`/api/v1/screens/${encodeURIComponent(id)}`) as { doc?: Record<string, unknown>; version?: number }
+          return { id, doc: g.doc, group: g.doc?.group, version: g.version }
+        } catch { return { id, doc: undefined, group: undefined, version: undefined } }
       })
       const members = docs.filter((d) => d.doc !== undefined && d.group === from)
+      // 保护清单：与 put/delete 同款硬边界——W 档工具不得改长期资产（保护画面请走人工 UI）
+      const protectedMembers = members.filter((m) => isProtectedSlug(m.id))
+      const writable = members.filter((m) => !isProtectedSlug(m.id))
       let fail = 0
       const done: string[] = []
-      await mapBatched(members, 4, async (m) => {
+      const conflicts: string[] = []
+      await mapBatched(writable, 4, async (m) => {
         try {
-          await backend.put(`/api/v1/screens/${encodeURIComponent(m.id)}`, { ...m.doc!, group: to })
+          // 乐观锁：GET 已带回 version（旧版服务端无该字段时退化为无条件写，保持兼容）
+          const q = typeof m.version === 'number' ? `?if_version=${m.version}` : ''
+          await backend.put(`/api/v1/screens/${encodeURIComponent(m.id)}${q}`, { ...m.doc!, group: to })
           done.push(m.id)
-        } catch { fail += 1 }
+        } catch (e) {
+          if (e instanceof HmiApiError && e.status === 409) conflicts.push(m.id)
+          else fail += 1
+        }
       })
-      return textResult({ ok: true, renamed: done.length, fail, screens: done, message: members.length === 0 ? `没有画面属于组「${from}」（组名须与列表页显示一致）` : undefined })
+      const message = members.length === 0
+        ? `没有画面属于组「${from}」（组名须与列表页显示一致）`
+        : protectedMembers.length
+          ? `${protectedMembers.length} 个长期资产画面未参与重命名（${protectedMembers.map((m) => m.id).join(', ')}）——保护画面请走人工编辑器`
+          : undefined
+      return textResult({ ok: true, renamed: done.length, fail, conflicts, protected_skipped: protectedMembers.map((m) => m.id), screens: done, message })
     },
   )
 

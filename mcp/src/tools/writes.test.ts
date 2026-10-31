@@ -180,8 +180,8 @@ describe('hmi_rename_group（W：批量 group 改写，cap4 语义）', () => {
       { m: 'GET', p: '/api/v1/screens/a', body: mk('X') },
       { m: 'GET', p: '/api/v1/screens/b', body: mk('Y') },
       { m: 'GET', p: '/api/v1/screens/c', body: mk('X') },
-      { m: 'PUT', p: '/api/v1/screens/a', body: { status: 'ok', version: 3 } },
-      { m: 'PUT', p: '/api/v1/screens/c', body: { status: 'ok', version: 3 } },
+      { m: 'PUT', p: '/api/v1/screens/a?if_version=2', body: { status: 'ok', version: 3 } },
+      { m: 'PUT', p: '/api/v1/screens/c?if_version=2', body: { status: 'ok', version: 3 } },
     ])
     const { server, registry } = captureRegistration()
     registerWriteTools(server, new HmiBackend({ fetchImpl: f }))
@@ -191,6 +191,8 @@ describe('hmi_rename_group（W：批量 group 改写，cap4 语义）', () => {
     expect(out.screens).toEqual(['a', 'c'])
     const puts = callsOf(f).filter(([_u, i]) => i?.method === 'PUT')
     expect(puts.length).toBe(2)
+    // 乐观锁：GET 带出的 version 必须进 query（写族统一强制 if_version）
+    expect(puts.every(([u]) => String(u).includes('?if_version=2'))).toBe(true)
     const body = JSON.parse(puts[0][1]!.body as string)
     expect(body.group).toBe('Z')
     expect(body.name).toBe('N')
@@ -203,8 +205,8 @@ describe('hmi_rename_group（W：批量 group 改写，cap4 语义）', () => {
       { m: 'GET', p: '/api/v1/screens', body: { screens: ['a', 'b'] } },
       { m: 'GET', p: '/api/v1/screens/a', body: mk('X') },
       { m: 'GET', p: '/api/v1/screens/b', body: mk('X') },
-      { m: 'PUT', p: '/api/v1/screens/a', status: 500, body: { error: 'boom' } },
-      { m: 'PUT', p: '/api/v1/screens/b', body: { status: 'ok', version: 3 } },
+      { m: 'PUT', p: '/api/v1/screens/a?if_version=2', status: 500, body: { error: 'boom' } },
+      { m: 'PUT', p: '/api/v1/screens/b?if_version=2', body: { status: 'ok', version: 3 } },
     ])
     const { server, registry } = captureRegistration()
     registerWriteTools(server, new HmiBackend({ fetchImpl: f }))
@@ -221,13 +223,49 @@ describe('hmi_rename_group（W：批量 group 改写，cap4 语义）', () => {
       { m: 'GET', p: '/api/v1/screens', body: { screens: ['a', 'b'] } },
       { m: 'GET', p: '/api/v1/screens/a', status: 500, body: { error: 'boom' } },
       { m: 'GET', p: '/api/v1/screens/b', body: mk('X') },
-      { m: 'PUT', p: '/api/v1/screens/b', body: { status: 'ok', version: 3 } },
+      { m: 'PUT', p: '/api/v1/screens/b?if_version=2', body: { status: 'ok', version: 3 } },
     ])
     const { server, registry } = captureRegistration()
     registerWriteTools(server, new HmiBackend({ fetchImpl: f }))
     const out = await callTool(registry, 'hmi_rename_group', { from: 'X', to: 'Z' })
     expect(out.ok).toBe(true)
     expect(out.renamed).toBe(1)
+    expect(out.fail).toBe(0)
+  })
+
+  it('保护清单画面不参与重命名（W 档工具不得改长期资产）', async () => {
+    const prot = PROTECTED_SLUGS[0]
+    const mk = () => ({ id: 'x', version: 2, doc: { name: 'N', group: 'X', json: [], eventList: [], eventFlow: [] } })
+    const f = routeFetch([
+      { m: 'GET', p: '/api/v1/screens', body: { screens: [prot, 'plain-a'] } },
+      { m: 'GET', p: `/api/v1/screens/${prot}`, body: mk() },
+      { m: 'GET', p: '/api/v1/screens/plain-a', body: mk() },
+      { m: 'PUT', p: '/api/v1/screens/plain-a?if_version=2', body: { status: 'ok', version: 3 } },
+    ])
+    const { server, registry } = captureRegistration()
+    registerWriteTools(server, new HmiBackend({ fetchImpl: f }))
+    const out = await callTool(registry, 'hmi_rename_group', { from: 'X', to: 'Z' })
+    expect(out.renamed).toBe(1)
+    expect(out.protected_skipped).toEqual([prot])
+    expect(out.message).toMatch(/长期资产/)
+    // 保护画面绝不能被 PUT（mock 无该路由：若被写会 404 → 计入 fail，下面两条同时兜底）
+    const protPuts = callsOf(f).filter(([u, i]) => i?.method === 'PUT' && String(u).includes(`/screens/${prot}`))
+    expect(protPuts.length).toBe(0)
+    expect(out.fail).toBe(0)
+  })
+
+  it('409 计入 conflicts（不吞成 fail，LLM 可据此重取重试）', async () => {
+    const mk = () => ({ id: 'x', version: 5, doc: { name: 'N', group: 'X', json: [], eventList: [], eventFlow: [] } })
+    const f = routeFetch([
+      { m: 'GET', p: '/api/v1/screens', body: { screens: ['a'] } },
+      { m: 'GET', p: '/api/v1/screens/a', body: mk() },
+      { m: 'PUT', p: '/api/v1/screens/a?if_version=5', status: 409, body: { error: 'version conflict', current_version: 7 } },
+    ])
+    const { server, registry } = captureRegistration()
+    registerWriteTools(server, new HmiBackend({ fetchImpl: f }))
+    const out = await callTool(registry, 'hmi_rename_group', { from: 'X', to: 'Z' })
+    expect(out.renamed).toBe(0)
+    expect(out.conflicts).toEqual(['a'])
     expect(out.fail).toBe(0)
   })
 })

@@ -14,6 +14,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { HmiBackend } from './backend'
+import { withToolLogging } from './logging'
 import type { ToolRegistrar } from './registrar'
 import { registerScreenTools } from './tools/screens'
 import { registerWidgetTools } from './tools/widgets'
@@ -28,7 +29,8 @@ async function main(): Promise<void> {
   const backend = new HmiBackend()
 
   // SDK 的泛型 registerTool 与 ToolRegistrar 结构型在泛型逆变下不可直赋——全仓唯一的边界断言点
-  const registrar = server as unknown as ToolRegistrar
+  // 装饰器单点埋审计日志（tool/tier/ok/ms，设计 §4.3）：全部 16 工具一次覆盖
+  const registrar = withToolLogging(server as unknown as ToolRegistrar)
 
   registerScreenTools(registrar, backend)
   registerWidgetTools(registrar)

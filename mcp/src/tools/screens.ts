@@ -10,6 +10,9 @@
  */
 import { z } from 'zod'
 import { allSymbols } from '../../../src/symbols/registry'
+// maotu 内置标签白名单单源（src/symbols/builtin-tags.ts，与前端 plugin-fallback 共用；
+// 曾双源手抄漂移——mcp 侧漏 group 致组合项恒报 unknown_tag，2026-10-31 审查修复）
+import { BUILTIN_TAGS } from '../../../src/symbols/builtin-tags'
 import { collectBiPanels, planQueries, BI_MAX_BATCH, BI_TAG_PREFIX } from '../../../src/lib/bi-contract'
 import { HmiBackend } from '../backend'
 import { readOnlyAnnotations, type RiskTier } from '../risk'
@@ -117,10 +120,6 @@ function collectItemWarnings(item: unknown, knownTags: Set<string>, warnings: Va
     }
   }
 }
-
-/** maotu 内置标签白名单（bundle 全量枚举；registry 只含 ah-* 自建族）。
- *  与 plugin-fallback.ts BUILTIN_TAGS 同源约定（2026-10-31 w10 教训补全）。 */
-const BUILTIN_TAGS = new Set(['text-vue', 'sys-button-vue', 'sys-line', 'sys-line-vertical'])
 
 /**
  * BI 图元契约校验：逐个 ah-bi-* 顶层元素走 collectBiPanels（单源解析）。

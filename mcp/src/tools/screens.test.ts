@@ -78,6 +78,13 @@ describe('validateScreenDoc 语义 warnings', () => {
     expect(r.warnings).toEqual([])
   })
 
+  it('group（组合项）属内置白名单，不报 unknown_tag（双源清单漂移修复）', () => {
+    const r = validateScreenDoc(OK_ID, docText(baseDoc([
+      { id: 'g1', tag: 'group', title: '组合', children: [] },
+    ])))
+    expect(r.warnings).toEqual([])
+  })
+
   it('bad bind_attr and bind_id warn', () => {
     const r = validateScreenDoc(OK_ID, docText(baseDoc([
       {

@@ -12,7 +12,6 @@ import { readdirSync, statSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { z } from 'zod'
-import { logTool } from '../backend'
 import { readOnlyAnnotations } from '../risk'
 import type { ToolRegistrar } from '../registrar'
 
@@ -91,19 +90,13 @@ export function registerScreenshotTools(server: ToolRegistrar): void {
     },
     async (args) => {
       const { id, wait_ms } = args as { id: string; wait_ms?: number }
-      const started = Date.now()
-      try {
-        const shot = await runScreenshot(id, wait_ms ?? 3000)
-        logTool({ tool: 'hmi_screenshot', tier: 'ReadOnly', ok: true, ms: Date.now() - started })
-        return {
-          content: [
-            { type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' },
-            { type: 'text', text: `截图完成：${shot.path}（${shot.png.byteLength} 字节，viewport 1280x800）` },
-          ],
-        }
-      } catch (e) {
-        logTool({ tool: 'hmi_screenshot', tier: 'ReadOnly', ok: false, ms: Date.now() - started, err: e instanceof Error ? e.message : String(e) })
-        throw e
+      // 审计日志由 logging.ts 装饰器单点记录（tool/tier/ok/ms），此处不再自行埋点
+      const shot = await runScreenshot(id, wait_ms ?? 3000)
+      return {
+        content: [
+          { type: 'image', data: shot.png.toString('base64'), mimeType: 'image/png' },
+          { type: 'text', text: `截图完成：${shot.path}（${shot.png.byteLength} 字节，viewport 1280x800）` },
+        ],
       }
     },
   )
