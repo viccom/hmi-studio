@@ -63,6 +63,9 @@
 - 实施方案 + 任务跟踪表：docs/plans/2026-10-25-hmi-studio-implementation-plan.md（§3 表格=任务状态真相源，完成任务即勾选回填 commit）
 - **BI 大屏内容体系与图元清单（P2）**：docs/plans/2026-10-29-bi-monitoring-dashboard-design.md（内容分区/数据映射/累计量口径三态/23 图元全表）
 - maotu 实证与概念映射：docs/maotu-rsiot-architecture.md
+- **图元与插件分类 + 开发指南（总览入口）**：docs/widgets-plugins-guide.md（分类总表 / 新图元
+  工作流 / 组合与「我的符号」/ 插件体系 / 画面数据契约；maotu 底层契约仍以
+  docs/maotu-symbol-development-guide.md 为权威）
 
 ## 纪律
 
