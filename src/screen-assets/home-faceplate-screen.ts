@@ -17,7 +17,8 @@ import { canvas, textItem, trendItem, svgItem, HOME_GROUP } from './home-screens
 import { HOME_E_TABS } from './home-tab-screens'
 import { buttonItem } from './home-tab-screens'
 
-export const HOME_E_FACEPLATE = 'home-meter-power-faceplate'
+// slug 常量定义在 protected.ts（权威源），此处 re-export 保持既有导入路径
+export { HOME_E_FACEPLATE } from './protected'
 
 /** 参数化绑定（bind_id = @dev.<tag>，运行时重写为 <devid>.<tag>） */
 function pbind(pelId: string, tag: string, attr: string): IDoneJsonBindList {

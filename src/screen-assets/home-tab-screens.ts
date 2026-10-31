@@ -23,9 +23,9 @@ import {
   panelBinds, HOME_GROUP,
 } from './home-screens'
 
-export const HOME_E_TABS = 'home-meter-power-tabs'
-export const HOME_W_TABS = 'home-meter-water-tabs'
-export const HOME_G_TABS = 'home-meter-gas-tabs'
+// slug 常量定义在 protected.ts（权威源），此处 re-import + re-export 保持既有导入路径
+import { HOME_E_TABS, HOME_W_TABS, HOME_G_TABS } from './protected'
+export { HOME_E_TABS, HOME_W_TABS, HOME_G_TABS } from './protected'
 
 /** 内置按钮图元（sys-button-vue）：原生 button，type 映射背景色（primary 蓝/info 灯灰）。
  *  events 挂 click——与 text-vue 同一 Md 编译路径（T9 seedNavScreens 实证 vue 型事件可用） */

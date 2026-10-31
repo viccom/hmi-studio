@@ -24,9 +24,9 @@ import type { ScreenDoc } from '../lib/screens'
 import type { HmiSymbol } from '../symbols/types'
 import { allSymbols } from '../symbols/registry'
 
-export const HOME_E = 'home-meter-power'
-export const HOME_W = 'home-meter-water'
-export const HOME_G = 'home-meter-gas'
+// slug 常量定义在 protected.ts（权威源），此处 re-import + re-export 保持既有导入路径
+import { HOME_E, HOME_W, HOME_G } from './protected'
+export { HOME_E, HOME_W, HOME_G } from './protected'
 export const HOME_GROUP = '家庭三表演示'
 
 const sym = (id: string): HmiSymbol => {

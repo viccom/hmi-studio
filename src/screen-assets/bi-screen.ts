@@ -25,7 +25,8 @@ import type { IExportDoneJson, IExportJson } from 'maotu'
 import type { ScreenDoc } from '../lib/screens'
 import { allSymbols } from '../symbols/registry'
 
-export const BI_STATION = 'bi-station'
+// slug 常量定义在 protected.ts（权威源），此处 re-export 保持既有导入路径
+export { BI_STATION } from './protected'
 export const BI_GROUP = 'BI 大屏演示'
 
 const sym = (id: string) => {

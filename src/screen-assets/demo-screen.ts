@@ -22,9 +22,9 @@ import type { ScreenDoc } from '../lib/screens'
 import type { HmiSymbol } from '../symbols/types'
 import { allSymbols } from '../symbols/registry'
 
-export const DEMO_A = 'water-demo-m3'
-export const DEMO_B = 'water-demo-m3-b'
-export const DEMO_CATALOG = 'catalog-demo'
+// slug 常量定义在 protected.ts（权威源），此处 re-import + re-export 保持既有导入路径
+import { DEMO_A, DEMO_B } from './protected'
+export { DEMO_A, DEMO_B, DEMO_CATALOG } from './protected'
 
 const sym = (id: string): HmiSymbol => {
   const s = allSymbols().find((x) => x.id === id)
