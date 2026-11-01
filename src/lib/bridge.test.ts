@@ -1,6 +1,7 @@
 /**
  * T7 桥层单测（P2 测试缺口补齐）：命令历史环形 20 封顶、send 三终态收敛
- * （confirmed / error(HTTP n) / timeout）、用户取消静默、nav 别名接线。
+ * （confirmed / error(HTTP n / 后端 error 原文) / timeout）、F-2 写回执失败面
+ * （422 文本透传、504「结果未知」）、用户取消静默、nav 别名接线。
  * 依赖全部注入替身：element-plus 模块 mock、fetch stubGlobal、router 假件——
  * 语义与 e2e m2 命令段互补（e2e 断言真实确认框/网络，此处锁定状态收敛逻辑）。
  */
@@ -56,7 +57,7 @@ describe('bridge.send 状态收敛', () => {
     expect(ep.success).toHaveBeenCalledOnce()
   })
 
-  it('HTTP 错误 → error 终态（message=HTTP n）+ 错误提示', async () => {
+  it('HTTP 错误（无 JSON error 字段）→ error 终态（message=HTTP n）+ 错误提示', async () => {
     stubFetch(async () => json({ err: 'x' }, 502))
     ep.confirm.mockResolvedValue(undefined)
     handle = installBridge({ mode: 'view', router: fakeRouter() })
@@ -66,13 +67,47 @@ describe('bridge.send 状态收敛', () => {
     expect(ep.error).toHaveBeenCalledOnce()
   })
 
-  it('5s 无响应 → timeout 终态 + 超时提示', async () => {
+  it('422 插件明确失败 → message=后端 error 原文 + 失败提示（不再只显示 HTTP 422）', async () => {
+    stubFetch(async () => json({ status: 'error', request_id: 'inst-1-3', error: '插件未连接' }, 422))
+    ep.confirm.mockResolvedValue(undefined)
+    handle = installBridge({ mode: 'view', router: fakeRouter() })
+    await (window as { $rsiot?: { send: (d: string, t: string, v: unknown) => Promise<void> } }).$rsiot!.send('pump1', 'spd', 1)
+    expect(handle.history.value[0]).toMatchObject({ state: 'error', message: '插件未连接' })
+    expect(ep.error).toHaveBeenCalledWith(expect.stringContaining('插件未连接'))
+    expect(ep.warning).not.toHaveBeenCalled()
+  })
+
+  it('504（投递成功但 12s 无结果）→ 「结果未知（超时）」warning，不报「命令失败」', async () => {
+    stubFetch(async () => json({ status: 'timeout', request_id: 'inst-1-4', error: 'no write result within 12s' }, 504))
+    ep.confirm.mockResolvedValue(undefined)
+    handle = installBridge({ mode: 'view', router: fakeRouter() })
+    await (window as { $rsiot?: { send: (d: string, t: string, v: unknown) => Promise<void> } }).$rsiot!.send('pump1', 'spd', 1)
+    expect(handle.history.value[0]).toMatchObject({ state: 'error', message: '结果未知（超时）' })
+    expect(ep.warning).toHaveBeenCalledWith(expect.stringContaining('结果未知（超时）'))
+    expect(ep.error).not.toHaveBeenCalled()
+  })
+
+  it('客户端侧中止（api.ts 15s AbortSignal）→ 同按结果未知提示，不报「发送失败」', async () => {
+    stubFetch(() => Promise.reject(new DOMException('The operation timed out.', 'TimeoutError')))
+    ep.confirm.mockResolvedValue(undefined)
+    handle = installBridge({ mode: 'view', router: fakeRouter() })
+    await (window as { $rsiot?: { send: (d: string, t: string, v: unknown) => Promise<void> } }).$rsiot!.send('pump1', 'spd', 1)
+    expect(handle.history.value[0]).toMatchObject({ state: 'error', message: '结果未知（超时）' })
+    expect(ep.warning).toHaveBeenCalledOnce()
+    expect(ep.error).not.toHaveBeenCalled()
+  })
+
+  // 有意变更（2026-11-01，F-2 写回执对齐）：发送等待 5s → 15s（rs-iot 最长等 12s）。
+  // 断言意图不变（无响应 → timeout 终态 + 超时提示），并加「14.9s 仍 pending」锁住 15s 而非 5s。
+  it('15s 无响应 → timeout 终态 + 超时提示（14.9s 时仍 pending）', async () => {
     vi.useFakeTimers()
     stubFetch(() => new Promise<Response>(() => { /* 永不返回 */ }))
     ep.confirm.mockResolvedValue(undefined)
     handle = installBridge({ mode: 'view', router: fakeRouter() })
     const p = (window as { $rsiot?: { send: (d: string, t: string, v: unknown) => Promise<void> } }).$rsiot!.send('pump1', 'spd', 1)
-    await vi.advanceTimersByTimeAsync(5000)
+    await vi.advanceTimersByTimeAsync(14_999)
+    expect(handle.history.value[0].state).toBe('pending')
+    await vi.advanceTimersByTimeAsync(1)
     await p
     expect(handle.history.value[0].state).toBe('timeout')
     expect(ep.warning).toHaveBeenCalledOnce()

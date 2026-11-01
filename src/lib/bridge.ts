@@ -2,8 +2,10 @@
  * T7 $rsiot 桥：图元 custom_code 的受控 API 面（设计 D2/D6——custom_code 只写一行调用，
  * 复杂度收在桥里）。window.$rsiot = { send / nav / back / home }。
  * - send：ElMessageBox 二次确认（编辑态按钮「取消/真实下发」防误触，运行态普通「确定」）
- *   → owner_inst 解析 → POST /api/v1/command/send → CommandTracker 跟踪（5s 超时）
- *   → ElMessage 结果 → 命令历史环形 20 条（状态栏消费）。
+ *   → owner_inst 解析 → POST /api/v1/command/send → CommandTracker 跟踪（15s 超时，覆盖
+ *   rs-iot 12s 写回执窗口）→ ElMessage 结果 → 命令历史环形 20 条（状态栏消费）。
+ *   失败语义按 F-2 回执契约分流：422/503 透传后端 error 原文（如「插件未连接」），
+ *   504（投递成功但无业务结果）/客户端中止 → warning「结果未知（超时）」。
  * - nav/back/home：经 navHandler（ViewView 注入的事件分发器——与 $mtEventCallBack('nav')
  *   同源同栈）；编辑态缺省直连 vue-router。
  */
@@ -11,7 +13,10 @@ import { ref, type Ref } from 'vue'
 import type { Router } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api, ApiError } from './api'
-import { buildCommandReq, CommandError, CommandTracker, resolveInstance, type TrackerState } from './command'
+import {
+  buildCommandReq, classifyCommandFailure, CommandError, CommandTracker, COMMAND_TIMEOUT_MS,
+  resolveInstance, UNKNOWN_RESULT_TEXT, type TrackerState,
+} from './command'
 import { fetchDeviceRegistry } from './device-registry'
 
 export interface CmdHistoryEntry {
@@ -46,7 +51,13 @@ export interface BridgeHandle {
 }
 
 const HISTORY_CAP = 20
-const SEND_TIMEOUT_MS = 5000
+
+/** 客户端侧中止（api.ts 的 REST 15s AbortSignal 抛 TimeoutError / 主动 abort 抛 AbortError）：
+ *  请求可能已送达后端，业务结果未知——与 504 同语义提示，不报「发送失败」 */
+function isAbortLike(e: unknown): boolean {
+  const name = (e as { name?: unknown } | null | undefined)?.name
+  return name === 'TimeoutError' || name === 'AbortError'
+}
 
 /** 安装 window.$rsiot（幂等覆盖）；返回句柄供状态栏/卸载 */
 export function installBridge(opts: BridgeOptions): BridgeHandle {
@@ -93,22 +104,29 @@ export function installBridge(opts: BridgeOptions): BridgeHandle {
       }
 
       const id = `cmd-${++seq}`
-      const tracker = new CommandTracker(id)
+      const tracker = new CommandTracker(id, { timeoutMs: COMMAND_TIMEOUT_MS })
       pushHistory({ id, devid, tag, value, state: tracker.state, ts: Date.now(), message: '' })
+      /** 投递已发生但业务结果未知（504 / 客户端中止）——提示挂起，不报「命令失败」 */
+      let resultUnknown = false
       try {
-        await Promise.race([
+        const outcome = await Promise.race([
           api().post('/api/v1/command/send', buildCommandReq({ inst, devid, tag, value })).then(() => 'ok' as const),
-          new Promise<'timeout'>((r) => setTimeout(() => r('timeout'), SEND_TIMEOUT_MS)),
-        ]).then((outcome) => {
-          safeTransition(() => (outcome === 'timeout' ? tracker.timeout() : tracker.confirm()))
-        }).catch((e: unknown) => {
-          const msg = e instanceof ApiError ? `HTTP ${e.status}` : '发送失败'
-          safeTransition(() => tracker.error(msg))
-        })
-      } catch { /* 不可能的路径（race 内已消化）——保底 */ }
+          new Promise<'timeout'>((r) => setTimeout(() => r('timeout'), COMMAND_TIMEOUT_MS)),
+        ])
+        safeTransition(() => (outcome === 'timeout' ? tracker.timeout() : tracker.confirm()))
+      } catch (e: unknown) {
+        const fail = e instanceof ApiError
+          ? classifyCommandFailure(e.status, e.body)
+          : isAbortLike(e)
+            ? { text: UNKNOWN_RESULT_TEXT, unknown: true }
+            : { text: '发送失败', unknown: false }
+        resultUnknown = fail.unknown
+        safeTransition(() => tracker.error(fail.text))
+      }
       settleHistory(id, tracker.state, tracker.message)
       if (tracker.state === 'confirmed') ElMessage.success(`命令已下发：${devid}.${tag}`)
-      else if (tracker.state === 'timeout') ElMessage.warning(`命令超时（${SEND_TIMEOUT_MS / 1000}s 未确认）：${devid}.${tag}`)
+      else if (tracker.state === 'timeout') ElMessage.warning(`命令超时（${COMMAND_TIMEOUT_MS / 1000}s 未确认）：${devid}.${tag}`)
+      else if (resultUnknown) ElMessage.warning(`${UNKNOWN_RESULT_TEXT}：${devid}.${tag}`)
       else ElMessage.error(`命令失败：${devid}.${tag}（${tracker.message}）`)
     },
     nav(target) {

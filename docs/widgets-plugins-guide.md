@@ -417,7 +417,8 @@ e2e 种子：`global-setup.ts` 全量 PUT 幂等播种；临时画面用 `e2e-t3
 ### 6.5 桥与事件词表
 
 - `window.$rsiot = { send, nav, back, home }`（`src/lib/bridge.ts`）：`send` → POST
-  `/api/v1/command/send` + 5s 超时 + 环形 20 条历史；nav/back/home 经 ViewView 注入。
+  `/api/v1/command/send` + 15s 超时（覆盖 rs-iot 写回执 12s 窗口；504/中止提示「结果未知（超时）」，
+  422 透传后端 `error` 原文）+ 环形 20 条历史；nav/back/home 经 ViewView 注入。
 - 图元事件 custom_code 白名单：`$rsiot / $mtEventCallBack / $getItemAttrByID / $item_info / $args`
   （`mcp/src/tools/screens.ts:40`——hmi-mcp 校验同表）。
 
