@@ -121,13 +121,24 @@ describe('BI 收集器：失败隔离与空画面', () => {
     expect(r.panels).toBe(0)
   })
 
-  it('batch 整体失败（网络错）→ 不写回任何图元，返回失败态（画面不空不炸）', async () => {
+  it('batch 整体失败（网络错）→ 给每个面板写**错误信封**（显示"查询失败"而非陈旧数值）', async () => {
+    // 2026-11-25 变更：原契约为"零写回，保留上一轮信封"——但面板不显示信封时间戳，
+    // 保留旧值等于把"查询失败"伪装成"数据未变"（运维误判）。改为写错误信封：
+    // 图元按 series.error 显示失败文案，数值置 null（不是 0）。
     const deps = makeDeps({ fetchBatch: vi.fn(async () => { throw new Error('network down') }) })
     const c = createBiCollector(deps)
     const r = await c.collect(TWO_PANELS)
-    expect(deps.write).not.toHaveBeenCalled()
     expect(r.ok).toBe(false)
     expect(r.error).toContain('network down')
+    expect(deps.write).toHaveBeenCalledTimes(2) // 两个面板各一条错误信封
+    for (const call of deps.write.mock.calls) {
+      const env = JSON.parse(call[1] as string) as { series: Array<{ value: number | null; error: string | null }> }
+      expect(env.series.length).toBeGreaterThan(0)
+      for (const s of env.series) {
+        expect(s.error).toContain('network down')
+        expect(s.value).toBeNull()
+      }
+    }
   })
 
   it('单条查询字段化失败 → 只该 series 带 error，其它面板正常写回', async () => {

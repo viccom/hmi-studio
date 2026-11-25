@@ -78,8 +78,11 @@ export function createBiCollector(deps: BiCollectorDeps, opts: BiCollectorOption
    *
    * 失败语义：
    * - 无 BI 图元且无告警面板 → ok=true、零请求零写回（普通 HMI 画面走这条，不产生任何开销）
-   * - batch 整体失败（网络/503）→ ok=false、**零写回**（保留图元上一次的旧信封，
-   *   总比写空白强）；告警拉取失败 → 仅告警面板不写（保留旧信封），数据面板照常
+   * - batch 整体失败（网络/503/读超时）→ ok=false + 给每个数据面板写**错误信封**
+   *   （series.error=原因，value=null）：图元据此显示"查询失败"，而不是继续显示
+   *   上一轮的旧数值——旧值没有时间戳，等于把"查询失败"伪装成"数据未变"
+   *   （2026-11-25 现场：存储引擎读阻塞时面板静默显示旧数，误判为"数据正常"）。
+   *   告警拉取失败 → 仅告警面板不写（保留旧信封），数据面板照常
    * - 单条查询失败 → 字段化进该 series 的 error，其余面板照常写回（单图失败不拖全屏）
    */
   async function collect(done: unknown): Promise<BiCollectResult> {
@@ -129,7 +132,33 @@ export function createBiCollector(deps: BiCollectorDeps, opts: BiCollectorOption
         }
       }
     } catch (e) {
-      return { ok: false, panels: panels.length, error: e instanceof Error ? e.message : String(e) }
+      // 整批失败：给每个面板写**错误信封**（而不是保留上一轮信封）——
+      // 否则面板继续显示上一次的数值，看起来"有数据但不动"，把"查询失败"
+      // 伪装成"数据未变"。图元按序列 error 字段显示"查询失败/超时"。
+      const msg = e instanceof Error ? e.message : String(e)
+      for (const panel of panels) {
+        deps.write(
+          panel.id,
+          JSON.stringify({
+            v: 1,
+            window: { start: t - panel.windowSecs, end: t },
+            generatedAt: t,
+            series: panel.series.map((sr) => ({
+              key: `${sr.dev_id}.${sr.tag}`,
+              label: sr.label,
+              unit: sr.unit,
+              color: sr.color,
+              mode: sr.mode,
+              metric: sr.mode === 'cumulative' ? 'usage' : sr.mode === 'daily' ? 'current' : panel.agg,
+              value: null,
+              points: [],
+              error: msg,
+            })),
+          }),
+          BI_DATA_ATTR,
+        )
+      }
+      return { ok: false, panels: panels.length, error: msg }
     }
 
     const envelopes = buildEnvelopes(panels, queries, raw, t)

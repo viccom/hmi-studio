@@ -46,3 +46,15 @@ describe('collectBinds @ 前缀过滤（W11）', () => {
     expect(r.devs).toEqual(['d1'])
   })
 })
+
+describe('合成点位（__）不进 SSE 订阅面', () => {
+  it('__sys/__area 与 <devid>.__prio/__alarms 全部排除；devid 仍保留', () => {
+    const done = {
+      json: [
+        { binds: [{ bind_id: '__sys.quality' }, { bind_id: '__area.water.alarm_count' }] },
+        { binds: [{ bind_id: 'dev_wm1.__prio' }, { bind_id: 'dev_wm1.flow_rate' }] },
+      ],
+    }
+    expect(collectBinds(done)).toEqual({ fields: ['dev_wm1.flow_rate'], devs: ['dev_wm1'] })
+  })
+})

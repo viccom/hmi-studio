@@ -24,6 +24,11 @@
  *  （architecture §2 依赖方向规则），故契约层不 import 注册表。 */
 export const BI_TAG_PREFIX = 'ah-bi-'
 
+/** 第二组 BI 面板 tag 前缀：`ah-hist-`（浅色历史趋势图元）。
+ *  与 `ah-bi-` 同走通道 B（宿主扫描 → /history/batch → 信封写回 props.data.val），
+ *  只是图元皮肤不同：ah-bi-* 是深色分析大屏件，ah-hist-* 是操作层灰阶画面里的历史趋势件。 */
+export const BI_TREND_TAG_PREFIX = 'ah-hist-'
+
 /** /history/batch 单次请求的查询条数上限（后端 400 拦截：不得超过 32 条）。 */
 export const BI_MAX_BATCH = 32
 
@@ -75,6 +80,9 @@ export interface BiPanelSpec {
   id: string
   title: string
   shape: BiShape
+  /** 多序列合并为一条（卡标题 + 合计值）。KPI 卡默认只显示首条序列——
+   *  「全厂今日用电量」这类跨设备指标必须显式声明合并，否则卡片显示的是首台表的量。 */
+  sumSeries: boolean
   agg: BiAgg
   /** 桶宽（秒）：shape=series 时为降采样桶宽；shape=aggregate 时固定 = 窗口长。 */
   interval: number
@@ -207,7 +215,7 @@ export function collectBiPanels(done: unknown): BiPanelSpec[] {
     const pel = asRecord(p)
     if (!pel) continue
     const tag = typeof pel.tag === 'string' ? pel.tag : ''
-    if (!tag.startsWith(BI_TAG_PREFIX)) continue
+    if (!tag.startsWith(BI_TAG_PREFIX) && !tag.startsWith(BI_TREND_TAG_PREFIX)) continue
     const id = typeof pel.id === 'string' ? pel.id : ''
     if (!id) continue
     const props = asRecord(pel.props) ?? {}
@@ -230,6 +238,7 @@ export function collectBiPanels(done: unknown): BiPanelSpec[] {
       interval,
       windowSecs,
       series,
+      sumSeries: props.sum_series === true || props.sum_series === 'true',
     })
   }
   return out
@@ -384,6 +393,62 @@ function toNum(v: unknown): number | null {
  * - 累计量 delta = 主窗末值 − 前窗末值；任一窗失败 → value=null 且 error 透出。
  * - 空窗（count=0 / 无点）→ value=null、error=null（图元显示占位，不是 0）。
  */
+/** 单序列求值：查询结果 → 呈现结果（口径按 panel.shape / series.mode）。 */
+function buildSeriesResult(
+  panel: BiPanelSpec,
+  s: BiSeriesSpec,
+  idx: number,
+  got: { main?: BiQueryPlan; mainRes?: BiRawResult; spark?: BiQueryPlan; sparkRes?: BiRawResult } | undefined,
+): BiSeriesResult {
+  const mainRes = got?.mainRes
+  const base: BiSeriesResult = {
+    key: `${s.dev_id}.${s.tag}`,
+    label: s.label,
+    unit: s.unit,
+    color: s.color,
+    mode: s.mode,
+    metric: s.mode === 'cumulative' ? 'usage' : s.mode === 'daily' ? 'current' : panel.agg,
+    value: null,
+    points: [],
+    error: null,
+  }
+  if (!mainRes) {
+    base.error = '未取数'
+    return base
+  }
+  if (mainRes.error !== undefined) {
+    base.error = mainRes.error
+    return base
+  }
+  const pts = (mainRes.points ?? [])
+    .map((p) => ({ ts: Number(p.ts), value: toNum(p.value) }))
+    .filter((p) => Number.isFinite(p.ts) && p.value !== null) as BiPoint[]
+  if (panel.shape === 'series') {
+    base.points = pts
+    return base
+  }
+  if (panel.shape === 'both') {
+    // main 给**口径正确的单值**（instant=聚合桶值 / cumulative=raw 分段累加），
+    // spark 给同窗时序点（KPI 卡：大数字 + 迷你趋势）
+    const sparkPts = (got?.sparkRes?.points ?? [])
+      .map((p) => ({ ts: Number(p.ts), value: toNum(p.value) }))
+      .filter((p) => Number.isFinite(p.ts) && p.value !== null) as BiPoint[]
+    base.points = sparkPts
+    base.value = s.mode === 'cumulative'
+      ? (pts.length ? cumulativeTotal(pts) : null)
+      : (pts.length ? pts[pts.length - 1].value : null)
+    return base
+  }
+  if (s.mode === 'cumulative') {
+    // 分段累加：raw 逐点 → 按回退点切段 → 段内增量求和
+    base.value = pts.length ? cumulativeTotal(pts) : null
+    return base
+  }
+  // instant aggregate / daily current：整窗落一桶 → 取该桶值（末点即桶聚合值）
+  base.value = pts.length ? pts[pts.length - 1].value : null
+  return base
+}
+
 export function buildEnvelopes(
   panels: BiPanelSpec[],
   queries: BiQueryPlan[],
@@ -411,64 +476,40 @@ export function buildEnvelopes(
 
   for (const panel of panels) {
     const series: BiSeriesResult[] = []
+    if (panel.sumSeries) {
+      // 合并模式：各序列先各自算值，再合计为一条（label = 面板标题，unit 取首条）
+      const parts = panel.series.map((s, idx) => {
+        const got = acc.get(`${panel.id}#${idx}`)
+        return buildSeriesResult(panel, s, idx, got)
+      })
+      const usable = parts.filter((p) => p.value !== null)
+      const value = usable.length ? usable.reduce((acc, p) => acc + (p.value ?? 0), 0) : null
+      // 点级合并：按 ts 对齐求和（各序列同窗同桶 → ts 对齐）
+      const byTs = new Map<number, number>()
+      for (const p of parts) {
+        for (const pt of p.points) byTs.set(pt.ts, (byTs.get(pt.ts) ?? 0) + pt.value)
+      }
+      series.push({
+        key: 'sum',
+        label: panel.title || parts[0]?.label || '合计',
+        unit: parts[0]?.unit ?? '',
+        color: '',
+        mode: parts[0]?.mode ?? 'instant',
+        metric: 'sum',
+        value,
+        points: [...byTs.entries()].sort((a, b) => a[0] - b[0]).map(([ts, v]) => ({ ts, value: v })),
+        error: parts.find((p) => p.error)?.error ?? null,
+      })
+      byPanel.set(panel.id, {
+        v: 1,
+        window: { start: nowSec - panel.windowSecs, end: nowSec },
+        generatedAt: nowSec,
+        series,
+      })
+      continue
+    }
     panel.series.forEach((s, idx) => {
-      const key = `${panel.id}#${idx}`
-      const got = acc.get(key)
-      const mainRes = got?.mainRes
-      const base: BiSeriesResult = {
-        key: `${s.dev_id}.${s.tag}`,
-        label: s.label,
-        unit: s.unit,
-        color: s.color,
-        mode: s.mode,
-        metric: s.mode === 'cumulative' ? 'usage' : s.mode === 'daily' ? 'current' : panel.agg,
-        value: null,
-        points: [],
-        error: null,
-      }
-      if (!mainRes) {
-        base.error = '未取数'
-        series.push(base)
-        return
-      }
-      if (mainRes.error !== undefined) {
-        base.error = mainRes.error
-        series.push(base)
-        return
-      }
-      const pts = (mainRes.points ?? [])
-        .map((p) => ({ ts: Number(p.ts), value: toNum(p.value) }))
-        .filter((p) => Number.isFinite(p.ts) && p.value !== null) as BiPoint[]
-      if (panel.shape === 'series') {
-        base.points = pts
-        series.push(base)
-        return
-      }
-      if (panel.shape === 'both') {
-        // main 给**口径正确的单值**（instant=聚合桶值 / cumulative=raw 分段累加），
-        // spark 给同窗时序点（KPI 卡：大数字 + 迷你趋势）
-        const sparkPts = (got?.sparkRes?.points ?? [])
-          .map((p) => ({ ts: Number(p.ts), value: toNum(p.value) }))
-          .filter((p) => Number.isFinite(p.ts) && p.value !== null) as BiPoint[]
-        base.points = sparkPts
-        base.value = s.mode === 'cumulative'
-          ? (pts.length ? cumulativeTotal(pts) : null)
-          : (pts.length ? pts[pts.length - 1].value : null)
-        series.push(base)
-        return
-      }
-      if (s.mode === 'cumulative') {
-        // 分段累加：raw 逐点 → 按回退点切段 → 段内增量求和
-        const pts = (mainRes.points ?? [])
-          .map((p) => ({ ts: Number(p.ts), value: toNum(p.value) }))
-          .filter((p) => Number.isFinite(p.ts) && p.value !== null) as BiPoint[]
-        base.value = pts.length ? cumulativeTotal(pts) : null
-        series.push(base)
-        return
-      }
-      // instant aggregate / daily current：整窗落一桶 → 取该桶值（末点即桶聚合值）
-      base.value = pts.length ? pts[pts.length - 1].value : null
-      series.push(base)
+      series.push(buildSeriesResult(panel, s, idx, acc.get(`${panel.id}#${idx}`)))
     })
     const win = panel.windowSecs
     byPanel.set(panel.id, {

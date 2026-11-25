@@ -18,8 +18,9 @@ import { createRtdataStream, type RtPoint, type StreamState } from '../lib/sse'
 import { api, tokenStore } from '../lib/api'
 import { logout, getAuthedUser } from '../lib/auth'
 import { installBridge } from '../lib/bridge'
-import { createDispatcher, createNavStack } from '../lib/nav'
+import { createDispatcher, createNavStack, parseNavTarget } from '../lib/nav'
 import { AlarmStore, createAlarmStream, type AlarmItem } from '../lib/alarms'
+import { aggregateAlarms, qualityOfStream, syntheticFields } from '../lib/synthetic'
 import { createBiCollector } from '../lib/bi-collector'
 import { BI_WINDOW_EVENT, collectBiWindowControls } from '../lib/bi-contract'
 import { registerSymbols } from '../symbols'
@@ -42,6 +43,8 @@ const state = ref<StreamState>('offline')
 const deadFields = ref<string[]>([])
 /** 订阅面（去重点位）——状态栏展示用，故 reactive */
 const bindFields = ref<string[]>([])
+/** 当前画面真实订阅的 devid 集（合成点位按设备补 0 用；`__` 类不入） */
+const subscribedDevs = ref<string[]>([])
 /** 当前画面 slug：容器内跳转只换 doc 不换组件实例（router-view 无 key），route.params 不再可信 */
 const currentSlug = ref(slug)
 
@@ -111,10 +114,25 @@ async function reloadCurrentScreen(): Promise<void> {
   }
 }
 
+/**
+ * 宿主合成点位推送（lib/synthetic.ts）：把活动告警/链路质量翻译成画布可绑定字段
+ * （`<devid>.__prio/__alarms`、`__area.*`、`__sys.*`），走与 SSE 相同的直写通道。
+ * 调用时机：告警快照/增量/清理后、SSE 状态变化后、画面装载后——保证"清除后写回 0"，
+ * 不会因没有新事件而把最后一次报警颜色留在屏幕上。
+ */
+function pushSynthetic(): void {
+  const pv = previewRef.value
+  if (!pv) return
+  const agg = aggregateAlarms(alarmStore.active())
+  const fields = syntheticFields(agg, subscribedDevs.value, qualityOfStream(state.value), bindFields.value)
+  for (const f of fields) pv.setDevicePointByID(f.field, f.value)
+}
+
 const refreshAlarms = (): void => {
   activeAlarms.value = alarmStore.active()
   historyAlarms.value = alarmStore.history()
   currentAlarm.value = alarmStore.current()
+  pushSynthetic()
 }
 
 /** 确认清除：DELETE /api/v1/alarms?key=（rs-iot 无 confirm 路由——实测，后端发 Clear 事件收敛） */
@@ -301,12 +319,14 @@ function setDev(dev: string): void {
 const resubscribe = (done: IExportJson): void => {
   const { fields, devs } = collectBinds(done)
   bindFields.value = fields
+  subscribedDevs.value = devs
   received.clear()
   deadFields.value = []
   if (devs.length === 0) {
     stream?.close()
     stream = undefined
     state.value = 'offline'
+    pushSynthetic()
     return
   }
   if (stream) stream.resubscribe(devs)
@@ -316,36 +336,47 @@ const resubscribe = (done: IExportJson): void => {
     onPoint,
     onState: onStreamState,
   })
+  pushSynthetic()
 }
 
 /** 状态桥 + 凭证失效登出链（T16 relogin 选型）：SSE 探测 401 → 走全局同款登出（不存凭据自动重登录） */
 function onStreamState(s: StreamState): void {
   state.value = s
+  pushSynthetic()
   if (s === 'auth-failed') doLogout()
 }
 
-/** 容器内跳转：GET 目标 doc → mountScreen（W11 参数化重映射同管线）→ URL 同步（replace，
- *  path 形式丢弃旧 query.dev）→ SSE 重订；404 报错停留当前画面。
+/** 容器内跳转：目标可为 `slug` 或 `slug?dev=<devid>`（工业画面 L2→L3 带设备上下文）。
+ *  GET 目标 doc → mountScreen（W11 参数化重映射同管线，dev 显式下传）→ URL 同步（replace）
+ *  → SSE 重订；404 报错停留当前画面。
  *  在飞互斥（P2 竞态）：连点不同目标时响应乱序会"后返回者被先返回者覆盖"（画面/URL/历史栈
- *  三者错乱）——序号守卫丢弃过期响应；mount 失败回退 currentSlug，避免同目标重跳被拦成死锁。 */
+ *  三者错乱）——序号守卫丢弃过期响应；mount 失败回退 currentSlug，避免同目标重跳被拦成死锁。
+ *  同 slug 不同 dev：只切设备上下文（不重载画面、不压栈），与选择器/设备按钮语义一致。 */
 let jumpSeq = 0
 const jump = async (target: string): Promise<boolean> => {
-  if (target === currentSlug.value) return false
+  const { slug: targetSlug, dev: targetDev } = parseNavTarget(target)
+  if (!targetSlug) return false
+  if (targetSlug === currentSlug.value) {
+    if (targetDev && templateDone.value && isDevParamScreen(templateDone.value)) setDev(targetDev)
+    return false
+  }
   const seq = ++jumpSeq
   const prev = currentSlug.value
   try {
-    const { doc, version } = await sApi.get(target)
+    const { doc, version } = await sApi.get(targetSlug)
     if (disposed || seq !== jumpSeq) return false
     const { done, meta: m } = unwrapDoc(doc)
     meta.value = m
     setAgentPageScreenInfo({ name: m.name, group: m.group, version })
-    currentSlug.value = target
+    currentSlug.value = targetSlug
     screenStale.value = '' // 跳到新画面：旧画面的"已更新/已删除"横幅不再适用
-    void router.replace(`/view/${target}`)
-    await mountScreen(done, '')
+    void router.replace(targetDev
+      ? `/view/${targetSlug}?dev=${encodeURIComponent(targetDev)}`
+      : `/view/${targetSlug}`)
+    await mountScreen(done, targetDev)
     return true
   } catch {
-    if (currentSlug.value === target) currentSlug.value = prev
+    if (currentSlug.value === targetSlug) currentSlug.value = prev
     ElMessage.error(`画面 ${target} 加载失败`)
     return false
   }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createDispatcher, createNavStack } from './nav'
+import { createDispatcher, createNavStack, parseNavTarget } from './nav'
 
 // T9 事件分发器：maotu 侧 $mtEventCallBack(type, $item_info.id, ...args) → MtPreview
 // emit onEventCallBack(type, id, ...rest) → dispatch([type, id, ...rest]) 小词表分发。
@@ -85,5 +85,30 @@ describe('dev 词表（W11 设备参数化）', () => {
     expect(seen).toEqual([['home-meter-e2', 'sel-1'], ['', '']])
     const quiet = createDispatcher({ onNav: () => {}, onBack: () => {}, onHome: () => {} })
     expect(() => quiet.dispatch(['dev', '', 'x'])).not.toThrow()
+  })
+})
+
+describe('parseNavTarget（L2→L3 设备上下文）', () => {
+  it('纯 slug → dev 空；带 ?dev= → 两者分离', () => {
+    expect(parseNavTarget('iot-unit-water')).toEqual({ slug: 'iot-unit-water', dev: '' })
+    expect(parseNavTarget('iot-faceplate-water?dev=dev_wm2')).toEqual({ slug: 'iot-faceplate-water', dev: 'dev_wm2' })
+  })
+
+  it('其他查询参数忽略；dev 可位于任意位置', () => {
+    expect(parseNavTarget('s?x=1&dev=dev_wm1&y=2')).toEqual({ slug: 's', dev: 'dev_wm1' })
+    expect(parseNavTarget('s?x=1')).toEqual({ slug: 's', dev: '' })
+  })
+
+  it('非法/空 target 与非法 dev → 空值（不把脏串拼进 URL）', () => {
+    expect(parseNavTarget('')).toEqual({ slug: '', dev: '' })
+    expect(parseNavTarget('s?dev=')).toEqual({ slug: 's', dev: '' })
+    expect(parseNavTarget('s?dev=a%20b')).toEqual({ slug: 's', dev: '' })
+    expect(parseNavTarget('s?dev=%40meta')).toEqual({ slug: 's', dev: '' })
+    expect(parseNavTarget('s?dev=dev_wm1%2Fx')).toEqual({ slug: 's', dev: '' })
+  })
+
+  it('编码的合法 devid 解码后接受', () => {
+    expect(parseNavTarget('s?dev=dev_wm1')).toEqual({ slug: 's', dev: 'dev_wm1' })
+    expect(parseNavTarget('s?dev=dev%5Fwm1')).toEqual({ slug: 's', dev: 'dev_wm1' })
   })
 })

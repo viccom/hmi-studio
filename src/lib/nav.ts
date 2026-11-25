@@ -32,6 +32,32 @@ export interface Dispatcher {
 
 const str = (v: unknown): string => (v === undefined || v === null ? '' : String(v))
 
+/**
+ * 跳转目标解析（工业画面 L2→L3 带设备上下文）：`slug?dev=<devid>` → `{ slug, dev }`。
+ * 兼容：纯 slug（dev 空）、多余查询串忽略、非法 dev（含 `&`/空格/`@`）视为无 dev。
+ * navStack 保存完整 target（含查询串），back 回到上一画面时设备上下文随 target 复原。
+ */
+export function parseNavTarget(target: string): { slug: string; dev: string } {
+  const raw = str(target).trim()
+  if (!raw) return { slug: '', dev: '' }
+  const q = raw.indexOf('?')
+  if (q < 0) return { slug: raw, dev: '' }
+  const slug = raw.slice(0, q)
+  const query = raw.slice(q + 1)
+  for (const pair of query.split('&')) {
+    const eq = pair.indexOf('=')
+    if (eq < 0) continue
+    if (pair.slice(0, eq) !== 'dev') continue
+    try {
+      const dev = decodeURIComponent(pair.slice(eq + 1))
+      return { slug, dev: /^[A-Za-z0-9_.:-]+$/.test(dev) ? dev : '' }
+    } catch {
+      return { slug, dev: '' }
+    }
+  }
+  return { slug, dev: '' }
+}
+
 export function createDispatcher(h: DispatcherHandlers): Dispatcher {
   return {
     dispatch(args) {

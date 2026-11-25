@@ -550,3 +550,47 @@ describe('BI 契约：告警信封组装（buildAlarmEnvelope）', () => {
     ])
   })
 })
+
+describe('多序列合并（sum_series）', () => {
+  it('面板声明 sum_series → 信封只含一条合成序列（标题 + 各序列合计）', () => {
+    const panels: BiPanelSpec[] = [{
+      id: 'kpi-1', title: '今日用电量', shape: 'both', agg: 'sum', interval: 3600, windowSecs: 86400,
+      sumSeries: true,
+      series: [
+        { dev_id: 'dev_em1', tag: 'energy_total', label: 'EM-301', unit: 'kWh', mode: 'cumulative', color: '' },
+        { dev_id: 'dev_em2', tag: 'energy_total', label: 'EM-302', unit: 'kWh', mode: 'cumulative', color: '' },
+      ],
+    }]
+    const queries = planQueries(panels, 1000)
+    // 两条序列 × (main + spark) = 4 条查询
+    expect(queries.length).toBe(4)
+    const results = queries.map((q) => ({
+      dev_id: q.dev_id, tag: q.tag,
+      points: q.slot === 'main'
+        ? [{ ts: 900, value: 10 }, { ts: 950, value: 20 }]
+        : [{ ts: 900, value: 5 }, { ts: 950, value: 7 }],
+    }))
+    const env = buildEnvelopes(panels, queries, results, 1000).get('kpi-1')!
+    expect(env.series.length).toBe(1)
+    expect(env.series[0].label).toBe('今日用电量')
+    // 每序列分段累加 = 20-10 = 10，两台合计 20
+    expect(env.series[0].value).toBe(20)
+    // 点级合并：同 ts 求和
+    expect(env.series[0].points).toEqual([{ ts: 900, value: 10 }, { ts: 950, value: 14 }])
+  })
+
+  it('未声明时保持原语义（多序列各一条）', () => {
+    const panels: BiPanelSpec[] = [{
+      id: 'kpi-2', title: 'x', shape: 'both', agg: 'sum', interval: 60, windowSecs: 3600,
+      sumSeries: false,
+      series: [
+        { dev_id: 'dev_em1', tag: 'active_power', label: 'EM-301', unit: 'kW', mode: 'instant', color: '' },
+        { dev_id: 'dev_em2', tag: 'active_power', label: 'EM-302', unit: 'kW', mode: 'instant', color: '' },
+      ],
+    }]
+    const queries = planQueries(panels, 1000)
+    const results = queries.map(() => ({ points: [{ ts: 900, value: 3 }] }))
+    const env = buildEnvelopes(panels, queries, results, 1000).get('kpi-2')!
+    expect(env.series.length).toBe(2)
+  })
+})

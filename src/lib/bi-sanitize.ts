@@ -9,7 +9,7 @@
  *
  * 对策：保存前把 BI 图元的 props.data 复位为 '[]'。纯函数、不改入参。
  */
-import { BI_TAG_PREFIX } from './bi-contract'
+import { BI_TAG_PREFIX, BI_TREND_TAG_PREFIX } from './bi-contract'
 
 type Rec = Record<string, unknown>
 
@@ -23,7 +23,7 @@ const EMPTY_DATA = '[]'
 /** 判断一个元素是否为 BI 图元（tag 前缀约定，与契约层同源）。 */
 function isBiElement(el: Rec): boolean {
   const tag = typeof el.tag === 'string' ? el.tag : ''
-  return tag.startsWith(BI_TAG_PREFIX)
+  return tag.startsWith(BI_TAG_PREFIX) || tag.startsWith(BI_TREND_TAG_PREFIX)
 }
 
 /**
