@@ -162,6 +162,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
         "interval": 300,
         "windowSecs": 86400,
         "shape": "both",
+        "sum_series": false,
         "data": "[]"
       },
       "binds": []
@@ -199,6 +200,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
         "interval": 300,
         "windowSecs": 86400,
         "shape": "both",
+        "sum_series": false,
         "data": "[]"
       },
       "binds": []
@@ -236,6 +238,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
         "interval": 300,
         "windowSecs": 86400,
         "shape": "both",
+        "sum_series": false,
         "data": "[]"
       },
       "binds": []
@@ -273,6 +276,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
         "interval": 300,
         "windowSecs": 3600,
         "shape": "both",
+        "sum_series": false,
         "data": "[]"
       },
       "binds": []
@@ -310,6 +314,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
         "interval": 300,
         "windowSecs": 3600,
         "shape": "both",
+        "sum_series": false,
         "data": "[]"
       },
       "binds": []
@@ -347,6 +352,7 @@ exports[`监控站 BI 大屏（bi-station） > 全量快照（防漂移基线）
         "interval": 300,
         "windowSecs": 3600,
         "shape": "both",
+        "sum_series": false,
         "data": "[]"
       },
       "binds": []

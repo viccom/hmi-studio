@@ -19,11 +19,29 @@ export const HOME_G_TABS = 'home-meter-gas-tabs'
 export const HOME_E_FACEPLATE = 'home-meter-power-faceplate'
 export const BI_STATION = 'bi-station'
 
+// 工业 SCADA 画面集（2026-11-24，docs/plans/2026-11-24-iot-scada-screens-plan.md）
+// L1 总览 / L2 四个单元 / L3 每台设备一张面板（每台限值不同，不共用参数化面板）
+export const IOT_L1 = 'iot-plant-overview'
+export const IOT_WATER = 'iot-unit-water'
+export const IOT_POWER = 'iot-unit-power'
+export const IOT_GAS = 'iot-unit-gas'
+export const IOT_ENV = 'iot-unit-env'
+/** 工业历史分析大屏（BI 分析层，深色大屏） */
+export const IOT_BI_STATION = 'iot-bi-station'
+export const IOT_FACEPLATES = [
+  'iot-faceplate-wm1', 'iot-faceplate-wm2', 'iot-faceplate-wm3',
+  'iot-faceplate-gm1', 'iot-faceplate-gm2',
+  'iot-faceplate-em1', 'iot-faceplate-em2', 'iot-faceplate-em3',
+  'iot-faceplate-env1', 'iot-faceplate-pt1',
+] as const
+
 export const PROTECTED_SLUGS = [
   DEMO_A, DEMO_B, DEMO_CATALOG,
   HOME_E, HOME_W, HOME_G,
   HOME_E_TABS, HOME_W_TABS, HOME_G_TABS,
   HOME_E_FACEPLATE, BI_STATION,
+  IOT_L1, IOT_WATER, IOT_POWER, IOT_GAS, IOT_ENV, IOT_BI_STATION,
+  ...IOT_FACEPLATES,
 ] as const
 
 export type ProtectedSlug = (typeof PROTECTED_SLUGS)[number]

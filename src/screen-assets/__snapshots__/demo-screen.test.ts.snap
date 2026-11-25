@@ -6,7 +6,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
   "group": "水处理演示",
   "canvasCfg": {
     "width": 800,
-    "height": 3360,
+    "height": 4620,
     "scale": 1,
     "color": "#141414",
     "img": "",
@@ -2179,6 +2179,7 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
         "interval": 60,
         "windowSecs": 3600,
         "shape": "aggregate",
+        "sum_series": false,
         "data": "[]"
       },
       "binds": []
@@ -2882,6 +2883,481 @@ exports[`demo-screen 图元陈列室（catalog） > 全量快照（防漂移基�
         "data": "[]"
       },
       "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "text-vue-cat-sec9",
+      "title": "文字",
+      "type": "vue",
+      "tag": "text-vue",
+      "binfo": {
+        "angle": 0,
+        "height": 22,
+        "left": 24,
+        "top": 3380,
+        "width": 260
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#8fa3b8",
+        "fontFamily": "黑体",
+        "fontSize": 14,
+        "text": "── 工业功能件（HP-HMI）──",
+        "vertical": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-value-block-cat-1",
+      "title": "值块",
+      "type": "vue",
+      "tag": "ah-value-block",
+      "binfo": {
+        "angle": 0,
+        "width": 220,
+        "height": 110,
+        "left": 24,
+        "top": 3440
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#1F4E79",
+        "label": "瞬时流量",
+        "value": 0,
+        "unit": "m³/h",
+        "precision": 2,
+        "min": 0,
+        "max": 40,
+        "show_limits": true,
+        "ll": -99999,
+        "l": 10,
+        "h": 30,
+        "hh": 31.5,
+        "show_sp": false,
+        "sp": 0,
+        "prio": 0,
+        "quality": 0,
+        "compact": false
+      },
+      "binds": [
+        {
+          "id": "bd-ah-value-block-cat-1",
+          "pel_id": "ah-value-block-cat-1",
+          "bind_id": "dev_wm1.flow_rate",
+          "bind_name": "flow_rate",
+          "bind_attr": "props.value.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-sparkline-cat-1",
+      "title": "迷你趋势",
+      "type": "vue",
+      "tag": "ah-sparkline",
+      "binfo": {
+        "angle": 0,
+        "width": 260,
+        "height": 90,
+        "left": 264,
+        "top": 3440
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#1F4E79",
+        "label": "流量趋势",
+        "value": 0,
+        "min": 0,
+        "max": 40,
+        "show_limits": true,
+        "ll": -99999,
+        "l": 10,
+        "h": 30,
+        "hh": -99999,
+        "show_sp": false,
+        "sp": 0,
+        "window": 300
+      },
+      "binds": [
+        {
+          "id": "bd-ah-sparkline-cat-1",
+          "pel_id": "ah-sparkline-cat-1",
+          "bind_id": "dev_wm1.flow_rate",
+          "bind_name": "flow_rate",
+          "bind_attr": "props.value.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-status-badge-cat-1",
+      "title": "状态徽标",
+      "type": "vue",
+      "tag": "ah-status-badge",
+      "binfo": {
+        "angle": 0,
+        "width": 140,
+        "height": 30,
+        "left": 544,
+        "top": 3450
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#5B6570",
+        "state": 1,
+        "label": "阀门",
+        "texts": "关,开,故障,维护,离线"
+      },
+      "binds": [
+        {
+          "id": "bd-ah-status-badge-cat-1",
+          "pel_id": "ah-status-badge-cat-1",
+          "bind_id": "dev_wm1.valve_status",
+          "bind_name": "valve_status",
+          "bind_attr": "props.state.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-alarm-badge-cat-1",
+      "title": "报警徽标",
+      "type": "vue",
+      "tag": "ah-alarm-badge",
+      "binfo": {
+        "angle": 0,
+        "width": 140,
+        "height": 32,
+        "left": 544,
+        "top": 3490
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#9E9E9E",
+        "prio": 2,
+        "count": 1,
+        "label": "报警",
+        "blink": false
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-quality-badge-cat-1",
+      "title": "质量徽标",
+      "type": "vue",
+      "tag": "ah-quality-badge",
+      "binfo": {
+        "angle": 0,
+        "width": 130,
+        "height": 28,
+        "left": 544,
+        "top": 3530
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#5B6570",
+        "quality": 0,
+        "label": "通信"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-area-card-cat-1",
+      "title": "区域卡片",
+      "type": "vue",
+      "tag": "ah-area-card",
+      "binfo": {
+        "angle": 0,
+        "width": 560,
+        "height": 200,
+        "left": 24,
+        "top": 3580
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#1F4E79",
+        "title": "水系统",
+        "total": 3,
+        "alarms": 0,
+        "prio": 0,
+        "kpi1_label": "瞬时流量",
+        "kpi1_value": 0,
+        "kpi1_unit": "m³/h",
+        "kpi1_dec": 2,
+        "kpi2_label": "管网压力",
+        "kpi2_value": 0,
+        "kpi2_unit": "MPa",
+        "kpi2_dec": 2,
+        "quality": 0
+      },
+      "binds": [
+        {
+          "id": "bd-ah-area-card-cat-1",
+          "pel_id": "ah-area-card-cat-1",
+          "bind_id": "dev_wm1.flow_rate",
+          "bind_name": "flow_rate",
+          "bind_attr": "props.kpi1_value.val",
+          "bind_mapping": [],
+          "triggers": []
+        },
+        {
+          "id": "bd-ah-area-card-cat-1",
+          "pel_id": "ah-area-card-cat-1",
+          "bind_id": "dev_wm1.pressure",
+          "bind_name": "pressure",
+          "bind_attr": "props.kpi2_value.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-pipe-cat-1",
+      "title": "工艺管线",
+      "type": "svg",
+      "tag": "ah-pipe",
+      "binfo": {
+        "angle": 0,
+        "width": 160,
+        "height": 20,
+        "left": 620,
+        "top": 3660
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [
+        {
+          "type": "in",
+          "position": "leftTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        },
+        {
+          "type": "out",
+          "position": "rightTop",
+          "offset": {
+            "x": {
+              "value": 0,
+              "unit": "px"
+            },
+            "y": {
+              "value": 50,
+              "unit": "%"
+            }
+          }
+        }
+      ],
+      "props": {
+        "fill": "#5b6570"
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-hist-trend-cat-1",
+      "title": "历史趋势",
+      "type": "vue",
+      "tag": "ah-hist-trend",
+      "binfo": {
+        "angle": 0,
+        "width": 460,
+        "height": 150,
+        "left": 24,
+        "top": 4460
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#1F4E79",
+        "title": "1# 水表流量历史（1h）",
+        "series": "[{\\"dev_id\\":\\"dev_wm1\\",\\"tag\\":\\"flow_rate\\",\\"label\\":\\"1#水表\\",\\"unit\\":\\"m³/h\\"}]",
+        "agg": "avg",
+        "interval": 60,
+        "windowSecs": 3600,
+        "shape": "series",
+        "data": "[]",
+        "min": 0,
+        "max": 0,
+        "line_width": 2
+      },
+      "binds": []
+    },
+    {
+      "active": false,
+      "hide": false,
+      "lock": false,
+      "resize": true,
+      "rotate": true,
+      "id": "ah-dev-faceplate-cat-1",
+      "title": "设备面板",
+      "type": "vue",
+      "tag": "ah-dev-faceplate",
+      "binfo": {
+        "angle": 0,
+        "width": 520,
+        "height": 620,
+        "left": 24,
+        "top": 3820
+      },
+      "common_animations": {
+        "val": "",
+        "delay": "delay-0s",
+        "speed": "slow",
+        "repeat": "infinite"
+      },
+      "events": [],
+      "ports": [],
+      "props": {
+        "fill": "#1F4E79",
+        "title": "WM-101 远传水表",
+        "dev": "dev_wm1",
+        "unit": "m³/h",
+        "pv": 0,
+        "precision": 2,
+        "min": 0,
+        "max": 40,
+        "show_limits": true,
+        "ll": -99999,
+        "l": 10,
+        "h": 30,
+        "hh": 31.5,
+        "show_sp": false,
+        "sp": 0,
+        "show_control": false,
+        "op": 0,
+        "mode": 1,
+        "status": 1,
+        "quality": 0,
+        "prio": 0,
+        "pv_prio": 0,
+        "alarms": 0,
+        "window": 300
+      },
+      "binds": [
+        {
+          "id": "bd-ah-dev-faceplate-cat-1",
+          "pel_id": "ah-dev-faceplate-cat-1",
+          "bind_id": "dev_wm1.flow_rate",
+          "bind_name": "flow_rate",
+          "bind_attr": "props.pv.val",
+          "bind_mapping": [],
+          "triggers": []
+        }
+      ]
     }
   ],
   "eventList": [],

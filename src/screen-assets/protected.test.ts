@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PROTECTED_SLUGS, isProtectedSlug } from './protected'
+import { PROTECTED_SLUGS, isProtectedSlug, IOT_L1, IOT_WATER, IOT_POWER, IOT_GAS, IOT_ENV, IOT_BI_STATION, IOT_FACEPLATES } from './protected'
 import { DEMO_A, DEMO_B, DEMO_CATALOG } from './demo-screen'
 import { HOME_E, HOME_W, HOME_G } from './home-screens'
 import { HOME_E_TABS, HOME_W_TABS, HOME_G_TABS } from './home-tab-screens'
@@ -14,6 +14,8 @@ describe('PROTECTED_SLUGS', () => {
       HOME_E, HOME_W, HOME_G,
       HOME_E_TABS, HOME_W_TABS, HOME_G_TABS,
       HOME_E_FACEPLATE, BI_STATION,
+      IOT_L1, IOT_WATER, IOT_POWER, IOT_GAS, IOT_ENV, IOT_BI_STATION,
+      ...IOT_FACEPLATES,
     ])
   })
 

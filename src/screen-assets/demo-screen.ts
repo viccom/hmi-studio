@@ -182,13 +182,13 @@ const boolBinds = (pelId: string, attr: string, bindId = 'rsiot.alarm_active'): 
   ])]
 
 /** 纯函数组态：图元陈列室（registry 全量覆盖判据的承载画面）。无随机、无副作用。
- * 画布 800×3360（P2 三表与趋势节自 y596 起，P2-BI 图表节自 y950 起，补三件节自 y2050，P3 扩容节自 y2380——
- * 出界/重叠判据由布局测试按 canvasCfg 推导）。 */
+ * 画布 800×4620（P2 三表与趋势节自 y596 起，P2-BI 图表节自 y950 起，补三件节自 y2050，P3 扩容节自 y2380，
+ * 工业功能件节自 y3380 起，历史趋势节自 y4460——出界/重叠判据由布局测试按 canvasCfg 推导）。 */
 export function buildCatalogScreen(): ScreenDoc {
   const c: ScreenDoc = {
     name: '图元陈列室', group: '水处理演示',
     canvasCfg: {
-      width: 800, height: 3360, scale: 1, color: '#141414', img: '',
+      width: 800, height: 4620, scale: 1, color: '#141414', img: '',
       guide: true, adsorp: true, adsorp_diff: 3, transform_origin: { x: 0, y: 0 }, drag_offset: { x: 0, y: 0 },
     },
     gridCfg: { enabled: true, align: true, size: 10 },
@@ -486,6 +486,63 @@ export function buildCatalogScreen(): ScreenDoc {
           ]),
           agg: 'last', windowSecs: 86400, shape: 'aggregate',
         },
+      }),
+      // 分区九：工业功能件（HP-HMI / ISA-101，2026-11-24）——浅色卡片在深色陈列室内自成一格，
+      // 绑定用真实 dev_wm1.flow_rate / rsiot 系统点，保证 /view 下有活数据可看
+      textItem(`text-vue-${C}-sec9`, { text: '── 工业功能件（HP-HMI）──', left: 24, top: 3380, width: 260, height: 22, fill: '#8fa3b8', fontSize: 14 }),
+      svgItem('ah-value-block', cid('value-block'), {
+        left: 24, top: 3440,
+        props: {
+          label: '瞬时流量', unit: 'm³/h', precision: 2, min: 0, max: 40,
+          show_limits: true, l: 10, h: 30, hh: 31.5, prio: 0, quality: 0,
+        },
+        binds: [bind(cid('value-block'), 'dev_wm1.flow_rate', 'props.value.val')],
+      }),
+      svgItem('ah-sparkline', cid('sparkline'), {
+        left: 264, top: 3440,
+        props: { label: '流量趋势', min: 0, max: 40, show_limits: true, l: 10, h: 30, window: 300 },
+        binds: [bind(cid('sparkline'), 'dev_wm1.flow_rate', 'props.value.val')],
+      }),
+      svgItem('ah-status-badge', cid('status-badge'), {
+        left: 544, top: 3450,
+        props: { state: 1, label: '阀门', texts: '关,开,故障,维护,离线' },
+        binds: [bind(cid('status-badge'), 'dev_wm1.valve_status', 'props.state.val')],
+      }),
+      svgItem('ah-alarm-badge', cid('alarm-badge'), {
+        left: 544, top: 3490,
+        props: { prio: 2, count: 1, label: '报警', blink: false },
+      }),
+      svgItem('ah-quality-badge', cid('quality-badge'), {
+        left: 544, top: 3530,
+        props: { quality: 0, label: '通信' },
+      }),
+      svgItem('ah-area-card', cid('area-card'), {
+        left: 24, top: 3580,
+        props: {
+          title: '水系统', total: 3, alarms: 0, prio: 0,
+          kpi1_label: '瞬时流量', kpi1_unit: 'm³/h',
+          kpi2_label: '管网压力', kpi2_unit: 'MPa', quality: 0,
+        },
+        binds: [
+          bind(cid('area-card'), 'dev_wm1.flow_rate', 'props.kpi1_value.val'),
+          bind(cid('area-card'), 'dev_wm1.pressure', 'props.kpi2_value.val'),
+        ],
+      }),
+      svgItem('ah-pipe', cid('pipe'), { left: 620, top: 3660, props: { fill: '#5b6570' } }),
+      svgItem('ah-hist-trend', cid('hist-trend'), {
+        left: 24, top: 4460,
+        props: {
+          title: '1# 水表流量历史（1h）', windowSecs: 3600, interval: 60, shape: 'series', agg: 'avg',
+          series: JSON.stringify([{ dev_id: 'dev_wm1', tag: 'flow_rate', label: '1#水表', unit: 'm³/h' }]),
+        },
+      }),
+      svgItem('ah-dev-faceplate', cid('dev-faceplate'), {
+        left: 24, top: 3820,
+        props: {
+          title: 'WM-101 远传水表', dev: 'dev_wm1', unit: 'm³/h', precision: 2, min: 0, max: 40,
+          show_limits: true, l: 10, h: 30, hh: 31.5, status: 1, quality: 0, prio: 0, alarms: 0,
+        },
+        binds: [bind(cid('dev-faceplate'), 'dev_wm1.flow_rate', 'props.pv.val')],
       }),
     ],
     eventList: [], eventFlow: [],

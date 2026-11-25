@@ -7,7 +7,7 @@
  */
 import {
   seedDemoScreens, seedCatalogDemo, seedHomeScreens, seedHomeTabScreens, seedFaceplateScreen,
-  seedBiStationScreen,
+  seedBiStationScreen, seedIotScreens, seedIotBiStation,
 } from './fixtures'
 
 export default async function globalSetup(): Promise<void> {
@@ -17,4 +17,6 @@ export default async function globalSetup(): Promise<void> {
   await seedHomeTabScreens()
   await seedFaceplateScreen()
   await seedBiStationScreen()
+  await seedIotScreens()
+  await seedIotBiStation()
 }

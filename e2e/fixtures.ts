@@ -4,6 +4,9 @@ import { buildHomeScreens, HOME_E, HOME_W, HOME_G } from '../src/screen-assets/h
 import { buildHomeTabScreens, HOME_E_TABS, HOME_W_TABS, HOME_G_TABS } from '../src/screen-assets/home-tab-screens'
 import { buildHomeFaceplateScreen, HOME_E_FACEPLATE } from '../src/screen-assets/home-faceplate-screen'
 import { buildBiStationScreen, BI_STATION } from '../src/screen-assets/bi-screen'
+import { buildIotScreens } from '../src/screen-assets/iot-screens'
+import { buildIotBiStationScreen } from '../src/screen-assets/iot-bi-screen'
+import { IOT_L1, IOT_WATER, IOT_POWER, IOT_GAS, IOT_ENV, IOT_BI_STATION } from '../src/screen-assets/protected'
 
 /**
  * M2 数据段种子画面（T6）——形状全部来自 2026-10-25 编辑器/BindProbe 实测：
@@ -167,6 +170,28 @@ export async function seedHomeTabScreens(): Promise<void> {
  */
 export async function seedFaceplateScreen(): Promise<void> {
   await rsiotPutScreen(HOME_E_FACEPLATE, buildHomeFaceplateScreen())
+}
+
+/**
+ * 工业 SCADA 画面集（2026-11-24 长期资产）：L1 + 4 个 L2 + 10 个 L3（每台设备一张面板）。
+ * slug 常量在 src/screen-assets/protected.ts（权威源）；PUT 幂等，组态源 = 纯函数
+ * buildIotScreens()（结构与绑定契约在其伴生单测冻结）。**任何测试不得删除**。
+ */
+export async function seedIotScreens(): Promise<void> {
+  const { l1, water, power, gas, env, faceplates } = buildIotScreens()
+  await rsiotPutScreen(IOT_L1, l1)
+  await rsiotPutScreen(IOT_WATER, water)
+  await rsiotPutScreen(IOT_POWER, power)
+  await rsiotPutScreen(IOT_GAS, gas)
+  await rsiotPutScreen(IOT_ENV, env)
+  for (const [slug, doc] of Object.entries(faceplates)) {
+    await rsiotPutScreen(slug, doc)
+  }
+}
+
+/** 工业历史分析大屏（BI 分析层）：长期资产，PUT 幂等，任何测试不得删除。 */
+export async function seedIotBiStation(): Promise<void> {
+  await rsiotPutScreen(IOT_BI_STATION, buildIotBiStationScreen())
 }
 
 /**
