@@ -1,0 +1,647 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`值块（工业功能件） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 110,
+  "id": "ah-value-block",
+  "ports": [],
+  "props": {
+    "compact": {
+      "title": "紧凑行模式（参数表行用）",
+      "type": "switch",
+      "val": false,
+    },
+    "fill": {
+      "title": "数值色",
+      "type": "color",
+      "val": "#1F4E79",
+    },
+    "h": {
+      "title": "H 高限",
+      "type": "number",
+      "val": -99999,
+    },
+    "hh": {
+      "title": "HH 高高限",
+      "type": "number",
+      "val": -99999,
+    },
+    "l": {
+      "title": "L 低限",
+      "type": "number",
+      "val": -99999,
+    },
+    "label": {
+      "title": "标签",
+      "type": "input",
+      "val": "瞬时流量",
+    },
+    "ll": {
+      "title": "LL 低低限",
+      "type": "number",
+      "val": -99999,
+    },
+    "max": {
+      "title": "量程上限",
+      "type": "number",
+      "val": 100,
+    },
+    "min": {
+      "title": "量程下限",
+      "type": "number",
+      "val": 0,
+    },
+    "precision": {
+      "title": "小数位",
+      "type": "number",
+      "val": 2,
+    },
+    "prio": {
+      "title": "报警优先级（0 正常 / 1 P1 … 4 P4）",
+      "type": "number",
+      "val": 0,
+    },
+    "quality": {
+      "title": "质量（0 GOOD / 1 STALE / 2 BAD）",
+      "type": "number",
+      "val": 0,
+    },
+    "show_limits": {
+      "title": "显示限值带",
+      "type": "switch",
+      "val": false,
+    },
+    "show_sp": {
+      "title": "显示 SP 标记",
+      "type": "switch",
+      "val": false,
+    },
+    "sp": {
+      "title": "设定值 SP",
+      "type": "number",
+      "val": 0,
+    },
+    "unit": {
+      "title": "单位",
+      "type": "input",
+      "val": "m³/h",
+    },
+    "value": {
+      "title": "数值",
+      "type": "number",
+      "val": 0,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-value-block%22%20viewBox%3D%220%200%20220%20110%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%22218%22%20height%3D%22108%22%20rx%3D%226%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%238a939d%22%2F%3E%0A%20%20%3Crect%20x%3D%2212%22%20y%3D%2212%22%20width%3D%2252%22%20height%3D%226%22%20rx%3D%222%22%20fill%3D%22%235b6570%22%2F%3E%0A%20%20%3Crect%20x%3D%2212%22%20y%3D%2228%22%20width%3D%2296%22%20height%3D%2222%22%20rx%3D%223%22%20fill%3D%22%231f4e79%22%2F%3E%0A%20%20%3Crect%20x%3D%22116%22%20y%3D%2238%22%20width%3D%2230%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%238a939d%22%2F%3E%0A%20%20%3Crect%20x%3D%2212%22%20y%3D%2276%22%20width%3D%22196%22%20height%3D%2210%22%20rx%3D%222%22%20fill%3D%22%23e3e6e8%22%2F%3E%0A%20%20%3Crect%20x%3D%2212%22%20y%3D%2276%22%20width%3D%2258%22%20height%3D%2210%22%20rx%3D%222%22%20fill%3D%22%23fbc02d%22%2F%3E%0A%20%20%3Crect%20x%3D%22150%22%20y%3D%2276%22%20width%3D%2258%22%20height%3D%2210%22%20rx%3D%222%22%20fill%3D%22%23fbc02d%22%2F%3E%0A%20%20%3Crect%20x%3D%2270%22%20y%3D%2276%22%20width%3D%2280%22%20height%3D%2210%22%20fill%3D%22%23c9d2d8%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "值块",
+  "type": "vue",
+  "width": 220,
+}
+`;
+
+exports[`区域卡片（工业功能件） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 200,
+  "id": "ah-area-card",
+  "ports": [],
+  "props": {
+    "alarms": {
+      "title": "活动报警数",
+      "type": "number",
+      "val": 0,
+    },
+    "fill": {
+      "title": "KPI 数值色",
+      "type": "color",
+      "val": "#1F4E79",
+    },
+    "kpi1_dec": {
+      "title": "KPI1 小数位",
+      "type": "number",
+      "val": 2,
+    },
+    "kpi1_label": {
+      "title": "KPI1 标签",
+      "type": "input",
+      "val": "总流量",
+    },
+    "kpi1_unit": {
+      "title": "KPI1 单位",
+      "type": "input",
+      "val": "m³/h",
+    },
+    "kpi1_value": {
+      "title": "KPI1 数值",
+      "type": "number",
+      "val": 0,
+    },
+    "kpi2_dec": {
+      "title": "KPI2 小数位",
+      "type": "number",
+      "val": 2,
+    },
+    "kpi2_label": {
+      "title": "KPI2 标签",
+      "type": "input",
+      "val": "管网压力",
+    },
+    "kpi2_unit": {
+      "title": "KPI2 单位",
+      "type": "input",
+      "val": "MPa",
+    },
+    "kpi2_value": {
+      "title": "KPI2 数值",
+      "type": "number",
+      "val": 0,
+    },
+    "prio": {
+      "title": "最高优先级（0 正常 / 1 P1 … 4 P4）",
+      "type": "number",
+      "val": 0,
+    },
+    "quality": {
+      "title": "质量（0 GOOD / 1 STALE / 2 BAD）",
+      "type": "number",
+      "val": 0,
+    },
+    "title": {
+      "title": "区域名",
+      "type": "input",
+      "val": "水系统",
+    },
+    "total": {
+      "title": "设备总数",
+      "type": "number",
+      "val": 3,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-area-card%22%20viewBox%3D%220%200%20560%20200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%22558%22%20height%3D%22198%22%20rx%3D%226%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%238a939d%22%2F%3E%0A%20%20%3Crect%20x%3D%2218%22%20y%3D%2216%22%20width%3D%2292%22%20height%3D%2210%22%20rx%3D%222%22%20fill%3D%22%231f2328%22%2F%3E%0A%20%20%3Crect%20x%3D%2218%22%20y%3D%2252%22%20width%3D%2240%22%20height%3D%226%22%20rx%3D%222%22%20fill%3D%22%235b6570%22%2F%3E%0A%20%20%3Crect%20x%3D%2218%22%20y%3D%2266%22%20width%3D%2290%22%20height%3D%2226%22%20rx%3D%223%22%20fill%3D%22%231f4e79%22%2F%3E%0A%20%20%3Crect%20x%3D%22150%22%20y%3D%2252%22%20width%3D%2240%22%20height%3D%226%22%20rx%3D%222%22%20fill%3D%22%235b6570%22%2F%3E%0A%20%20%3Crect%20x%3D%22150%22%20y%3D%2266%22%20width%3D%2290%22%20height%3D%2226%22%20rx%3D%223%22%20fill%3D%22%231f4e79%22%2F%3E%0A%20%20%3Crect%20x%3D%22430%22%20y%3D%2240%22%20width%3D%2290%22%20height%3D%2252%22%20rx%3D%223%22%20fill%3D%22%23fbc02d%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "区域卡片",
+  "type": "vue",
+  "width": 560,
+}
+`;
+
+exports[`历史趋势（工业功能件） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 150,
+  "id": "ah-hist-trend",
+  "ports": [],
+  "props": {
+    "agg": {
+      "options": [
+        {
+          "label": "平均",
+          "value": "avg",
+        },
+        {
+          "label": "最大",
+          "value": "max",
+        },
+        {
+          "label": "最小",
+          "value": "min",
+        },
+        {
+          "label": "求和",
+          "value": "sum",
+        },
+        {
+          "label": "计数",
+          "value": "count",
+        },
+        {
+          "label": "末值",
+          "value": "last",
+        },
+      ],
+      "title": "窗口聚合口径",
+      "type": "select",
+      "val": "avg",
+    },
+    "data": {
+      "title": "数据通道（宿主写回）",
+      "type": "textArea",
+      "val": "[]",
+    },
+    "fill": {
+      "title": "强调色（边框）",
+      "type": "color",
+      "val": "#1F4E79",
+    },
+    "interval": {
+      "title": "桶宽（秒）",
+      "type": "number",
+      "val": 60,
+    },
+    "line_width": {
+      "title": "曲线粗细",
+      "type": "number",
+      "val": 2,
+    },
+    "max": {
+      "title": "纵轴上限（缺省自适应）",
+      "type": "number",
+      "val": 0,
+    },
+    "min": {
+      "title": "纵轴下限（缺省自适应）",
+      "type": "number",
+      "val": 0,
+    },
+    "series": {
+      "title": "序列配置（JSON，dev_id+tag）",
+      "type": "textArea",
+      "val": "[{"dev_id":"dev_wm1","tag":"flow_rate","label":"1#水表","unit":"m³/h"}]",
+    },
+    "shape": {
+      "title": "取数形态",
+      "type": "input",
+      "val": "series",
+    },
+    "title": {
+      "title": "面板标题",
+      "type": "input",
+      "val": "历史趋势",
+    },
+    "windowSecs": {
+      "title": "统计窗（秒）",
+      "type": "number",
+      "val": 3600,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-hist-trend%22%20viewBox%3D%220%200%20460%20150%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%22458%22%20height%3D%22148%22%20rx%3D%224%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%238a939d%22%2F%3E%0A%20%20%3Crect%20x%3D%2214%22%20y%3D%2212%22%20width%3D%2290%22%20height%3D%227%22%20rx%3D%222%22%20fill%3D%22%235b6570%22%2F%3E%0A%20%20%3Cpolyline%20points%3D%2214%2C120%2060%2C96%20106%2C104%20152%2C70%20198%2C80%20244%2C48%20290%2C58%20336%2C34%20382%2C44%20428%2C26%22%20fill%3D%22none%22%20stroke%3D%22%231f4e79%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%3Cpolyline%20points%3D%2214%2C132%2060%2C124%20106%2C118%20152%2C110%20198%2C104%20244%2C92%20290%2C86%20336%2C74%20382%2C66%20428%2C58%22%20fill%3D%22none%22%20stroke%3D%22%232e6b52%22%20stroke-width%3D%222%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "历史趋势",
+  "type": "vue",
+  "width": 460,
+}
+`;
+
+exports[`工艺管线（工业功能件） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 20,
+  "id": "ah-pipe",
+  "ports": [
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "leftTop",
+      "type": "in",
+    },
+    {
+      "offset": {
+        "x": {
+          "unit": "px",
+          "value": 0,
+        },
+        "y": {
+          "unit": "%",
+          "value": 50,
+        },
+      },
+      "position": "rightTop",
+      "type": "out",
+    },
+  ],
+  "props": {
+    "fill": {
+      "title": "管线色",
+      "type": "color",
+      "val": "#5B6570",
+    },
+  },
+  "svg": "<svg viewBox="0 0 160 20" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="8" width="160" height="4"/>
+  <path d="M48 3 L64 10 L48 17 Z"/>
+  <path d="M144 3 L160 10 L144 17 Z"/>
+</svg>",
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-pipe%22%20viewBox%3D%220%200%20160%2020%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%220%22%20y%3D%228%22%20width%3D%22160%22%20height%3D%224%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M48%203%20L64%2010%20L48%2017%20Z%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M144%203%20L160%2010%20L144%2017%20Z%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "工艺管线",
+  "type": "svg",
+  "width": 160,
+}
+`;
+
+exports[`报警徽标（工业功能件） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 32,
+  "id": "ah-alarm-badge",
+  "ports": [],
+  "props": {
+    "blink": {
+      "title": "活动时闪烁",
+      "type": "switch",
+      "val": true,
+    },
+    "count": {
+      "title": "活动报警数",
+      "type": "number",
+      "val": 0,
+    },
+    "fill": {
+      "title": "正常态色",
+      "type": "color",
+      "val": "#9E9E9E",
+    },
+    "label": {
+      "title": "标签",
+      "type": "input",
+      "val": "报警",
+    },
+    "prio": {
+      "title": "优先级（0 正常 / 1 P1 … 4 P4）",
+      "type": "number",
+      "val": 0,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-alarm-badge%22%20viewBox%3D%220%200%20140%2032%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%22138%22%20height%3D%2230%22%20rx%3D%224%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%23d32f2f%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M14%206%20L21%2022%20H7%20Z%22%20fill%3D%22%23d32f2f%22%2F%3E%0A%20%20%3Crect%20x%3D%2228%22%20y%3D%2212%22%20width%3D%2244%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%23d32f2f%22%2F%3E%0A%20%20%3Crect%20x%3D%2280%22%20y%3D%2212%22%20width%3D%2226%22%20height%3D%228%22%20rx%3D%222%22%20fill%3D%22%235b6570%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "报警徽标",
+  "type": "vue",
+  "width": 140,
+}
+`;
+
+exports[`状态徽标（工业功能件） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 30,
+  "id": "ah-status-badge",
+  "ports": [],
+  "props": {
+    "fill": {
+      "title": "强调色",
+      "type": "color",
+      "val": "#5B6570",
+    },
+    "label": {
+      "title": "设备名",
+      "type": "input",
+      "val": "设备",
+    },
+    "state": {
+      "title": "状态（0 停 / 1 运行 / 2 故障 / 3 维护 / 4 离线）",
+      "type": "number",
+      "val": 1,
+    },
+    "texts": {
+      "title": "状态文字（逗号分隔，按 0-4 顺序）",
+      "type": "input",
+      "val": "停止,运行,故障,维护,离线",
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-status-badge%22%20viewBox%3D%220%200%20140%2030%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%22138%22%20height%3D%2228%22%20rx%3D%224%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%238a939d%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2214%22%20cy%3D%2215%22%20r%3D%225%22%20fill%3D%22%232e7d32%22%2F%3E%0A%20%20%3Crect%20x%3D%2226%22%20y%3D%2212%22%20width%3D%2252%22%20height%3D%226%22%20rx%3D%222%22%20fill%3D%22%231f2328%22%2F%3E%0A%20%20%3Crect%20x%3D%2286%22%20y%3D%2212%22%20width%3D%2240%22%20height%3D%226%22%20rx%3D%222%22%20fill%3D%22%235b6570%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "状态徽标",
+  "type": "vue",
+  "width": 140,
+}
+`;
+
+exports[`设备面板（工业功能件） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 620,
+  "id": "ah-dev-faceplate",
+  "ports": [],
+  "props": {
+    "alarms": {
+      "title": "活动报警数",
+      "type": "number",
+      "val": 0,
+    },
+    "dev": {
+      "title": "设备 id",
+      "type": "input",
+      "val": "dev_wm1",
+    },
+    "fill": {
+      "title": "PV 数值色",
+      "type": "color",
+      "val": "#1F4E79",
+    },
+    "h": {
+      "title": "H 高限",
+      "type": "number",
+      "val": -99999,
+    },
+    "hh": {
+      "title": "HH 高高限",
+      "type": "number",
+      "val": -99999,
+    },
+    "l": {
+      "title": "L 低限",
+      "type": "number",
+      "val": -99999,
+    },
+    "ll": {
+      "title": "LL 低低限",
+      "type": "number",
+      "val": -99999,
+    },
+    "max": {
+      "title": "量程上限",
+      "type": "number",
+      "val": 100,
+    },
+    "min": {
+      "title": "量程下限",
+      "type": "number",
+      "val": 0,
+    },
+    "mode": {
+      "title": "模式（0 MAN / 1 AUTO / 2 CAS）",
+      "type": "number",
+      "val": 1,
+    },
+    "op": {
+      "title": "输出 OP（0-100）",
+      "type": "number",
+      "val": 0,
+    },
+    "precision": {
+      "title": "小数位",
+      "type": "number",
+      "val": 2,
+    },
+    "prio": {
+      "title": "设备最高优先级（0 正常 / 1 P1 … 4 P4）",
+      "type": "number",
+      "val": 0,
+    },
+    "pv": {
+      "title": "主测点 PV",
+      "type": "number",
+      "val": 0,
+    },
+    "pv_prio": {
+      "title": "PV 点位优先级（只染 PV 数值色）",
+      "type": "number",
+      "val": 0,
+    },
+    "quality": {
+      "title": "质量（0 GOOD / 1 STALE / 2 BAD）",
+      "type": "number",
+      "val": 0,
+    },
+    "show_control": {
+      "title": "显示控制区（SP/OP/模式）",
+      "type": "switch",
+      "val": false,
+    },
+    "show_limits": {
+      "title": "显示限值",
+      "type": "switch",
+      "val": true,
+    },
+    "show_sp": {
+      "title": "显示 SP 标记",
+      "type": "switch",
+      "val": false,
+    },
+    "sp": {
+      "title": "设定值 SP",
+      "type": "number",
+      "val": 0,
+    },
+    "status": {
+      "title": "状态（0 停 / 1 运行 / 2 故障 / 3 维护 / 4 离线）",
+      "type": "number",
+      "val": 1,
+    },
+    "title": {
+      "title": "位号/设备名",
+      "type": "input",
+      "val": "WM-101 远传水表",
+    },
+    "unit": {
+      "title": "单位",
+      "type": "input",
+      "val": "m³/h",
+    },
+    "window": {
+      "title": "趋势窗口（秒）",
+      "type": "number",
+      "val": 300,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-dev-faceplate%22%20viewBox%3D%220%200%20520%20620%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%22518%22%20height%3D%22618%22%20rx%3D%226%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%238a939d%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%2218%22%20width%3D%22150%22%20height%3D%2212%22%20rx%3D%222%22%20fill%3D%22%231f2328%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%2244%22%20width%3D%2280%22%20height%3D%227%22%20rx%3D%222%22%20fill%3D%22%235b6570%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%2276%22%20width%3D%22190%22%20height%3D%2246%22%20rx%3D%223%22%20fill%3D%22%231f4e79%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%22150%22%20width%3D%22480%22%20height%3D%2214%22%20rx%3D%222%22%20fill%3D%22%23e3e6e8%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%22150%22%20width%3D%22110%22%20height%3D%2214%22%20fill%3D%22%23fbc02d%22%2F%3E%0A%20%20%3Crect%20x%3D%22360%22%20y%3D%22150%22%20width%3D%22140%22%20height%3D%2214%22%20fill%3D%22%23fbc02d%22%2F%3E%0A%20%20%3Crect%20x%3D%2220%22%20y%3D%22210%22%20width%3D%22480%22%20height%3D%22160%22%20rx%3D%224%22%20fill%3D%22%23f5f5f5%22%20stroke%3D%22%238a939d%22%2F%3E%0A%20%20%3Cpolyline%20points%3D%2230%2C340%2090%2C310%20150%2C320%20210%2C280%20270%2C300%20330%2C260%20390%2C280%20450%2C240%20490%2C250%22%20fill%3D%22none%22%20stroke%3D%22%231f4e79%22%20stroke-width%3D%222%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "设备面板",
+  "type": "vue",
+  "width": 520,
+}
+`;
+
+exports[`质量徽标（工业功能件） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 28,
+  "id": "ah-quality-badge",
+  "ports": [],
+  "props": {
+    "fill": {
+      "title": "标签色",
+      "type": "color",
+      "val": "#5B6570",
+    },
+    "label": {
+      "title": "标签",
+      "type": "input",
+      "val": "通信",
+    },
+    "quality": {
+      "title": "质量（0 GOOD / 1 STALE / 2 BAD）",
+      "type": "number",
+      "val": 0,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-quality-badge%22%20viewBox%3D%220%200%20130%2028%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%22128%22%20height%3D%2226%22%20rx%3D%224%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%238a939d%22%2F%3E%0A%20%20%3Ccircle%20cx%3D%2213%22%20cy%3D%2214%22%20r%3D%225%22%20fill%3D%22%235b6570%22%2F%3E%0A%20%20%3Crect%20x%3D%2224%22%20y%3D%2211%22%20width%3D%2234%22%20height%3D%226%22%20rx%3D%222%22%20fill%3D%22%235b6570%22%2F%3E%0A%20%20%3Crect%20x%3D%2266%22%20y%3D%2211%22%20width%3D%2250%22%20height%3D%226%22%20rx%3D%222%22%20fill%3D%22%231f2328%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "质量徽标",
+  "type": "vue",
+  "width": 130,
+}
+`;
+
+exports[`迷你趋势（工业功能件） > 结构快照（ILeftAsideConfigItemPublic） 1`] = `
+{
+  "height": 90,
+  "id": "ah-sparkline",
+  "ports": [],
+  "props": {
+    "fill": {
+      "title": "曲线色",
+      "type": "color",
+      "val": "#1F4E79",
+    },
+    "h": {
+      "title": "H 高限",
+      "type": "number",
+      "val": -99999,
+    },
+    "hh": {
+      "title": "HH 高高限",
+      "type": "number",
+      "val": -99999,
+    },
+    "l": {
+      "title": "L 低限",
+      "type": "number",
+      "val": -99999,
+    },
+    "label": {
+      "title": "标签",
+      "type": "input",
+      "val": "趋势",
+    },
+    "ll": {
+      "title": "LL 低低限",
+      "type": "number",
+      "val": -99999,
+    },
+    "max": {
+      "title": "量程上限",
+      "type": "number",
+      "val": 100,
+    },
+    "min": {
+      "title": "量程下限",
+      "type": "number",
+      "val": 0,
+    },
+    "show_limits": {
+      "title": "显示限值线",
+      "type": "switch",
+      "val": false,
+    },
+    "show_sp": {
+      "title": "显示 SP 线",
+      "type": "switch",
+      "val": false,
+    },
+    "sp": {
+      "title": "设定值 SP",
+      "type": "number",
+      "val": 0,
+    },
+    "value": {
+      "title": "数值",
+      "type": "number",
+      "val": 0,
+    },
+    "window": {
+      "title": "窗口（秒）",
+      "type": "number",
+      "val": 300,
+    },
+  },
+  "thumbnail": "data:image/svg+xml;utf8,%3Csvg%20data-ah-id%3D%22ah-sparkline%22%20viewBox%3D%220%200%20260%2090%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%20%20%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%22258%22%20height%3D%2288%22%20rx%3D%224%22%20fill%3D%22%23ffffff%22%20stroke%3D%22%238a939d%22%2F%3E%0A%20%20%3Cpolyline%20points%3D%228%2C64%2036%2C52%2064%2C58%2092%2C38%20120%2C44%20148%2C26%20176%2C34%20204%2C20%20232%2C28%20252%2C18%22%20fill%3D%22none%22%20stroke%3D%22%231f4e79%22%20stroke-width%3D%222%22%2F%3E%0A%20%20%3Cline%20x1%3D%228%22%20y1%3D%2230%22%20x2%3D%22252%22%20y2%3D%2230%22%20stroke%3D%22%23fbc02d%22%20stroke-dasharray%3D%224%203%22%2F%3E%0A%3C%2Fsvg%3E",
+  "title": "迷你趋势",
+  "type": "vue",
+  "width": 260,
+}
+`;

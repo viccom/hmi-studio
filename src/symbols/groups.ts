@@ -41,6 +41,14 @@ export const SYMBOL_GROUP_DEFS: SymbolGroupDef[] = [
     ids: ['ah-nav-button', 'ah-dev-selector', 'ah-trend-chart'],
   },
   {
+    // 工业功能件（HP-HMI / ISA-101，docs/hmi-style-guide.md §5）：L1-L4 画面专用
+    title: '工业功能件',
+    ids: [
+      'ah-value-block', 'ah-sparkline', 'ah-status-badge', 'ah-alarm-badge',
+      'ah-quality-badge', 'ah-pipe', 'ah-area-card', 'ah-dev-faceplate', 'ah-hist-trend',
+    ],
+  },
+  {
     title: 'BI 数据图表',
     ids: [
       'ah-bi-kpi', 'ah-bi-trend', 'ah-bi-rank', 'ah-bi-pie', 'ah-bi-stack', 'ah-bi-heat',

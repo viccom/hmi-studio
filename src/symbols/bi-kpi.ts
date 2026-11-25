@@ -67,6 +67,11 @@ export const biKpi: HmiSymbol = {
         { value: 'both', label: '单值+时序（带迷你趋势）' },
       ],
     },
+    sum_series: {
+      title: '合并多序列为合计（跨设备指标，如全厂今日用电量）',
+      type: 'switch',
+      val: false,
+    },
     data: { title: '运行时数据（宿主写回）', type: 'textArea', val: '[]' },
   },
   ports: [],

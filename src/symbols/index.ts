@@ -47,6 +47,14 @@ import AhBiBoxplot from './AhBiBoxplot.vue'
 import AhBiCalendar from './AhBiCalendar.vue'
 import AhBiProgress from './AhBiProgress.vue'
 import AhBiWaterfall from './AhBiWaterfall.vue'
+import AhValueBlock from './AhValueBlock.vue'
+import AhSparkline from './AhSparkline.vue'
+import AhStatusBadge from './AhStatusBadge.vue'
+import AhAlarmBadge from './AhAlarmBadge.vue'
+import AhQualityBadge from './AhQualityBadge.vue'
+import AhAreaCard from './AhAreaCard.vue'
+import AhDevFaceplate from './AhDevFaceplate.vue'
+import AhHistTrend from './AhHistTrend.vue'
 import AhPluginMissing from './AhPluginMissing.vue'
 
 /**
@@ -96,6 +104,15 @@ export const VUE_SYMBOL_COMPONENTS: Record<string, Component> = {
   [vueTagFor('ah-bi-calendar')]: AhBiCalendar,
   [vueTagFor('ah-bi-progress')]: AhBiProgress,
   [vueTagFor('ah-bi-waterfall')]: AhBiWaterfall,
+  // 工业功能件（HP-HMI / ISA-101）
+  [vueTagFor('ah-value-block')]: AhValueBlock,
+  [vueTagFor('ah-sparkline')]: AhSparkline,
+  [vueTagFor('ah-status-badge')]: AhStatusBadge,
+  [vueTagFor('ah-alarm-badge')]: AhAlarmBadge,
+  [vueTagFor('ah-quality-badge')]: AhQualityBadge,
+  [vueTagFor('ah-area-card')]: AhAreaCard,
+  [vueTagFor('ah-dev-faceplate')]: AhDevFaceplate,
+  [vueTagFor('ah-hist-trend')]: AhHistTrend,
   // P3b 降级占位（plugin-fallback.ts 的渲染面）：必须启动期就注册——插件缺席时
   // 画面里出现 ah-plugin-missing 项，此组件是它们唯一的渲染出口
   [vueTagFor('ah-plugin-missing')]: AhPluginMissing,

@@ -1,7 +1,7 @@
 // 正式图元注册表（T11 起）：allSymbols() 是左面板注册与 lint 全量检查的唯一事实源。
 // 新图元 = 一个 ts 文件 export HmiSymbol + 在此追加，lint 全绿（symbol-lint.test 全量循环）即可注册。
 //
-// 图元目录（47 类 = 过程/操作 27 + BI 图表 20，截至 2026-10-29 P3；id——能力）。
+// 图元目录（56 类 = 过程/操作 27 + BI 图表 20 + 工业功能件 9，截至 2026-11-24 SCADA 画面集；id——能力）。
 // **本目录是导览快照而非权威清单**：权威 id 集合 = `groups.ts` SYMBOL_GROUP_DEFS
 // （分组结构 + 全量 id 的机器事实源，测试覆盖）；新增/删改图元后须手工同步本注释
 // （symbol-lint 不校验注释，腐化只能靠人工发现——嫌麻烦就只维护分组指针）。
@@ -54,6 +54,16 @@
 //   ah-bi-calendar   日历热力——按日聚合热力格
 //   ah-bi-progress   容量利用率条——单值进度 + 越限红显
 //   ah-bi-waterfall  增量瀑布——透明基座 + 增量段 + 合计列
+// 工业功能件族（HP-HMI / ISA-101，docs/hmi-style-guide.md §5；浅色主题，正常态灰阶）：
+//   ah-value-block   值块——标签+PV+单位+限值带+SP 标记+报警/质量态（L2 就地值主力）
+//   ah-sparkline     迷你趋势——限值线/SP 线 + 环形缓冲（不发起网络请求）
+//   ah-status-badge  状态徽标——形状+色+文字（停/运行/故障/维护/离线）
+//   ah-alarm-badge   报警徽标——P1-P4 形状+色+文字+活动计数（正常态中性灰）
+//   ah-quality-badge 质量徽标——GOOD/STALE/BAD（不把没数据画成正常）
+//   ah-pipe          工艺管线——粗线+流向箭头（竖直段用 angle 旋转）
+//   ah-area-card     区域卡片——L1 区域双 KPI + 活动报警计数 + 质量
+//   ah-dev-faceplate 设备面板——PV/限值带/量程条/可选控制区/趋势/报警页脚（L3/L4）
+//   ah-hist-trend    历史趋势（浅色）——消费 BI 通道 B 信封，操作层画面就地看历史
 import type { HmiSymbol } from './types'
 import { pumpCentrifugal } from './pump-centrifugal'
 import { gateValve } from './gate-valve'
@@ -102,6 +112,16 @@ import { biBoxplot } from './bi-boxplot'
 import { biCalendar } from './bi-calendar'
 import { biProgress } from './bi-progress'
 import { biWaterfall } from './bi-waterfall'
+// 工业功能件（HP-HMI / ISA-101，2026-11-24）：L1-L4 画面用的值块/徽标/趋势/面板
+import { valueBlock } from './value-block'
+import { sparkline } from './sparkline'
+import { statusBadge } from './status-badge'
+import { alarmBadge } from './alarm-badge'
+import { qualityBadge } from './quality-badge'
+import { pipe } from './pipe'
+import { areaCard } from './area-card'
+import { devFaceplate } from './dev-faceplate'
+import { histTrend } from './hist-trend'
 
 const SYMBOLS: HmiSymbol[] = [
   pumpCentrifugal,
@@ -151,6 +171,16 @@ const SYMBOLS: HmiSymbol[] = [
   biCalendar,
   biProgress,
   biWaterfall,
+  // 工业功能件（docs/hmi-style-guide.md §5）
+  valueBlock,
+  sparkline,
+  statusBadge,
+  alarmBadge,
+  qualityBadge,
+  pipe,
+  areaCard,
+  devFaceplate,
+  histTrend,
 ]
 
 export function allSymbols(): HmiSymbol[] {

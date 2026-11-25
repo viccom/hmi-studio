@@ -25,7 +25,8 @@ const props = defineProps<{
   agg?: string           // 聚合口径（宿主用）
   interval?: number      // 桶宽（秒）
   windowSecs?: number    // 统计窗长（秒）
-  shape?: string         // 取数形态：aggregate / series / both
+  shape?: string         // 取数形态：aggregate / series
+  sum_series?: boolean   // 合并多序列为合计（宿主已在信封里合成单条；本组件只读）
   data?: string          // 运行时数据通道（宿主写回的信封 JSON 串）
 }>()
 
