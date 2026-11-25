@@ -19,9 +19,9 @@
 - `src/lib/` 纯逻辑层（api/screens/binds/sse/command/alarms/nav/agent-context/sanitizeMarkdown…，同名 .test.ts 伴生）
 - `src/views/` 四业务页（Login/ScreenList/Edit/View）+ `src/components/` 骨架组件
 - `src/components/chat/` AI 面板（入口 `AiDrawerHost` 挂 App.vue）：懒加载 defineAsyncComponent，`GET /api/agent/status` 非 2xx → 入口隐藏（appliance 档降级）；附件上传/工作区 @ 引用已对齐控制台（2026-10-31）；样式变量 `chat-theme.css` 与控制台 main.css 同值——**改色两仓同步**
-- `src/symbols/` 图元 + `src/screen-assets/` 画面生成器 + `widgets/` 插件运行时（gitignore）+ `mcp/` hmi-mcp 工具层（独立 npm 包，根 tsconfig/vitest 不含它）——**图元·符号·插件·画面体系全部细节 → docs/widgets-plugins-guide.md**（分类总表 / 新图元工作流 / 组合与「我的符号」/ 插件全链路 / 保护清单 / 数据契约 / AI Agent 快速上手 / hmi-mcp 工具面）
+- `src/symbols/` 图元 + `src/screen-assets/` 画面生成器 + `widgets/` 插件运行时（gitignore）+ `mcp/` hmi-mcp 工具层（独立 npm 包，根 tsconfig/vitest 不含它）——**图元·符号·插件·画面体系全部细节 → docs/widgets-plugins-guide.md**（分类总表 / 新图元工作流 / 组合与「我的符号」/ 插件全链路 / 保护清单 / 数据契约 / AI Agent 快速上手 / hmi-mcp 工具面）。工业 SCADA 画面集在 `src/screen-assets/iot-screens.ts` + `iot-catalog.ts`（`iot-*` 15 张，图元分组「工业功能件」；规范见 docs/hmi-style-guide.md）
 - `src/dev/` 研究资产（spike/probe/probe-combin），不进导航不进守卫
-- `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7-w11 / alarm-drawer / screen-versioning / home-meters / bi-dashboard / probe-bi / ai-panel / probe-combin / my-symbols / plugin-dir
+- `e2e/` Playwright：smoke / m1-m4 / lan / symbols / w7-w11 / alarm-drawer / screen-versioning / home-meters / bi-dashboard / probe-bi / ai-panel / probe-combin / my-symbols / plugin-dir / iot-screens（工业画面集，真实点位）
 - `scripts/check-layers.mjs` 分层依赖方向门禁（just layers）
 
 ## 文档
@@ -30,6 +30,7 @@
 - 设计（六决策锁定）：docs/plans/2026-10-25-hmi-studio-design.md
 - 实施方案 + 任务跟踪表：docs/plans/2026-10-25-hmi-studio-implementation-plan.md（§3 表格 = 任务状态真相源，完成即勾选回填 commit）
 - **图元与插件体系——分类与开发指南（AI Agents 开发图元入口，自包含）**：docs/widgets-plugins-guide.md
+- **工业 HMI 组态规范（HP-HMI/ISA-101 落地）**：docs/hmi-style-guide.md；工业画面集计划：docs/plans/2026-11-24-iot-scada-screens-plan.md
 - maotu 图元开发宪法：docs/maotu-symbol-development-guide.md；maotu 实证映射：docs/maotu-rsiot-architecture.md
 - BI 大屏内容体系：docs/plans/2026-10-29-bi-monitoring-dashboard-design.md
 - AI 助手与扩展体系设计：docs/plans/2026-10-30-ai-assistant-and-extension-system-design.md
