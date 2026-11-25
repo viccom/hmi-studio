@@ -83,6 +83,12 @@ function openEdit(c: ScreenCard) {
   dlgVisible.value = true
 }
 
+// 浏览模式新标签页打开：/view 无返回管理页入口，避免占走当前标签页。
+function openView(id: string) {
+  const href = router.resolve({ path: `/view/${id}` }).href
+  window.open(href, '_blank', 'noopener')
+}
+
 async function create() {
   const valid = await formRef.value?.validate().then(() => true).catch(() => false)
   if (!valid) return
@@ -239,7 +245,7 @@ async function doDisbandGroup(g: string) {
                         <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                       </svg>
                     </button>
-                    <button class="icon-btn" title="在浏览器打开" @click="router.push(`/view/${c.id}`)">
+                    <button class="icon-btn" title="在新标签页打开浏览器" @click="openView(c.id)">
                       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 3h7v7M21 3l-9 9M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" />
                       </svg>
