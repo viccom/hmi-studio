@@ -77,3 +77,33 @@
 - eval 执行链（custom_code/事件引擎）：编辑保存面要加 lint（禁 fetch 外域等）。
 - SVG→img(dataURL) 渲染：无 DOM 级动画控制（flash 用 maotu common_animations 近似）。
 - mt-event-flow 的 timer/http 在预览端执行——真设备联动仍应走 rs-iot 侧脚本。
+
+## 6. 增补：画面真相源两层模型与合成点位（2026-11-25）
+
+### 6.1 生成器（git）↔ 画面文档（lux）
+
+- **生成器** = `src/screen-assets/*.ts` 纯函数（demo/home/bi/iot 系列），用 TS 逐元素构造
+  maotu `done_json`——与编辑器保存产物同构，字段与绑定形状由 `HmiSymbol`/`IExportDoneJson`
+  类型约束。**SPA 产物不含生成器**；它只在 vitest / e2e 播种 / hmi-mcp 三个 Node 场景执行。
+- **画面文档** = lux `/api/v1/screens/<slug>`，编辑器/浏览器的唯一运行时数据。
+  编辑器手工改动只落 lux，不回写 git；e2e global-setup 会用生成器输出**覆盖**受保护
+  画面（PUT 幂等）——手工调整要长期保留必须回移植生成器或存「我的符号」。
+- 仓库里的 `__snapshots__/*.snap` 是生成结果的完整 JSON 基线（回归防线），
+  字面上也包含画面 JSON，但身份是测试资产。
+
+### 6.2 宿主合成点位（`src/lib/synthetic.ts`）
+
+活动告警清单（AlarmStore）与 SSE 链路状态对画布不可见，故宿主把它们翻译成可绑定的
+"点"，走与 SSE 相同的 `setDevicePointByID` 直写通道，**不新增网络请求**：
+
+| 字段 | 含义 |
+|---|---|
+| `<devid>.__prio` / `<devid>.__alarms` | 设备最高优先级（0-4）/ 活动告警条数 |
+| `<devid>.<tag>.__prio` | **点级**优先级（值块/面板只染真正越限的点） |
+| `__area.<area>.alarm_count/.prio` | 区域聚合（water/power/gas/env） |
+| `__sys.prio/.alarms/.p1/.quality` | 全厂优先级 / 总数 / P1 数 / 链路质量 |
+
+规则：`__` 开头的 bind_id 不进 SSE 订阅面也不计 deadFields（`binds.ts`）；
+优先级映射 error→P1 / warn→P3 / info→P4；推送时机 = 告警快照/增量/清理后、
+SSE 状态变化后、画面装载后——保证"清除后写回 0"，不残留最后报警颜色。
+告警判定源在 rs-iot 侧 `scripts/limit-alarm`（见该仓 ops 文档），HMI 只显示结果。

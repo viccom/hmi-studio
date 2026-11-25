@@ -58,10 +58,11 @@ L0 外部边界      maotu npm 包 / endpoints.ts（env 单源）/ 浏览器 API
 | command | 命令契约：buildCommandReq / CommandTracker 状态机 / resolveInstance |
 | bridge | `window.$rsiot` 安装/卸载（send 二次确认 + nav 别名 + 命令历史环形 20） |
 | alarms | AlarmStore 双源合并（REST 快照 + events SSE）+ 轮播游标 |
-| nav | 事件词表分发器（nav/back/home/dev/alarm）+ 历史栈 |
+| nav | 事件词表分发器（nav/back/home/dev/alarm）+ 历史栈 + `parseNavTarget`（`slug?dev=` 设备上下文） |
+| synthetic | 宿主合成点位：告警聚合 → `<devid>.__prio/__alarms`、`<devid>.<tag>.__prio`、`__area.*`、`__sys.*`（__ 前缀不进订阅面，见 §5 决策簿 2026-11-25） |
 | dev-context | `@dev.` 前缀重映射（模板画面 → 具体设备）+ `@meta.dev` 回显通道 |
 | uid / fit-scale / trigger-value / theme / symbol-lint | 稳定 uid / contain 缩放纯函数 / 触发器值归一 / 明暗单源 html.dark / 图元约定七规则 lint |
-| demo-screen / home-* | **画面资产**（预组态画面的纯函数生成器，见 §4.2） |
+| demo-screen / home-* / iot-* / iot-bi-screen / iot-catalog | **画面资产**（预组态画面的纯函数生成器，见 §4.2；iot 系列 = 工业 SCADA 16 张 + BI 大屏，目录 iot-catalog.ts） |
 
 ## 4. 耦合边界与约束
 
@@ -112,3 +113,5 @@ L0 外部边界      maotu npm 包 / endpoints.ts（env 单源）/ 浏览器 API
 - 2026-10-28 组管理落地：组保持无实体（doc.group 字段投影）——新建/编辑对话框下拉可选已有组或输入新建（allow-create），卡片编辑信息改名称/组，组头重命名（同名合并）/解散（画面归未分组不删除）
 - 2026-10-29 画面资产独立成层 `src/screen-assets/`（architecture §4.2 结清）：lib→symbols 豁免清空；`symbol-lint` 迁 symbols（与被测对象同层）；新增唯一反向白名单 `symbols → lib/bi-contract.ts`（BI 载荷形状单点事实源，纯类型+纯函数）
 - 2026-10-29 BI 双通道定案：**通道 A** SSE bind 直写（实时，传统 HMI 屏）+ **通道 B** 宿主聚合（历史分析，BI 大屏）——BI 图元不自发请求，宿主（ViewView）扫画面 → 合并查询 → `/history/batch` → 结果按面板组装信封 → 写回 `props.data.val`（拉模式 30s）。累计量口径三态（instant/daily/cumulative）与分段累加算法见 docs/plans/2026-10-29-bi-monitoring-dashboard-design.md §1.4
+- 2026-11-25 宿主合成点位定案：活动告警/SSE 链路状态 → `synthetic.ts` 聚合为 `<devid>.__prio/__alarms`、`<devid>.<tag>.__prio`、`__area.*`、`__sys.*`，经 `setDevicePointByID` 直写；`__` 前缀不进订阅面（binds.ts 排除）也不计 deadFields。推送时机含"清除后写回 0"。告警判定源在 rs-iot `scripts/limit-alarm`（HMI 只显示结果）
+- 2026-11-25 BI 通道两处扩展：第二面板族 `ah-hist-*`（浅色历史趋势，`BI_TREND_TAG_PREFIX`，bi-sanitize 同步复位）+ `sum_series` 多序列合计（宿主合成单条，label=面板标题）；batch 整体失败改写错误信封（替代"零写回保留旧信封"——旧语义把查询失败伪装成数据未变）

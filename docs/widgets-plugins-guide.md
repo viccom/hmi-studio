@@ -60,9 +60,11 @@ node scripts/check-layers.mjs                    # 分层方向（图元域常�
 - **直绑通道**：SSE rtdata（`src/lib/sse.ts`）→ `MtPreview.setDevicePointByID(field, value)` →
   命中图元 `binds[].bind_attr`（恒为 `props.<name>.val`）→ 属性写入；`triggers` 规则命中 →
   `changeAttr` 按点路径改其他图元属性（`src/lib/trigger-value.ts`）。
-- **BI 通道 B**：宿主聚合收集器（`src/lib/bi-collector.ts`）扫顶层 `ah-bi-*` 图元 → 合并成少量
-  `/history/batch` 往返 → 组装信封写回 `props.data.val`。**图元自身不发网络**；window/alarms
-  两个特例不吃历史查询（§2.7）。
+- **BI 通道 B**：宿主聚合收集器（`src/lib/bi-collector.ts`）扫顶层 `ah-bi-*` 与 `ah-hist-*`
+  （浅色历史趋势件，操作层画面用）图元 → 合并成少量 `/history/batch` 往返 → 组装信封写回
+  `props.data.val`。**图元自身不发网络**；window/alarms 两个特例不吃历史查询（§2.7）。
+  batch 整体失败 → 每面板写**错误信封**（`series.error` 带原因、`value=null`），UI 显示
+  "查询失败"而非陈旧数值（2026-11-25 起替代旧的"零写回保留旧信封"语义）。
 
 ### 1.3 三条不变量（违反 = 通路静默失效）
 
@@ -72,9 +74,10 @@ node scripts/check-layers.mjs                    # 分层方向（图元域常�
 3. BI 图元 `props.series` = 组态输入（JSON 串）、`props.data` = 运行态输出、**保存前复位 `'[]'`**
    （`src/lib/bi-sanitize.ts`——否则 maotu 拍平把运行态 JSON PUT 进文档，膨胀 128KiB 配额 + 陈旧首帧）。
 
-## 2. 图元分类总表（编译期 47 + 内置 5，截至 2026-10-31）
+## 2. 图元分类总表（编译期 56 + 内置 5，截至 2026-11-25）
 
-type 分布：**svg 15 / custom-svg 6 / vue 26**。左面板分组 = `groups.ts` 顺序，`groups.test.ts`
+type 分布：**svg 16 / custom-svg 6 / vue 34**（2026-11-25 新增工业功能件族 9：
+vue 8 + svg 1，见 §2.8）。左面板分组 = `groups.ts` 顺序，`groups.test.ts`
 冻结「全覆盖无重复」不变量（漏分组 = 编辑器里找不到，重复 = 两处维护）。
 三条路线的选型决策树与渲染机制见 maotu 宪法 §1——一句话版：**纯静态形体 → svg 型；
 要文字读数/计算几何 → custom-svg 型；要 HTML 布局/图表库 → vue 型；能用 svg 型就不用后两者**。
@@ -158,7 +161,25 @@ DOM 事件，窗口状态权威在宿主收集器）。
 （`src/lib/bi-contract.ts:28-34`）。**BI 图元必须平铺顶层，不得进组合**——组合内图元收不到
 SSE 数据且 `setItemAttrByID` 只按顶层 id 定位（§4.1）。
 
-### 2.8 横切机制（symbols 层公共件）
+### 2.8 工业功能件（9：vue 8 + svg 1；调色板 `src/symbols/hp-hmi.ts`）
+
+HP-HMI / ISA-101 落地（规范 `docs/hmi-style-guide.md`）：浅色主题、正常态灰阶、
+饱和色仅表异常；报警 = 颜色 + 形状 + 文字三冗余；点级报警色来自宿主合成点位
+`<devid>.<tag>.__prio`（见 maotu-rsiot-architecture 增补节）。
+
+| id | type | 文件 | 说明 |
+|---|---|---|---|
+| `ah-value-block` | vue | value-block.ts | 值块：PV+单位+限值带（LL/L/H/HH 刻线，未组态哨兵 -99999）+SP 标记；`compact` 参数表行模式；点级 `__prio` 驱动数值色 |
+| `ah-sparkline` | vue | sparkline.ts | 迷你实时趋势：`spark-buffer.ts` 环形缓冲（SSE 直写通道） |
+| `ah-hist-trend` | vue | hist-trend.ts | 历史趋势（浅色）：吃通道 B 信封（`props.data`），多序列 + 量程自适应；**操作层画面就地看历史**，与深色 `ah-bi-trend` 分工 |
+| `ah-status-badge` | vue | status-badge.ts | 状态徽标：形状+色+文字（停/运行/故障/维护/离线），`texts` 可改语义 |
+| `ah-alarm-badge` | vue | alarm-badge.ts | 报警徽标：P1-P4 形状+色+文字+活动计数，活动闪烁（blink） |
+| `ah-quality-badge` | vue | quality-badge.ts | 质量徽标：GOOD/STALE/BAD，文字恒显 |
+| `ah-pipe` | svg | pipe.ts | 工艺管线：粗线+流向箭头（竖直段 `binfo.angle=90`） |
+| `ah-area-card` | vue | area-card.ts | L1 区域卡：双 KPI（小数位独立）+ 活动报警数/优先级 + 质量 |
+| `ah-dev-faceplate` | vue | dev-faceplate.ts | 设备面板总成：PV/限值带/量程条/可选控制区（`show_control`，默认关）/趋势/报警页脚；`pv_prio` 只染 PV 数值色 |
+
+### 2.9 横切机制（symbols 层公共件）
 
 | 模块 | 职责 | 关键导出 |
 |---|---|---|

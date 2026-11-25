@@ -362,3 +362,21 @@ DOM 布局，svg 型承载不了图表）。
 - `docs/maotu-symbol-development-guide.md` → 追加 BI 图元通道章节（通道 B 契约）
 - `AGENTS.md`（hmi-studio）→ 地图补一行 BI 资产落位
 - webhmi 工作区 `AGENTS.md` → 主线 P2 状态回填
+
+---
+
+## 勘误与演进（2026-11-25）
+
+设计后实施中演化的三点（以本节为准）：
+
+1. **batch 整体失败的写回语义**：原设计"零写回、保留上一轮信封"。实施后改为
+   **写错误信封**（`series.error`=原因、`value=null`）——旧语义会把"查询失败"
+   伪装成"数据未变"（信封无时间戳可见性），运维误判。见 `bi-collector.ts` 与
+   其测试「batch 整体失败 → 错误信封」。
+2. **第二面板族 `ah-hist-*`**：浅色历史趋势件（`src/symbols/hist-trend.ts`），
+   与 `ah-bi-*` 同走通道 B（`bi-contract.ts` 的 `BI_TREND_TAG_PREFIX`），
+   供灰阶操作层画面就地看历史；`bi-sanitize` 同样复位其 `props.data`。
+3. **`sum_series` 多序列合计**：KPI 卡原只显示首条序列；面板声明
+   `sum_series=true` 后宿主把多条序列合成一条（label=面板标题、value=合计、
+   点级按 ts 对齐求和）。用量口径纪律不变：水/气/电不跨介质求和，
+   占比仅同介质内部。
