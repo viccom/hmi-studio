@@ -298,6 +298,22 @@ const onDrop = async (event) => {
       console.error('Failed to load Gaussian Splat:', error);
       return;
     }
+  } else if (type.startsWith('Industrial:')) {
+    // [PATCH-05] 工业图元：一个图元 = 一组基础几何子件（各自独立 bid，可单独绑点位）。
+    // 由 hmi-studio 的 adapter/industrial-parts 提供 spec；这里只负责建 three 对象并入场景。
+    const partId = type.slice('Industrial:'.length)
+    const factory = window.__hmi3d?.buildIndustrialPart
+    if (!factory) { console.error('工业图元工厂未注入（window.__hmi3d.buildIndustrialPart）'); return }
+    const dropPosition = getDropPosition(event);
+    const objects = factory(partId, dropPosition)
+    if (!objects?.length) { console.error('未知工业图元:', partId); return }
+    // 多子件各自独立入场景（**不能包 Group**：上游序列化按 group 存成一个对象，
+    // 子件的 bid/几何会丢，绑定点位也无从谈起）。一次 CompositeCommand 统一撤销。
+    const { CompositeCommand } = await import('../core/CommandFactory.js')
+    const cmds = objects.map((o) => new AddObjectCommand(sceneManager, o, persistenceManager, editorStore))
+    historyManager.execute(new CompositeCommand(cmds))
+    editorStore.selectObject(objects[0])
+    return
   } else {
     // Simple geometry
     let geometry, material;

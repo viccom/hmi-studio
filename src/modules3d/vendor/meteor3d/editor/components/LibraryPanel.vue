@@ -2,6 +2,23 @@
   <div class="library-panel">
     <h3>资源库</h3>
     
+    <!-- [PATCH-06] 工业图元：来自 hmi-studio 的 adapter/industrial-parts（站点可维护清单） -->
+    <div v-if="industrialGroups.length" class="section">
+      <h4>工业设备</h4>
+      <template v-for="g in industrialGroups" :key="g.category">
+        <div class="industrial-group-label">{{ g.label }}</div>
+        <div
+          v-for="p in g.parts" :key="p.id"
+          class="item industrial-item"
+          draggable="true"
+          :title="p.name"
+          @dragstart="onDragStartIndustrial($event, p.id)"
+        >
+          {{ p.name }}
+        </div>
+      </template>
+    </div>
+
     <!-- 几何体部分 -->
     <div class="section">
       <h4>几何体</h4>
@@ -222,6 +239,26 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { getAssets, getAssetUrl as _getAssetUrl, getCompressedAssetUrl, getCloudAssetUrl } from '../services/assetService';
+import { INDUSTRIAL_PARTS, CATEGORY_TEXT } from '../../../../adapter/industrial-parts';
+
+/** 工业图元按分类分组（数据源见 adapter/industrial-parts，站点可增删） */
+const industrialGroups = Object.entries(
+  INDUSTRIAL_PARTS.reduce((acc, p) => {
+    (acc[p.category] = acc[p.category] || []).push({ id: p.id, name: p.name });
+    return acc
+  }, {}),
+).map(([category, parts]) => ({
+  category,
+  label: CATEGORY_TEXT[category] || category,
+  parts,
+}))
+
+/** 拖工业图元：type 前缀 `Industrial:<id>`，由 Viewport 的 PATCH-05 分支接住 */
+function onDragStartIndustrial(event, partId) {
+  if (!event.dataTransfer) return
+  event.dataTransfer.setData('type', `Industrial:${partId}`)
+  event.dataTransfer.effectAllowed = 'copy'
+}
 
 const models = ref([]);
 const environments = ref([]);

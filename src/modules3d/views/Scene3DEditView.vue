@@ -36,6 +36,8 @@ import EventPanel from '../components/EventPanel.vue'
 import VersionPanel from '../../components/VersionPanel.vue'
 import { useEditorStore } from '../vendor/meteor3d/editor/stores/editorStore.js'
 import type { SceneDoc } from '../scene3d'
+import * as THREE from 'three'
+import { buildPartSpecs, partById } from '../adapter/industrial-parts'
 
 const route = useRoute()
 const router = useRouter()
@@ -63,6 +65,48 @@ const verDrawer = ref(false)
 let autoTimer = 0
 const AUTO_SAVE_MS = 15_000
 
+/**
+ * 工业图元工厂（供 Viewport 的 PATCH-05 分支调用）：
+ * spec 列表 → three Mesh 数组。**每个子件是独立 Mesh**（不包 Group）——
+ * 上游序列化按对象存，Group 会把子件的 bid/几何吞掉。
+ */
+function buildIndustrialPart(partId: string, origin: { x: number; y: number; z: number }): THREE.Mesh[] {
+  const part = partById(partId)
+  if (!part) return []
+  const prefix = part.name
+  const recs = buildPartSpecs(part, { origin, namePrefix: prefix })
+  return recs.map((r) => {
+    const geo = makeGeometry(r.geometry)
+    const mat = new THREE.MeshStandardMaterial({
+      color: Number(r.material.color ?? 0x6b8299),
+      roughness: Number(r.material.roughness ?? 0.8),
+      metalness: Number(r.material.metalness ?? 0.1),
+      ...(r.material.emissive !== undefined ? { emissive: Number(r.material.emissive), emissiveIntensity: Number(r.material.emissiveIntensity ?? 1) } : {}),
+      ...(r.material.opacity !== undefined ? { transparent: true, opacity: Number(r.material.opacity) } : {}),
+    })
+    const mesh = new THREE.Mesh(geo, mat)
+    mesh.name = r.name
+    mesh.userData.bid = r.bid
+    mesh.position.set(r.position.x, r.position.y, r.position.z)
+    mesh.rotation.set(r.rotation.x, r.rotation.y, r.rotation.z)
+    mesh.scale.set(r.scale.x, r.scale.y, r.scale.z)
+    return mesh
+  })
+}
+
+/** 参数化几何构造（上游 deserializeObject 认的那几类） */
+function makeGeometry(g: { type: string; parameters: Record<string, number | boolean> }): THREE.BufferGeometry {
+  const p = g.parameters as Record<string, number>
+  switch (g.type) {
+    case 'BoxGeometry': return new THREE.BoxGeometry(p.width, p.height, p.depth)
+    case 'SphereGeometry': return new THREE.SphereGeometry(p.radius, p.widthSegments, p.heightSegments)
+    case 'CylinderGeometry': return new THREE.CylinderGeometry(p.radiusTop, p.radiusBottom, p.height, p.radialSegments)
+    case 'ConeGeometry': return new THREE.ConeGeometry(p.radius, p.height, p.radialSegments)
+    case 'PlaneGeometry': return new THREE.PlaneGeometry(p.width, p.height)
+    default: return new THREE.BoxGeometry(1, 1, 1)
+  }
+}
+
 /** 把适配器与自动保存策略挂到模块约定位置（Viewport/Toolbar 读它，见 PATCHES PATCH-01/03） */
 function installModuleBridge(): ScenesDbManager {
   const db = new ScenesDbManager()
@@ -70,7 +114,8 @@ function installModuleBridge(): ScenesDbManager {
   w.__hmi3d = {
     ...(w.__hmi3d ?? {}),
     createDbManager: () => db,
-    autoSaveMs: 0, // P0：关闭自动保存（P2 改脏标记 + 乐观锁）
+    autoSaveMs: 0, // 自动保存由壳层接管（脏标记 + 409 即停，见 P2）
+    buildIndustrialPart, // PATCH-05：工业图元工厂
   }
   return db
 }
