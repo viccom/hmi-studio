@@ -27,6 +27,7 @@ import SceneSettingsPanel from '../vendor/meteor3d/editor/components/SceneSettin
 import Toolbar from '../vendor/meteor3d/editor/components/Toolbar.vue'
 import LibraryPanel from '../vendor/meteor3d/editor/components/LibraryPanel.vue'
 import '../vendor/meteor3d/editor/assets/sidebar-controls.css'
+import '../vendor/meteor3d/editor/assets/theme-bridge.css'
 import { ScenesDbManager, ConflictError } from '../adapter/store-adapter'
 import { sceneStore } from '../store'
 import { getAuthedUser, logout } from '../../lib/auth'
