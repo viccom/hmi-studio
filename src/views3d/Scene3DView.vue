@@ -213,6 +213,8 @@ onMounted(async () => {
 
   if (still.value) viewer.stopLoop()
   viewer.render()
+  // 调试出口：浏览器控制台可直接查看 3D 运行时（viewer/rt/doc）
+  ;(window as unknown as { __scene3d?: unknown }).__scene3d = { viewer, rt, doc }
   fpsT = performance.now(); raf = requestAnimationFrame(fpsLoop)
   connect()
 })
