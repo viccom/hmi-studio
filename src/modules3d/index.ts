@@ -22,6 +22,7 @@ const module3d: HmiOptionalModule = {
   routes: [
     { path: '/screens3d', component: () => import('./views/ScreenList3DView.vue') },
     { path: '/view3d/:id', component: () => import('./views/Scene3DView.vue') },
+    { path: '/edit3d/:id', component: () => import('./views/Scene3DEditView.vue') },
   ],
 }
 

@@ -26,7 +26,10 @@
     "pinia": "^4.1.0",
     "three": "0.187.0",
     "vue": "^3.5.44",
-    "vue-router": "^5.4.0"
+    "vue-router": "^5.4.0",
+    "three-mesh-bvh": "^0.9.10",
+    "@tweenjs/tween.js": "^25.0.0",
+    "3d-tiles-renderer": "^0.4.24"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

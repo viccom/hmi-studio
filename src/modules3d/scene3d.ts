@@ -43,8 +43,43 @@ export interface SceneDoc {
     unit_m: number
     home: { pos: Vec3; target: Vec3 }
   }
+  /** v1：语义节点模型（程序化几何渲染，见 src/modules3d/scene.ts） */
   nodes: SceneNode[]
   links: SceneLink[]
+  // ---- v2（编辑器产出，2026-11-26；方案 §4.2）----
+  // v1 与 v2 并存不转换：运行页按是否存在 objects 分派渲染路径。
+  /** v2：上游 SceneManager 的精简序列化（节点图，含 transform/geometry/material/animation） */
+  objects?: readonly unknown[]
+  /** v2：场景级配置（灯光/初始视角/环境贴图/节点图等），上游 restoreScene 直接消费 */
+  scene?: Record<string, unknown>
+  /** v2：hmi-studio 语义层——设备点位绑定 */
+  bindings?: readonly SceneBinding[]
+  /** v2：hmi-studio 语义层——点击/联动规则 */
+  events?: readonly SceneEventRule[]
+}
+
+/** v2 绑定：bid → rs-iot 点位（字段规则复用 lib/binds.ts 的 isSyntheticField） */
+export interface SceneBinding {
+  id: string
+  /** 指向 objects[].bid（上游持久节点标识） */
+  targetBid: string
+  /** rs-iot 点位：`<devid>.<tag>` */
+  field: string
+  /** 由 field 前段解析，供命令下发反查目标设备 */
+  devId: string
+  kind: 'color' | 'visible' | 'label' | 'emissive' | 'animationSpeed'
+  config: Record<string, unknown>
+}
+
+/** v2 事件：点击对象 → 导航/聚焦/设相机/下发命令 */
+export interface SceneEventRule {
+  id: string
+  on: { type: 'click'; targetBid?: string }
+  do:
+    | { type: 'navigate'; slug: string; dev?: string }
+    | { type: 'focus'; targetBid: string }
+    | { type: 'setCamera'; view: { position: Vec3; target: Vec3 } }
+    | { type: 'command'; targetBid: string; cmd: string; params?: Record<string, unknown> }
 }
 
 /** iot-demo 虚构厂区：4 区域分列，设备按 iot-catalog.ts 的 10 台一一对应。 */

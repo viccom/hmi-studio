@@ -6,6 +6,13 @@ import vue from '@vitejs/plugin-vue'
 // （router.ts 用 import.meta.env.BASE_URL 同源对齐）；dev/test 维持 '/'（e2e baseURL 不受影响）。
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? '/hmi/' : '/',
+  resolve: {
+    alias: {
+      // 高斯泼溅包体积大且本项目不启用（方案 §6.2 档 C）：用降级桩替代，
+      // 免装依赖；运行期真加载泼溅资产时由桩抛明确错误。
+      '@sparkjsdev/spark': fileURLToPath(new URL('./src/modules3d/vendor/stubs/spark.js', import.meta.url)),
+    },
+  },
   plugins: [
     vue(),
     // P3b 插件目录 dev 面板（prod 由 gateway hmi_widgets_dir 挂 /hmi/widgets；dev base='/'

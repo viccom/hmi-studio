@@ -54,7 +54,19 @@ export function blankScene3D(slug: string): SceneDoc {
   return {
     $schema: 'agent-hmi.scene3d/1',
     meta: { name: slug, group: '', unit_m: 1, home: { pos: [15, 11, 17], target: [-2, 1, -1] } },
+    // v1 字段（程序化几何场景用；新建的编辑器场景为空）
     nodes: [],
     links: [],
-  }
+    // v2 字段：让新建场景**直接可在 3D 编辑器里编辑**（上游只认 objects）
+    objects: [],
+    scene: {
+      // 非零灯光默认（上游 DEFAULT_LIGHTING 全零 → 新场景黑场，实测踩过）
+      lightingConfig: {
+        enabled: true, ambient: 0.85, hemisphere: 1.8, key: 3,
+        fill: 2, head: 1.5, azimuth: 45, elevation: 55, exposure: 1.25,
+      },
+    },
+    bindings: [],
+    events: [],
+  } as unknown as SceneDoc
 }
