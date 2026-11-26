@@ -21,7 +21,8 @@ const module3d: HmiOptionalModule = {
   nav: [{ label: '3D 画面', to: '/screens3d', order: 10 }],
   routes: [
     { path: '/screens3d', component: () => import('./views/ScreenList3DView.vue') },
-    { path: '/view3d/:id', component: () => import('./views/Scene3DView.vue') },
+    // v1（nodes/links 程序化）与 v2（objects 节点图）并存不转换：由 Scene3DHost 按文档形态分派
+    { path: '/view3d/:id', component: () => import('./views/Scene3DHost.vue') },
     { path: '/edit3d/:id', component: () => import('./views/Scene3DEditView.vue') },
   ],
 }
