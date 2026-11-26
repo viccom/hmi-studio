@@ -8,7 +8,7 @@
  * - 数据：createRtdataStream（SSE，与 2D 同源）→ 设备几何状态 + 标签值
  * - 导航：mitt click → openDevice → router.push('/view/...?dev=')
  */
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import * as THREE from 'three'
 import type { Intersection } from 'three'
@@ -19,6 +19,7 @@ import { C, PRIO_COLOR } from '../modules3d/geometry'
 import { api } from '../lib/api'
 import { createRtdataStream, type RtPoint } from '../lib/sse'
 import { buildDemoScene, devsOf, isScene3D, type SceneDoc, type SceneNode } from '../lib/scene3d'
+import { DEVICE_BY_ID, faceplateSlug } from '../screen-assets/iot-catalog'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,8 +34,10 @@ let viewer: Viewer | null = null
 let rt: SceneRuntime | null = null
 let stream: { close(): void } | null = null
 let raf = 0, frames = 0, fpsT = 0
-const values = new Map<string, number>()
-const prios = new Map<string, number>()
+// 响应式 Map：普通 Map 不被 computed 追踪 → 面板里的实时值会冻结在首次求值的结果
+// （values.set 改了 Map，computed 不知道要重算）。reactive(Map) 的 get/set 都被追踪。
+const values = reactive(new Map<string, number>())
+const prios = reactive(new Map<string, number>())
 
 let doc: SceneDoc = buildDemoScene()
 const slug = computed(() => String(route.params.id ?? 'iot-plant-3d'))
@@ -137,28 +140,36 @@ function clearSelection(): void {
 /** 显式进入选中设备的 2D 面板（不在点击时自动触发） */
 function enterFaceplate(): void {
   if (!selected.value) return
-  void router.push(`/view/iot-faceplate-${selected.value.replace(/^dev_/, '')}?dev=${selected.value}`)
+  void router.push(`/view/${faceplateSlug(selected.value)}?dev=${selected.value}`)
 }
 
-/** 详情面板数据（选中设备的关键值 / 状态 / 区域） */
+/** 详情面板数据：设备元数据取自 iot-catalog（唯一事实源），实时值取自响应式 values */
 const detail = computed(() => {
   const id = selected.value
   if (!id) return null
   const n: SceneNode | undefined = doc.nodes.find((x) => x.id === id)
   if (!n) return null
+  const meta = DEVICE_BY_ID[id]
   const field = n.points?.value
   const raw = field ? values.get(field) : undefined
   const unit = n.kind === 'emeter' ? 'kW' : n.kind === 'env' ? '°C' : n.kind === 'pt' ? 'MPa' : 'm³/h'
   const prio = prios.get(id) ?? 0
+  const has = raw !== undefined && Number.isFinite(raw)
   return {
-    id, title: n.label ?? id, tag: (n.label ?? id).split(' ')[0],
-    area: n.id.startsWith('dev_wm') ? '供水' : n.id.startsWith('dev_gm') ? '燃气'
-      : n.id.startsWith('dev_em') ? '配电' : '环境',
-    value: raw === undefined || !Number.isFinite(raw) ? '—' : raw.toFixed(2),
-    unit, prio,
+    id,
+    tag: meta?.pos ?? id,                 // 位号 WM-101
+    title: meta?.title ?? (n.label ?? id), // 1# 远传水表
+    area: AREA_TEXT[meta?.area ?? 'env'],
+    valueText: has ? raw!.toFixed(2) : '—',
+    unit,
+    prio,
     prioText: ['正常', 'P1 严重', 'P2 高', 'P3 中等', 'P4 提示'][prio] ?? '正常',
+    field: field ?? '—',
   }
 })
+
+/** 区域中文名（与 2D L1 区域卡一致） */
+const AREA_TEXT: Record<string, string> = { water: '供水', gas: '燃气', power: '配电', env: '环境' }
 
 /** 从拾取结果找设备 id（向上遍历 parent，与 threejs-demo 的 findParent 同语义） */
 function devidOf(hits: Intersection[]): string | undefined {
@@ -221,14 +232,21 @@ onMounted(async () => {
   // 调试出口：浏览器控制台可直接查看 3D 运行时（viewer/rt/doc）
   ;(window as unknown as { __scene3d?: unknown }).__scene3d = { viewer, rt, doc }
   fpsT = performance.now(); raf = requestAnimationFrame(fpsLoop)
+  window.addEventListener('keydown', onKey)
   connect()
 })
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(raf)
   stream?.close()
+  window.removeEventListener('keydown', onKey)
   viewer?.destroy() // 完整 dispose + forceContextLoss + scene.clear（threejs-demo 同款）
 })
+
+/** Esc 关闭详情面板 */
+function onKey(e: KeyboardEvent): void {
+  if (e.key === 'Escape' && selected.value) clearSelection()
+}
 </script>
 
 <template>
@@ -253,69 +271,93 @@ onBeforeUnmount(() => {
         :style="{ left: l.x + 'px', top: l.y + 'px' }"
       ><span class="tag">{{ l.text }}</span><span class="val">{{ l.value }}</span></div>
 
-      <!-- 同页设备详情（threejs-demo 的 Popover 范式，不跳页） -->
-      <div v-if="detail" class="detail-panel" :class="'prio-' + detail.prio">
-        <div class="detail-head">
-          <span class="detail-tag">{{ detail.tag }}</span>
-          <span class="detail-prio">{{ detail.prioText }}</span>
+      <!-- 同页设备详情：选中对象的详情栏（threejs-demo 的 Popover 范式，不跳页） -->
+      <aside v-if="detail" class="detail-panel" aria-label="设备详情">
+        <header class="detail-head">
+          <div class="detail-ident">
+            <span class="detail-tag">{{ detail.tag }}</span>
+            <span class="detail-title">{{ detail.title }}</span>
+          </div>
+          <span class="detail-status" :class="'prio-' + detail.prio">{{ detail.prioText }}</span>
+          <button class="detail-close" type="button" aria-label="关闭设备详情" @click="clearSelection">×</button>
+        </header>
+
+        <!-- 主数据：标签在上、值在下；唯一的强调色给这一个数字 -->
+        <div class="detail-figure">
+          <span class="detail-label">实时值</span>
+          <span class="detail-value">{{ detail.valueText }}<small>{{ detail.unit }}</small></span>
         </div>
-        <div class="detail-title">{{ detail.title }}</div>
-        <div class="detail-grid">
-          <div class="detail-cell"><span class="k">区域</span><span class="v">{{ detail.area }}</span></div>
-          <div class="detail-cell"><span class="k">实时值</span><span class="v big">{{ detail.value }} <small>{{ detail.unit }}</small></span></div>
-          <div class="detail-cell"><span class="k">设备 ID</span><span class="v mono">{{ detail.id }}</span></div>
-        </div>
-        <button class="detail-enter" @click="enterFaceplate">进入 2D 设备面板 →</button>
-        <button class="detail-close" @click="clearSelection">×</button>
-      </div>
+
+        <!-- 键值行：左标签右值，同一右边界 -->
+        <dl class="detail-rows">
+          <div class="detail-row"><dt>区域</dt><dd>{{ detail.area }}</dd></div>
+          <div class="detail-row"><dt>点位</dt><dd>{{ detail.field }}</dd></div>
+          <div class="detail-row"><dt>设备 ID</dt><dd class="mono">{{ detail.id }}</dd></div>
+        </dl>
+
+        <button class="detail-enter" type="button" @click="enterFaceplate">进入 2D 设备面板</button>
+      </aside>
     </div>
     <div class="hint"><b>左键拖动</b> 旋转 · <b>右键拖动</b> 平移 · <b>滚轮</b> 缩放 · <b>单击设备</b> 查看同页详情（不跳页）</div>
   </div>
 </template>
 
 <style scoped>
-/* 深色科技风（对齐 threejs-demo）：深蓝底 + 青色强调 + 半透明浮层 */
-.scene3d-page { width: 100vw; height: 100vh; display: flex; flex-direction: column; background: #0b1420; color: #d7e6f2; font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif; }
-.bar { height: 52px; flex: 0 0 52px; display: flex; align-items: center; gap: 18px; padding: 0 20px; background: linear-gradient(180deg, #0c1b2c, #0a1420); border-bottom: 1px solid #1b3a52; box-shadow: 0 2px 14px rgba(0,180,255,.12); }
-.back { border: 1px solid #21445e; background: rgba(20,48,70,.6); border-radius: 5px; padding: 6px 10px; cursor: pointer; font-size: 13px; color: #8fc7e8; }
+/* 深色 3D 空间层（对齐 threejs-demo 参考项目与 design-taste-frontend 的 app-screen 规则）：
+   画面本身是媒体（深色底由 3D 场景提供），面板是 chrome —— 无渐变、无发光阴影、
+   边框与阴影不同时用、字号不低于 12px、唯一的强调色给主数据（实时值）。 */
+.scene3d-page { width: 100vw; height: 100vh; display: flex; flex-direction: column; background: #0b1420; color: #e8f1f8; font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif; }
+.bar { height: 52px; flex: 0 0 52px; display: flex; align-items: center; gap: 18px; padding: 0 20px; background: #0a1420; border-bottom: 1px solid #1e3448; }
+.back { border: 1px solid #2a455e; background: #0f1f30; border-radius: 6px; padding: 7px 12px; cursor: pointer; font-size: 13px; color: #b8d6e8; }
 .back:hover { border-color: #1de0ff; color: #1de0ff; }
-.title { font-size: 16px; font-weight: 600; color: #eaf6ff; letter-spacing: .5px; }
+.back:focus-visible, .dev-picker:focus-visible, .detail-close:focus-visible, .detail-enter:focus-visible { outline: 2px solid #1de0ff; outline-offset: 2px; }
+.title { font-size: 16px; font-weight: 600; color: #eaf6ff; }
 .badges { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-.badge { font-size: 12px; color: #7fb6d6; background: rgba(20,52,76,.7); border: 1px solid #1b3a52; border-radius: 4px; padding: 4px 8px; font-variant-numeric: tabular-nums; }
-.dev-picker { font-size: 12px; padding: 5px 8px; border: 1px solid #21445e; border-radius: 4px; background: rgba(12,32,50,.9); color: #bfe4f7; cursor: pointer; }
+.badge { font-size: 12px; color: #9dbdd0; background: #0f1f30; border-radius: 4px; padding: 5px 9px; font-variant-numeric: tabular-nums; }
+.dev-picker { font-size: 12px; padding: 6px 9px; border: 1px solid #2a455e; border-radius: 6px; background: #0f1f30; color: #c8e4f4; cursor: pointer; }
 .stage { flex: 1; min-height: 0; position: relative; overflow: hidden; }
 .stage :deep(canvas) { display: block; width: 100%; height: 100%; }
 
-/* 设备标签：暗底青边、发光文字 */
-.dev-label { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 11px; padding: 4px 7px; border: 1px solid #1b6a88; background: rgba(8,24,38,.82); color: #cfe8f7; border-radius: 3px; box-shadow: 0 0 8px rgba(29,224,255,.18); font-variant-numeric: tabular-nums; pointer-events: none; }
-.dev-label .tag { font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #eaf6ff; }
+/* 设备标签（场景内标注）：暗底 + 1px 边 + 强调色只给数值 */
+.dev-label { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; padding: 4px 8px; border: 1px solid #24506c; background: rgba(8,18,28,.86); color: #d6e8f4; border-radius: 4px; font-variant-numeric: tabular-nums; pointer-events: none; }
+.dev-label .tag { font-weight: 600; color: #eaf6ff; }
 .dev-label .val { color: #1de0ff; }
-.dev-label.selected { border-color: #1de0ff; box-shadow: 0 0 14px rgba(29,224,255,.55); outline: 1px solid rgba(29,224,255,.5); outline-offset: 1px; }
-.dev-label.prio-1 { border-color: #ff3b4e; color: #ff8b98; box-shadow: 0 0 12px rgba(255,59,78,.5); }
-.dev-label.prio-1 .val { color: #ff3b4e; }
-.dev-label.prio-2 { border-color: #ff8c2a; color: #ffb87a; }
-.dev-label.prio-3 { border-color: #ffd23f; color: #ffe486; }
-.dev-label.prio-4 { border-color: #3d9dff; color: #8fc6ff; }
+.dev-label.selected { border-color: #1de0ff; }
+.dev-label.prio-1 { border-color: #ff3b4e; color: #ff9aa6; }
+.dev-label.prio-1 .val { color: #ff6b7a; }
+.dev-label.prio-2 { border-color: #ff8c2a; color: #ffc08a; }
+.dev-label.prio-3 { border-color: #d9b52a; color: #f0d98a; }
+.dev-label.prio-4 { border-color: #3d9dff; color: #9fcaff; }
 
-/* 同页设备详情面板（参考 threejs-demo 的 Popover，但承载实际读数） */
-.detail-panel { position: absolute; right: 20px; top: 20px; width: 268px; padding: 16px; border: 1px solid #1b6a88; border-radius: 6px; background: linear-gradient(160deg, rgba(10,30,48,.94), rgba(8,20,34,.96)); box-shadow: 0 0 22px rgba(29,224,255,.18), inset 0 1px 0 rgba(255,255,255,.05); }
-.detail-panel.prio-1 { border-color: #ff3b4e; box-shadow: 0 0 22px rgba(255,59,78,.28); }
-.detail-head { display: flex; align-items: center; justify-content: space-between; }
-.detail-tag { font-family: ui-monospace, monospace; font-size: 14px; font-weight: 700; color: #1de0ff; }
-.detail-prio { font-size: 11px; color: #7fb6d6; border: 1px solid #21445e; border-radius: 3px; padding: 2px 6px; }
-.detail-panel.prio-1 .detail-prio { color: #ff8b98; border-color: #ff3b4e; }
-.detail-title { font-size: 13px; color: #cfe8f7; margin-top: 6px; }
-.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
-.detail-cell { display: flex; flex-direction: column; gap: 3px; padding: 8px; background: rgba(20,52,76,.5); border-radius: 4px; }
-.detail-cell .k { font-size: 10px; color: #6f9dbb; }
-.detail-cell .v { font-size: 13px; color: #dff1ff; }
-.detail-cell .v.big { font-size: 22px; font-weight: 600; color: #1de0ff; font-variant-numeric: tabular-nums; }
-.detail-cell .v.big small { font-size: 11px; color: #7fb6d6; font-weight: 400; }
-.detail-cell .v.mono { font-family: ui-monospace, monospace; font-size: 11px; }
-.detail-enter { width: 100%; margin-top: 12px; padding: 8px; border: 1px solid #1de0ff; border-radius: 4px; background: rgba(29,224,255,.12); color: #1de0ff; font-size: 12px; cursor: pointer; }
-.detail-enter:hover { background: rgba(29,224,255,.25); }
-.detail-close { position: absolute; right: 8px; top: 8px; width: 22px; height: 22px; border: none; background: transparent; color: #6f9dbb; font-size: 18px; cursor: pointer; }
-.detail-close:hover { color: #fff; }
-.hint { flex: 0 0 30px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #6f9dbb; background: #0a1420; border-top: 1px solid #1b3a52; }
+/* 设备详情面板：深色地面 + 1px 边（无阴影、无渐变），行距 32px */
+.detail-panel { position: absolute; right: 20px; top: 20px; width: 292px; padding: 16px; border: 1px solid #2a455e; border-radius: 8px; background: rgba(10,18,26,.96); }
+.detail-head { display: flex; align-items: flex-start; gap: 8px; }
+.detail-ident { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.detail-tag { font-size: 13px; font-weight: 600; color: #eaf6ff; }
+.detail-title { font-size: 12px; color: #9dbdd0; }
+.detail-status { flex: none; font-size: 12px; line-height: 20px; padding: 0 8px; border-radius: 4px; background: #16242f; color: #9dbdd0; }
+.detail-status.prio-1 { background: #2c1a20; color: #ff8f9c; }
+.detail-status.prio-2 { background: #2c2318; color: #ffc08a; }
+.detail-status.prio-3 { background: #2a2717; color: #f0d98a; }
+.detail-status.prio-4 { background: #16242c; color: #9fcaff; }
+.detail-close { flex: none; width: 28px; height: 28px; margin: -4px -6px 0 0; border: none; border-radius: 4px; background: transparent; color: #8aa7ba; font-size: 20px; line-height: 1; cursor: pointer; }
+.detail-close:hover { background: #16242f; color: #ffffff; }
+
+/* 主数据：标签在上、值在下；屏幕上唯一的强调色 */
+.detail-figure { display: flex; flex-direction: column; gap: 2px; margin: 18px 0 4px; }
+.detail-label { font-size: 12px; color: #9dbdd0; }
+.detail-value { font-size: 32px; font-weight: 600; color: #1de0ff; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.detail-value small { font-size: 13px; font-weight: 400; color: #9dbdd0; margin-left: 4px; }
+
+/* 键值行：左标签右值，同一右边界；行间 1px 细线 */
+.detail-rows { margin: 14px 0 0; padding: 0; border-top: 1px solid #1e3448; }
+.detail-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #1e3448; }
+.detail-row dt { font-size: 12px; color: #9dbdd0; }
+.detail-row dd { margin: 0; font-size: 13px; color: #e8f1f8; text-align: right; }
+.detail-row dd.mono { font-family: ui-monospace, monospace; font-size: 12px; }
+
+.detail-enter { width: 100%; margin-top: 16px; height: 34px; border: none; border-radius: 6px; background: #e8f1f8; color: #0b1420; font-size: 13px; font-weight: 500; cursor: pointer; }
+.detail-enter:hover { background: #ffffff; }
+.hint { flex: 0 0 30px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #8aa7ba; background: #0a1420; border-top: 1px solid #1e3448; }
 .hint b { color: #1de0ff; font-weight: 600; }
 </style>
