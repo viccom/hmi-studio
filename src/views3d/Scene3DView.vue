@@ -8,7 +8,7 @@
  * - 数据：createRtdataStream（SSE，与 2D 同源）→ 设备几何状态 + 标签值
  * - 导航：mitt click → openDevice → router.push('/view/...?dev=')
  */
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import * as THREE from 'three'
 import type { Intersection } from 'three'
@@ -24,16 +24,20 @@ import { DEVICE_BY_ID, faceplateSlug } from '../screen-assets/iot-catalog'
 const route = useRoute()
 const router = useRouter()
 const host = ref<HTMLElement>()
+const panelEl = ref<HTMLElement>()
 const status = ref('加载中…')
 const alarmCount = ref(0)
 const fps = ref(0)
 const selected = ref('')
 const labels = ref<Array<{ id: string; text: string; value: string; x: number; y: number; prio: number }>>([])
+/** 详情面板在画布内的矩形（相对 .stage）——用来避开被面板压住的标签 */
+const panelBox = ref<{ left: number; top: number; right: number; bottom: number } | null>(null)
 
 let viewer: Viewer | null = null
 let rt: SceneRuntime | null = null
 let stream: { close(): void } | null = null
 let raf = 0, frames = 0, fpsT = 0
+let panelRO: ResizeObserver | null = null
 // 响应式 Map：普通 Map 不被 computed 追踪 → 面板里的实时值会冻结在首次求值的结果
 // （values.set 改了 Map，computed 不知道要重算）。reactive(Map) 的 get/set 都被追踪。
 const values = reactive(new Map<string, number>())
@@ -45,6 +49,20 @@ const still = computed(() => String(route.query.still ?? '') === '1')
 
 const deviceNav = computed(() => doc.nodes.filter((n) => n.devId).map((n) => ({ id: n.id, label: n.label ?? n.id })))
 function onPickDevice(id: string): void { if (id) openDevice(id) }
+
+// 面板出现/消失时挂摘观察器（v-if，面板元素随选中变化）
+watch(panelEl, (el, old) => {
+  panelRO?.disconnect()
+  panelRO = null
+  if (el) {
+    panelRO = new ResizeObserver(() => { syncPanelBox(); updateLabels() })
+    panelRO.observe(el)
+    syncPanelBox()
+  } else {
+    panelBox.value = null
+  }
+  void old
+})
 
 /** 标签数据：短位号 + 一个关键实时值（屏幕空间投影，pointer-events:none 不挡拾取） */
 function updateLabels(): void {
@@ -61,11 +79,19 @@ function updateLabels(): void {
     const key = n.points?.value ?? ''
     const raw = values.get(key)
     const unit = n.kind === 'emeter' ? 'kW' : n.kind === 'env' ? '°C' : n.kind === 'pt' ? 'MPa' : 'm³/h'
+    const lx = (v.x + 1) / 2 * w
+    const ly = (1 - v.y) / 2 * h
+    // 夹在画布内：标签被边缘切掉就读不到了
+    const x = Math.max(46, Math.min(w - 46, lx))
+    const y = Math.max(14, Math.min(h - 14, ly))
+    // 被详情面板压住的标签不画（读了也看不见，还挡视线）
+    if (panelBox.value && x > panelBox.value.left - 60 && x < panelBox.value.right + 60
+        && y > panelBox.value.top - 20 && y < panelBox.value.bottom + 20) continue
     out.push({
       id: n.id,
       text: (n.label ?? n.id).split(' ')[0],
       value: raw === undefined || !Number.isFinite(raw) ? '—' : `${raw.toFixed(1)}${unit}`,
-      x: Math.round((v.x + 1) / 2 * w), y: Math.round((1 - v.y) / 2 * h),
+      x: Math.round(x), y: Math.round(y),
       prio: prios.get(n.id) ?? 0,
     })
   }
@@ -127,7 +153,7 @@ function openDevice(devid: string): void {
     const s = g.userData.sel as THREE.Mesh | undefined
     if (s) s.visible = id === devid
   }
-}
+  nextTick(syncPanelBox)}
 
 function clearSelection(): void {
   selected.value = ''
@@ -135,6 +161,15 @@ function clearSelection(): void {
     const s = g.userData.sel as THREE.Mesh | undefined
     if (s) s.visible = false
   }
+  panelBox.value = null
+}
+
+/** 面板矩形（相对 .stage）——标签避开被面板压住的区域 */
+function syncPanelBox(): void {
+  const p = panelEl.value, s = host.value
+  if (!p || !s) { panelBox.value = null; return }
+  const pr = p.getBoundingClientRect(), sr = s.getBoundingClientRect()
+  panelBox.value = { left: pr.left - sr.left, top: pr.top - sr.top, right: pr.right - sr.left, bottom: pr.bottom - sr.top }
 }
 
 /** 显式进入选中设备的 2D 面板（不在点击时自动触发） */
@@ -221,7 +256,7 @@ onMounted(async () => {
 
   // 4) 标签投影：订阅 render 事件每帧重算（挂载时算一次会用未就绪的 camera.aspect，
   //    标签会冻结在旧投影上（设备越靠画面边缘偏得越远））
-  viewer.emitter.on(Events.render, () => updateLabels())
+  viewer.emitter.on(Events.render, () => { updateLabels() })
   updateLabels()
 
   if (still.value) {
@@ -240,6 +275,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   cancelAnimationFrame(raf)
   stream?.close()
+  panelRO?.disconnect()
   window.removeEventListener('keydown', onKey)
   viewer?.destroy() // 完整 dispose + forceContextLoss + scene.clear（threejs-demo 同款）
 })
@@ -273,7 +309,7 @@ function onKey(e: KeyboardEvent): void {
       ><span class="tag">{{ l.text }}</span><span class="val">{{ l.value }}</span></div>
 
       <!-- 同页设备详情：选中对象的详情栏（threejs-demo 的 Popover 范式，不跳页） -->
-      <aside v-if="detail" class="detail-panel" aria-label="设备详情">
+      <aside v-if="detail" ref="panelEl" class="detail-panel" aria-label="设备详情">
         <header class="detail-head">
           <div class="detail-ident">
             <span class="detail-tag">{{ detail.tag }}</span>
