@@ -3,6 +3,8 @@ export default {
   click: { raycaster: 'click:raycaster' },
   dblclick: { raycaster: 'dblclick:raycaster' },
   mousemove: { raycaster: 'mousemove:raycaster' },
+  /** 每帧渲染后发出（屏幕空间标签等跟随相机的投影必须挂这里） */
+  render: 'render',
   dispose: 'dispose',
   orbitChange: 'orbitChange',
 } as const

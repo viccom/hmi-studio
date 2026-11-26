@@ -30,6 +30,7 @@ export default class Viewer {
     'click:raycaster': import('three').Intersection[]
     'dblclick:raycaster': import('three').Intersection[]
     'mousemove:raycaster': import('three').Intersection[]
+    render: undefined
     dispose: undefined
     orbitChange: undefined
   }>
@@ -158,7 +159,7 @@ export default class Viewer {
     this.renderer.render(this.scene, this.camera)
   }
 
-  /** 渲染循环：controls + 动画队列（isDestroy 时退出） */
+  /** 渲染循环：controls + 动画队列 + 渲染后事件（isDestroy 时退出） */
   private loop(): void {
     const step = () => {
       if (this.isDestroy) return
@@ -168,12 +169,22 @@ export default class Viewer {
         if (a.fun && a.content) (a.fun as (c: unknown) => void)(a.content)
       }
       this.render()
+      // 渲染后发事件：屏幕空间标签等"跟随相机"的投影必须挂这里——
+      // 挂在挂载时刻算一次会用到未就绪的 camera.aspect，标签冻结在旧投影上。
+      this.emitter.emit(Events.render, undefined)
     }
     this.raf = requestAnimationFrame(step)
   }
 
   /** 停止动画循环（静态模式用：只保留事件驱动的按需渲染） */
   public stopLoop(): void { cancelAnimationFrame(this.raf); this.raf = 0 }
+
+  /** 手动渲染一帧并发出 render 事件（静态模式：相机/尺寸变化后调用） */
+  public renderAndNotify(): void {
+    if (this.isDestroy) return
+    this.render()
+    this.emitter.emit(Events.render, undefined)
+  }
 
   /** 完整销毁（照 threejs-demo：dispose + forceContextLoss + scene.clear） */
   public destroy(): void {

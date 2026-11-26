@@ -207,12 +207,17 @@ onMounted(async () => {
     }
   })
 
-  // 4) 标签投影（数据变化 +相机变化 时刷新；仍用我们更优的屏幕投影而非鼠标 Popover）
-  viewer.controls.addEventListener('change', () => { if (still.value) updateLabels() })
+  // 4) 标签投影：订阅 render 事件每帧重算（挂载时算一次会用未就绪的 camera.aspect，
+  //    标签会冻结在旧投影上——设备越靠画面边缘偏得越远）
+  viewer.emitter.on(Events.render, () => updateLabels())
   updateLabels()
 
-  if (still.value) viewer.stopLoop()
-  viewer.render()
+  if (still.value) {
+    viewer.stopLoop()
+    // 静态模式无 render 事件：相机/尺寸变化时手动渲染 + 通知（标签据此重投影）
+    viewer.controls.addEventListener('change', () => viewer?.renderAndNotify())
+  }
+  viewer.renderAndNotify()
   // 调试出口：浏览器控制台可直接查看 3D 运行时（viewer/rt/doc）
   ;(window as unknown as { __scene3d?: unknown }).__scene3d = { viewer, rt, doc }
   fpsT = performance.now(); raf = requestAnimationFrame(fpsLoop)
