@@ -16,7 +16,7 @@ import { throttle } from 'lodash-es'
 import mitt, { type Emitter } from 'mitt'
 import Events from './Events'
 
-const C_BG = 0xeef1f4 // 与 hmi-style-guide 空间层底色一致（灰阶，非深色）
+const C_BG = 0x0b1420 // 深色科技风（对齐 threejs-demo 参考项目）
 
 export type Animate = { fun: (...args: never[]) => void; content: unknown }
 

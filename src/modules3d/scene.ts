@@ -28,8 +28,12 @@ export function buildScene(viewer: Viewer, doc: SceneDoc): SceneRuntime {
   // 地面 + 网格 + 围墙 + 十字道路
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(70, 50), new THREE.MeshStandardMaterial({ color: C.floor, roughness: 1 }))
   floor.rotation.x = -Math.PI / 2; scene.add(floor)
-  const grid = new THREE.GridHelper(70, 70, 0xccd3da, 0xdde2e7)
-  grid.position.y = 0.005; scene.add(grid)
+  // 发光青色网格（threejs-demo 的标志性视觉：深色底 + 青色发光线）
+  const grid = new THREE.GridHelper(70, 70, 0x1de0ff, 0x123a52)
+  grid.position.y = 0.005
+  ;(grid.material as THREE.Material).transparent = true
+  ;(grid.material as THREE.Material).opacity = 0.55
+  scene.add(grid)
   const wh = 1.1
   for (const [x, z, w, d] of [[0, -25, 70, 0.25], [0, 25, 70, 0.25], [-35, 0, 0.25, 50], [35, 0, 0.25, 50]] as number[][]) {
     const wall = new THREE.Mesh(new THREE.BoxGeometry(w, wh, d), new THREE.MeshStandardMaterial({ color: C.wall, roughness: 1 }))

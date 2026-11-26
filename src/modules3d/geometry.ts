@@ -6,12 +6,16 @@
 import * as THREE from 'three'
 import type { SceneNode } from '../lib/scene3d'
 
-/** 3D 主题令牌（与 2D 同源） */
+/**
+ * 3D 空间层主题令牌——深色科技风（对齐 threejs-demo 参考项目的视觉）。
+ * 与 2D 操作层（HP-HMI 灰阶）刻意不同：空间层是态势/导航层，不承载精确读数。
+ * 常态深色中性、发光青色网格；饱和色只给报警与选中。
+ */
 export const C = {
-  bg: 0xeef1f4, floor: 0xe3e7eb, road: 0xd2d8de, wall: 0xb9c2ca,
-  frame: 0xc8d0d8, base: 0x8d99a6, body: 0x5b6570, panel: 0xdfe5ea,
-  dark: 0x3d4752, live: 0x1f4e79, green: 0x2e7d32,
-  p1: 0xd32f2f, p2: 0xf57c00, p3: 0xfbc02d, p4: 0x1976d2,
+  bg: 0x0b1420, floor: 0x101d2e, road: 0x16283d, wall: 0x1e3448,
+  frame: 0x24405a, base: 0x2b4a63, body: 0x6b8299, panel: 0x8fa9c0,
+  dark: 0x0a121c, live: 0x1de0ff, green: 0x2ecc71,
+  p1: 0xff3b4e, p2: 0xff8c2a, p3: 0xffd23f, p4: 0x3d9dff,
 }
 export const PRIO_COLOR: Record<number, number> = { 0: C.body, 1: C.p1, 2: C.p2, 3: C.p3, 4: C.p4 }
 

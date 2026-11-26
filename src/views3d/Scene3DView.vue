@@ -18,7 +18,7 @@ import { buildScene, animateRuntime, type SceneRuntime } from '../modules3d/scen
 import { C, PRIO_COLOR } from '../modules3d/geometry'
 import { api } from '../lib/api'
 import { createRtdataStream, type RtPoint } from '../lib/sse'
-import { buildDemoScene, devsOf, isScene3D, type SceneDoc } from '../lib/scene3d'
+import { buildDemoScene, devsOf, isScene3D, type SceneDoc, type SceneNode } from '../lib/scene3d'
 
 const route = useRoute()
 const router = useRouter()
@@ -114,18 +114,51 @@ function connect(): void {
   })
 }
 
-/** 打开设备的 2D faceplate（mitt click 与顶部下拉共用） */
+/**
+ * 选中设备（mitt click 与顶部下拉共用）——与 threejs-demo 一致：点击只选中 +
+ * 同页详情，**不跳页**。需要精确读数/操作时由用户显式点详情面板的「进入 2D 面板」。
+ */
 function openDevice(devid: string): void {
   selected.value = devid
   for (const [id, g] of (rt?.devices ?? new Map())) {
     const s = g.userData.sel as THREE.Mesh | undefined
     if (s) s.visible = id === devid
   }
-  // 真实画面是设备级 slug：iot-faceplate-<编号>（dev_wm1 → iot-faceplate-wm1）
-  // 不是类型级 iot-faceplate-env/water——那种 slug 在 rs-iot 里不存在（会"画面加载失败"）
-  const target = `iot-faceplate-${devid.replace(/^dev_/, '')}`
-  void router.push(`/view/${target}?dev=${devid}`)
 }
+
+function clearSelection(): void {
+  selected.value = ''
+  for (const g of (rt?.devices ?? new Map()).values()) {
+    const s = g.userData.sel as THREE.Mesh | undefined
+    if (s) s.visible = false
+  }
+}
+
+/** 显式进入选中设备的 2D 面板（不在点击时自动触发） */
+function enterFaceplate(): void {
+  if (!selected.value) return
+  void router.push(`/view/iot-faceplate-${selected.value.replace(/^dev_/, '')}?dev=${selected.value}`)
+}
+
+/** 详情面板数据（选中设备的关键值 / 状态 / 区域） */
+const detail = computed(() => {
+  const id = selected.value
+  if (!id) return null
+  const n: SceneNode | undefined = doc.nodes.find((x) => x.id === id)
+  if (!n) return null
+  const field = n.points?.value
+  const raw = field ? values.get(field) : undefined
+  const unit = n.kind === 'emeter' ? 'kW' : n.kind === 'env' ? '°C' : n.kind === 'pt' ? 'MPa' : 'm³/h'
+  const prio = prios.get(id) ?? 0
+  return {
+    id, title: n.label ?? id, tag: (n.label ?? id).split(' ')[0],
+    area: n.id.startsWith('dev_wm') ? '供水' : n.id.startsWith('dev_gm') ? '燃气'
+      : n.id.startsWith('dev_em') ? '配电' : '环境',
+    value: raw === undefined || !Number.isFinite(raw) ? '—' : raw.toFixed(2),
+    unit, prio,
+    prioText: ['正常', 'P1 严重', 'P2 高', 'P3 中等', 'P4 提示'][prio] ?? '正常',
+  }
+})
 
 /** 从拾取结果找设备 id（向上遍历 parent，与 threejs-demo 的 findParent 同语义） */
 function devidOf(hits: Intersection[]): string | undefined {
@@ -201,7 +234,7 @@ onBeforeUnmount(() => {
         <span class="badge">设备 {{ alarmCount }}</span>
         <span class="badge">{{ fps }} fps</span>
         <select class="dev-picker" :value="selected" @change="onPickDevice(($event.target as HTMLSelectElement).value)">
-          <option value="">打开设备面板…</option>
+          <option value="">选择设备查看…</option>
           <option v-for="n in deviceNav" :key="n.id" :value="n.id">{{ n.label }}</option>
         </select>
       </div>
@@ -212,30 +245,70 @@ onBeforeUnmount(() => {
         class="dev-label" :class="['prio-' + l.prio, { selected: selected === l.id }]"
         :style="{ left: l.x + 'px', top: l.y + 'px' }"
       ><span class="tag">{{ l.text }}</span><span class="val">{{ l.value }}</span></div>
+
+      <!-- 同页设备详情（threejs-demo 的 Popover 范式，不跳页） -->
+      <div v-if="detail" class="detail-panel" :class="'prio-' + detail.prio">
+        <div class="detail-head">
+          <span class="detail-tag">{{ detail.tag }}</span>
+          <span class="detail-prio">{{ detail.prioText }}</span>
+        </div>
+        <div class="detail-title">{{ detail.title }}</div>
+        <div class="detail-grid">
+          <div class="detail-cell"><span class="k">区域</span><span class="v">{{ detail.area }}</span></div>
+          <div class="detail-cell"><span class="k">实时值</span><span class="v big">{{ detail.value }} <small>{{ detail.unit }}</small></span></div>
+          <div class="detail-cell"><span class="k">设备 ID</span><span class="v mono">{{ detail.id }}</span></div>
+        </div>
+        <button class="detail-enter" @click="enterFaceplate">进入 2D 设备面板 →</button>
+        <button class="detail-close" @click="clearSelection">×</button>
+      </div>
     </div>
-    <div class="hint"><b>左键拖动</b> 旋转 · <b>右键拖动</b> 平移 · <b>滚轮</b> 缩放 · <b>单击设备</b> 进入 2D 面板</div>
+    <div class="hint"><b>左键拖动</b> 旋转 · <b>右键拖动</b> 平移 · <b>滚轮</b> 缩放 · <b>单击设备</b> 查看同页详情（不跳页）</div>
   </div>
 </template>
 
 <style scoped>
-.scene3d-page { width: 100vw; height: 100vh; display: flex; flex-direction: column; background: #eef1f4; }
-.bar { height: 52px; flex: 0 0 52px; display: flex; align-items: center; gap: 18px; padding: 0 20px; background: #fff; border-bottom: 1px solid #d9e0e6; }
-.back { border: 1px solid #b9c2ca; background: #fff; border-radius: 5px; padding: 6px 10px; cursor: pointer; font-size: 13px; color: #3d4752; }
-.title { font-size: 16px; font-weight: 600; color: #1f2328; }
+/* 深色科技风（对齐 threejs-demo）：深蓝底 + 青色强调 + 半透明浮层 */
+.scene3d-page { width: 100vw; height: 100vh; display: flex; flex-direction: column; background: #0b1420; color: #d7e6f2; font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif; }
+.bar { height: 52px; flex: 0 0 52px; display: flex; align-items: center; gap: 18px; padding: 0 20px; background: linear-gradient(180deg, #0c1b2c, #0a1420); border-bottom: 1px solid #1b3a52; box-shadow: 0 2px 14px rgba(0,180,255,.12); }
+.back { border: 1px solid #21445e; background: rgba(20,48,70,.6); border-radius: 5px; padding: 6px 10px; cursor: pointer; font-size: 13px; color: #8fc7e8; }
+.back:hover { border-color: #1de0ff; color: #1de0ff; }
+.title { font-size: 16px; font-weight: 600; color: #eaf6ff; letter-spacing: .5px; }
 .badges { margin-left: auto; display: flex; gap: 8px; align-items: center; }
-.badge { font-size: 12px; color: #5b6570; background: #eef1f4; border-radius: 4px; padding: 4px 8px; }
-.dev-picker { font-size: 12px; padding: 5px 8px; border: 1px solid #b9c2ca; border-radius: 4px; background: #fff; color: #3d4752; cursor: pointer; }
+.badge { font-size: 12px; color: #7fb6d6; background: rgba(20,52,76,.7); border: 1px solid #1b3a52; border-radius: 4px; padding: 4px 8px; font-variant-numeric: tabular-nums; }
+.dev-picker { font-size: 12px; padding: 5px 8px; border: 1px solid #21445e; border-radius: 4px; background: rgba(12,32,50,.9); color: #bfe4f7; cursor: pointer; }
 .stage { flex: 1; min-height: 0; position: relative; overflow: hidden; }
 .stage :deep(canvas) { display: block; width: 100%; height: 100%; }
-.dev-label { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 11px; padding: 4px 7px; border: 1px solid #aab4be; background: rgba(255,255,255,.94); color: #1f2328; border-radius: 4px; box-shadow: 0 2px 6px rgba(40,55,70,.12); font-variant-numeric: tabular-nums; pointer-events: none; }
-.dev-label .tag { font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-.dev-label .val { color: #1f4e79; }
-.dev-label.selected { outline: 2px solid #1f4e79; outline-offset: 1px; }
-.dev-label.prio-1 { border-color: #d32f2f; color: #d32f2f; }
-.dev-label.prio-1 .val { color: #d32f2f; }
-.dev-label.prio-2 { border-color: #f57c00; color: #b35a00; }
-.dev-label.prio-3 { border-color: #d9a800; color: #8a6f00; }
-.dev-label.prio-4 { border-color: #1976d2; color: #1976d2; }
-.hint { flex: 0 0 30px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #5b6570; background: #fff; border-top: 1px solid #d9e0e6; }
-.hint b { color: #1f4e79; font-weight: 600; }
+
+/* 设备标签：暗底青边、发光文字 */
+.dev-label { position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 11px; padding: 4px 7px; border: 1px solid #1b6a88; background: rgba(8,24,38,.82); color: #cfe8f7; border-radius: 3px; box-shadow: 0 0 8px rgba(29,224,255,.18); font-variant-numeric: tabular-nums; pointer-events: none; }
+.dev-label .tag { font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #eaf6ff; }
+.dev-label .val { color: #1de0ff; }
+.dev-label.selected { border-color: #1de0ff; box-shadow: 0 0 14px rgba(29,224,255,.55); outline: 1px solid rgba(29,224,255,.5); outline-offset: 1px; }
+.dev-label.prio-1 { border-color: #ff3b4e; color: #ff8b98; box-shadow: 0 0 12px rgba(255,59,78,.5); }
+.dev-label.prio-1 .val { color: #ff3b4e; }
+.dev-label.prio-2 { border-color: #ff8c2a; color: #ffb87a; }
+.dev-label.prio-3 { border-color: #ffd23f; color: #ffe486; }
+.dev-label.prio-4 { border-color: #3d9dff; color: #8fc6ff; }
+
+/* 同页设备详情面板（参考 threejs-demo 的 Popover，但承载实际读数） */
+.detail-panel { position: absolute; right: 20px; top: 20px; width: 268px; padding: 16px; border: 1px solid #1b6a88; border-radius: 6px; background: linear-gradient(160deg, rgba(10,30,48,.94), rgba(8,20,34,.96)); box-shadow: 0 0 22px rgba(29,224,255,.18), inset 0 1px 0 rgba(255,255,255,.05); }
+.detail-panel.prio-1 { border-color: #ff3b4e; box-shadow: 0 0 22px rgba(255,59,78,.28); }
+.detail-head { display: flex; align-items: center; justify-content: space-between; }
+.detail-tag { font-family: ui-monospace, monospace; font-size: 14px; font-weight: 700; color: #1de0ff; }
+.detail-prio { font-size: 11px; color: #7fb6d6; border: 1px solid #21445e; border-radius: 3px; padding: 2px 6px; }
+.detail-panel.prio-1 .detail-prio { color: #ff8b98; border-color: #ff3b4e; }
+.detail-title { font-size: 13px; color: #cfe8f7; margin-top: 6px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.detail-cell { display: flex; flex-direction: column; gap: 3px; padding: 8px; background: rgba(20,52,76,.5); border-radius: 4px; }
+.detail-cell .k { font-size: 10px; color: #6f9dbb; }
+.detail-cell .v { font-size: 13px; color: #dff1ff; }
+.detail-cell .v.big { font-size: 22px; font-weight: 600; color: #1de0ff; font-variant-numeric: tabular-nums; }
+.detail-cell .v.big small { font-size: 11px; color: #7fb6d6; font-weight: 400; }
+.detail-cell .v.mono { font-family: ui-monospace, monospace; font-size: 11px; }
+.detail-enter { width: 100%; margin-top: 12px; padding: 8px; border: 1px solid #1de0ff; border-radius: 4px; background: rgba(29,224,255,.12); color: #1de0ff; font-size: 12px; cursor: pointer; }
+.detail-enter:hover { background: rgba(29,224,255,.25); }
+.detail-close { position: absolute; right: 8px; top: 8px; width: 22px; height: 22px; border: none; background: transparent; color: #6f9dbb; font-size: 18px; cursor: pointer; }
+.detail-close:hover { color: #fff; }
+.hint { flex: 0 0 30px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #6f9dbb; background: #0a1420; border-top: 1px solid #1b3a52; }
+.hint b { color: #1de0ff; font-weight: 600; }
 </style>
