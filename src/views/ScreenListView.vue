@@ -89,6 +89,12 @@ function openView(id: string) {
   window.open(href, '_blank', 'noopener')
 }
 
+/** 3D 场景在新标签页打开（与 2D 浏览同语义，但走 /view3d/ 路由） */
+function openView3d(id: string) {
+  const href = router.resolve({ path: `/view3d/${id}` }).href
+  window.open(href, '_blank', 'noopener')
+}
+
 async function create() {
   const valid = await formRef.value?.validate().then(() => true).catch(() => false)
   if (!valid) return
@@ -231,22 +237,32 @@ async function doDisbandGroup(g: string) {
               class="screen-card card-in"
               :style="{ animationDelay: `${appearDelay(sIdx, i)}ms` }"
               :data-screen-id="c.id"
-              @click="router.push(`/edit/${c.id}`)"
+              @click="c.is3d ? router.push(`/view3d/${c.id}`) : router.push(`/edit/${c.id}`)"
             >
               <div class="card-thumb-box">
-                <ScreenThumb :done="c.done" />
+                <div v-if="c.is3d" class="scene3d-thumb">
+                  <svg viewBox="0 0 200 120" width="100%" height="100%" aria-hidden="true">
+                    <path d="M20 95 L100 45 L180 95 Z" fill="#e8edf2" stroke="#8d99a6" stroke-width="1.5" />
+                    <path d="M100 45 L100 95 M20 95 L180 95" stroke="#b9c2ca" stroke-width="1" />
+                    <rect x="55" y="62" width="12" height="18" fill="#5b6570" />
+                    <rect x="90" y="55" width="12" height="18" fill="#5b6570" />
+                    <rect x="125" y="66" width="12" height="18" fill="#5b6570" />
+                  </svg>
+                  <span class="scene3d-thumb-tag">3D 场景</span>
+                </div>
+                <ScreenThumb v-else :done="c.done" />
               </div>
               <div class="card-meta">
                 <div class="card-row">
                   <span class="card-no" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
                   <span class="card-name" :title="c.name ?? c.id">{{ c.name ?? c.id }}</span>
                   <span class="card-ops" @click.stop>
-                    <button class="icon-btn" title="编辑信息（名称/分组）" @click="openEdit(c)">
+                    <button class="icon-btn" :title="c.is3d ? '打开 3D 场景' : '编辑信息（名称/分组）'" @click="c.is3d ? router.push(`/view3d/${c.id}`) : openEdit(c)">
                       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                       </svg>
                     </button>
-                    <button class="icon-btn" title="在新标签页打开浏览器" @click="openView(c.id)">
+                    <button class="icon-btn" title="在新标签页打开浏览器" @click="c.is3d ? openView3d(c.id) : openView(c.id)">
                       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 3h7v7M21 3l-9 9M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" />
                       </svg>
@@ -414,6 +430,9 @@ async function doDisbandGroup(g: string) {
   border-bottom: 1px solid var(--el-border-color-lighter);
 }
 .card-thumb-box :deep(.thumb) { border: none; border-radius: 0; margin-bottom: 0; background: transparent; }
+/* 3D 场景缩略图：静态 SVG 海报（不挂 WebGL，避免列表页耗尽上下文） */
+.scene3d-thumb { width: 100%; height: 100%; position: relative; background: #eef1f4; display: flex; align-items: center; }
+.scene3d-thumb-tag { position: absolute; left: 8px; top: 8px; font-size: 10px; padding: 2px 6px; border-radius: 3px; background: #1f4e79; color: #fff; }
 
 .card-meta { padding: 11px 14px 13px; }
 .card-row { display: flex; align-items: center; gap: 8px; min-width: 0; }

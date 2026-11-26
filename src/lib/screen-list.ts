@@ -6,6 +6,7 @@
 import type { IExportJson } from 'maotu'
 import { ApiError } from './api'
 import { screensApi, unwrapDoc } from './screens'
+import { isScene3D } from './scene3d'
 
 /** 并发分批：批内并发 ≤ cap、批间串行（顺序稳定），返回顺序 = 输入顺序 */
 export async function batched<T, R>(
@@ -27,6 +28,8 @@ export interface ScreenCard {
   group?: string
   /** 画面完整 done_json（缩略图源；体积小直接随卡持有） */
   done?: IExportJson
+  /** 3D 空间层场景（$schema=agent-hmi.scene3d/1）——导航到 /view3d/，缩略图不出 WebGL */
+  is3d?: boolean
 }
 
 /** 某 id 404（列表与详情之间被并发删除）跳过该卡，不整体失败；其他错误上抛 */
@@ -38,6 +41,11 @@ export async function loadScreenCards(
   const cards = await batched(ids, cap, async (id): Promise<ScreenCard | null> => {
     try {
       const { doc } = await client.get(id)
+      if (isScene3D(doc)) {
+        // 3D 场景：不交给 maotu 的 unwrapDoc（它没有 canvasCfg/json），只取 meta 导航
+        const m = doc as unknown as { name?: string; group?: string }
+        return { id, name: m.name, group: m.group, is3d: true }
+      }
       const { done, meta } = unwrapDoc(doc)
       return { id, ...meta, done }
     } catch (e) {
