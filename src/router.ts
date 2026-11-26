@@ -6,6 +6,7 @@ const routes = [
   { path: '/login', component: () => import('./views/LoginView.vue') },
   { path: '/', component: () => import('./views/ScreenListView.vue') },
   { path: '/view/:id', component: () => import('./views/ViewView.vue') },
+  { path: '/view3d/:id', component: () => import('./views3d/Scene3DView.vue') },
   { path: '/edit/:id', component: () => import('./views/EditView.vue') },
   { path: '/dev/spike', component: () => import('./dev/SpikeEdit.vue') },
   { path: '/dev/probe', component: () => import('./dev/Probe.vue') },

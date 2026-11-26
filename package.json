@@ -20,6 +20,7 @@
     "element-plus": "^2.14.7",
     "maotu": "0.6.5",
     "pinia": "^4.1.0",
+    "three": "0.187.0",
     "vue": "^3.5.44",
     "vue-router": "^5.4.0"
   },
@@ -27,6 +28,7 @@
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
+    "@types/three": "0.187.0",
     "@vitejs/plugin-vue": "^6.0.10",
     "eslint": "^10.13.0",
     "eslint-plugin-vue": "^10.11.1",

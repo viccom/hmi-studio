@@ -182,6 +182,7 @@ async function doDisbandGroup(g: string) {
         <span class="topbar-stats" aria-label="画面统计">
           <strong>{{ cards.length }}</strong> 幅<template v-if="groupCount"> · {{ groupCount }} 组</template>
         </span>
+        <el-button class="view3d-btn" @click="router.push('/view3d/iot-plant-3d')" title="3D 空间总览（独立空间层）">3D 总览</el-button>
         <ThemeToggle />
         <el-button type="primary" class="new-btn" @click="openCreate">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
