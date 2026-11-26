@@ -13,13 +13,14 @@ vendor 范围（相对上游）：
 - **不带入**：GIS/地图/天气/相机速度面板、MapSelectorDialog、views/、services/、utils/onboarding
   （连带省掉 `leaflet`、`driver.js` 依赖）；`meteor3d-server` 与 `asset-manager` 包。
 
-## 补丁（共 3 处，均为 P0 集成必需）
+## 补丁（共 4 处，均为 P0 集成必需）
 
 | # | 文件 | 改动 | 原因 |
 |---|---|---|---|
 | PATCH-01 | `editor/components/Viewport.vue` | `dbManager = window.__hmi3d?.createDbManager?.() ?? new DBManager(...)` | 存储后端注入点：默认用上游 DBManager（打 Meteor 自带后端），hmi-studio 注入 rs-iot `scenes` 适配器（`../../adapter/store-adapter.ts`）。**唯一**需要改上游逻辑的地方 |
 | PATCH-02 | `editor/components/Viewport.vue` | `route.params.sceneId \|\| route.params.id` | 上游路由用 `:sceneId`，hmi-studio 统一用 `:id` |
 | PATCH-03 | `editor/components/Toolbar.vue` | 自动保存间隔从 `window.__hmi3d?.autoSaveMs` 读，`0` = 关闭 | 上游硬编码 10s 无条件保存，与 rs-iot `if_version` 乐观锁冲突（多标签静默互相覆盖，实测过）。P2 改为「脏标记 + 409 即停」 |
+| PATCH-04 | `core/PersistenceManager.js` | **撤销**曾经的 `stripBindings` 开关，恢复完整保存 `nodeGraph`/`nodeBindings` | 该开关源于对「多 GLTF 实例骨骼重挂缺陷」的误判（真因是 scale 设错）；且 3D 文档已迁到 1 MiB 的 `scenes` 族，放得下（实测 217 KiB / 43 对象）。保留会导致**保存一次丢 nodeGraph**（展厅 292 条，实测 nodeGraph 292→0） |
 
 ## 本地替换（非上游文件，替代其同名模块）
 

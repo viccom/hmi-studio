@@ -67,6 +67,62 @@ describe('store-adapter 字段映射', () => {
   })
 })
 
+describe('保存保真：上游不传的字段必须保留', () => {
+  /**
+   * 实测缺陷（2026-11-26，迁移 DEMO 后发现）：
+   * 上游 `PersistenceManager.saveScene` 只把 objects/lighting/cameraFar 等传给 DBManager，
+   * **不传 initialView，也不传 nodeGraph**（它自己算了 nodeGraph 却没放进 payload）。
+   * 适配器若无脑用 payload 重建 doc，保存一次就把这两项抹掉：
+   *   iot-robot-hall-3d 实测 nodeGraph 292 → 0、initialView true → false。
+   * 修法：适配器缓存加载时的 doc，保存时以"旧 scene 打底 + 新字段覆盖"合并。
+   */
+  const loadedDoc = {
+    $schema: 'agent-hmi.scene3d/1',
+    meta: { name: '展厅', group: '空间层', unit_m: 1, home: { pos: [15, 11, 17], target: [-2, 1, -1] } },
+    nodes: [], links: [],
+    objects: [{ bid: 'b1', type: 'BoxGeometry' }],
+    scene: {
+      lightingConfig: { enabled: true, ambient: 0.85 },
+      initialView: { position: { x: 11, y: 6.5, z: 15 }, target: { x: 0, y: 1.4, z: 0 } },
+      nodeGraph: [{ bid: 'b1', parentBid: null }, { bid: 'b2', parentBid: 'b1' }],
+      cameraFar: 1000000,
+    },
+    bindings: [], events: [],
+  }
+
+  function dbWith(loaded: unknown) {
+    const puts: unknown[] = []
+    const db = new ScenesDbManager()
+    ;(db as unknown as { store: unknown }).store = {
+      get: async () => ({ doc: loaded, version: 1 }),
+      put: async (_id: string, doc: unknown) => { puts.push(doc); return { status: 'ok', version: 2 } },
+    }
+    return { db, puts }
+  }
+
+  it('保存（payload 不含 initialView/nodeGraph）后二者仍在', async () => {
+    const { db, puts } = dbWith(loadedDoc)
+    await db.getSceneData('x')                 // 先加载（缓存 doc）
+    await db.saveScene({
+      id: 'x',
+      objects: [{ bid: 'b1', type: 'BoxGeometry' }],
+      name: '展厅',
+      lightingConfig: { enabled: true, ambient: 0.9 }, // 新值应覆盖旧值
+    })
+    const saved = puts[0] as { scene: Record<string, unknown> }
+    expect(saved.scene.initialView).toEqual(loadedDoc.scene.initialView)
+    expect(saved.scene.nodeGraph).toHaveLength(2)
+    expect(saved.scene.lightingConfig).toEqual({ enabled: true, ambient: 0.9 }) // payload 覆盖
+  })
+
+  it('未加载就保存（无缓存）时不崩，按 payload 建文档', async () => {
+    const { db, puts } = dbWith(loadedDoc)
+    await db.saveScene({ id: 'x', objects: [], lightingConfig: { enabled: true } })
+    const saved = puts[0] as { scene: Record<string, unknown> }
+    expect(saved.scene.lightingConfig).toEqual({ enabled: true })
+  })
+})
+
 describe('ScenesDbManager 乐观锁', () => {
   function fake(putImpl: () => Promise<unknown>) {
     const db = new ScenesDbManager()

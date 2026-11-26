@@ -56,6 +56,11 @@ const META_KEYS = [
 
 export class ScenesDbManager {
   private version = 0
+  /**
+   * 加载时的原文档缓存。用途见 saveScene 注释：上游 saveScene **不传** initialView
+   * 与 nodeGraph（它自己算了 nodeGraph 却没放进载荷），不合并就会保存一次丢一次。
+   */
+  private lastDoc: SceneDoc | null = null
   private store = sceneStore()
 
   /** 兼容上游 `new DBManager({apiBaseUrl})` 的构造形状（apiBaseUrl 由 sceneStore 内的 api() 决定） */
@@ -69,13 +74,22 @@ export class ScenesDbManager {
   async getSceneData(sceneId = 'default'): Promise<UpstreamSceneData> {
     const { doc, version } = await this.store.get(docIdOf(sceneId))
     this.version = version
+    this.lastDoc = doc
     return docToUpstream(doc)
   }
 
   /** 上游契约：存整个场景 */
   async saveScene(payload: UpstreamSavePayload): Promise<{ success: true; version: number }> {
     const sceneId = docIdOf(String(payload.id ?? 'default'))
-    const doc = upstreamToDoc(payload)
+    const next = upstreamToDoc(payload)
+    // 合并：旧 scene 打底 + 本次载荷覆盖。
+    // 上游 saveScene 只传 cameraFar/environmentUrl/lightingConfig/gisConfig/deletedSourceNodes，
+    // **不传 initialView，也不传 nodeGraph**（PersistenceManager 算了 nodeGraph 但没放进载荷）。
+    // 实测后果：不合并的话保存一次就把 nodeGraph（展厅 292 条）与初始视角抹掉。
+    // 取舍：本次载荷里有的字段用新值；没有的保留旧值（宁可让 nodeGraph 略旧，也不能丢）。
+    const doc = this.lastDoc
+      ? ({ ...next, scene: { ...(this.lastDoc.scene ?? {}), ...(next.scene ?? {}) } } as SceneDoc)
+      : next
     if (!isScene3D(doc)) throw new Error('saveScene: 适配器产出的不是 3D 文档（内部错误）')
     try {
       const r = await this.store.put(sceneId, doc, this.version)

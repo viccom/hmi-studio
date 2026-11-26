@@ -1369,17 +1369,13 @@ export class PersistenceManager {
         const cameraFar = this.editorStore?.sceneMetadata?.cameraFar || 1000000;
 
         // 批量保存到后端
-        // 2026-11-26 本地修：stripBindings 选项——nodeGraph/nodeBindings 恢复链路对
-        // 「同一 GLTF 多实例」场景存在骨骼被错误重挂/放大的缺陷（实测四肢飞到 150m）。
-        // 不使用跨模型节点重挂的场景可传 {stripBindings:true} 绕过：
-        // 加载端 applyGlobalNodeGraph/applyNodeBindings 收到空数组即整段跳过，
-        // 各实例保持 SkeletonUtils.clone 的标准层级与姿势。
-        const stripBindings = options.stripBindings === true
-        const safeNodeGraph = stripBindings ? [] : nodeGraph
+        // [PATCH-04] 原上游此处无条件保存 nodeGraph/nodeBindings。曾加过 stripBindings
+        // 开关（误判为"多 GLTF 实例骨骼重挂缺陷"），后经复测确认那是 scale 设错导致的
+        // 视觉重叠、恢复链路本身正常（详见 PATCHES.md）。且 3D 文档已迁到 1 MiB 的
+        // `scenes` 族（实测 217 KiB / 43 对象），放得下完整节点图。
+        // 故移除开关：完整保存，避免"保存一次丢 nodeGraph（展厅 292 条）"。
         await this.dbManager.saveScene({
-            objects: stripBindings
-                ? serializedObjects.map(o => (o.nodeBindings ? { ...o, nodeBindings: [] } : o))
-                : serializedObjects,
+            objects: serializedObjects,
             id: this.currentSceneId,
             name: name,
             description: description,
@@ -1389,8 +1385,8 @@ export class PersistenceManager {
             environmentUrl: environmentUrl, // 保存环境贴图 URL
             lightingConfig: this.sceneManager.lightingManager?.getConfig(),
             gisConfig,
-            nodeGraph: safeNodeGraph,
-            deletedSourceNodes: stripBindings ? [] : this.serializeDeletedSourceNodes(nodeGraph)
+            nodeGraph,
+            deletedSourceNodes: this.serializeDeletedSourceNodes(nodeGraph)
         });
 
         // 更新 objectMap
