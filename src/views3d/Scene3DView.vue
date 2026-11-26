@@ -118,7 +118,7 @@ function connect(): void {
 }
 
 /**
- * 选中设备（mitt click 与顶部下拉共用）——与 threejs-demo 一致：点击只选中 +
+ * 选中设备（mitt click 与顶部下拉共用）。与 threejs-demo 一致：点击只选中 +
  * 同页详情，**不跳页**。需要精确读数/操作时由用户显式点详情面板的「进入 2D 面板」。
  */
 function openDevice(devid: string): void {
@@ -160,11 +160,11 @@ const detail = computed(() => {
     tag: meta?.pos ?? id,                 // 位号 WM-101
     title: meta?.title ?? (n.label ?? id), // 1# 远传水表
     area: AREA_TEXT[meta?.area ?? 'env'],
-    valueText: has ? raw!.toFixed(2) : '—',
+    valueText: has ? raw!.toFixed(2) : '—', // taste-skill-ignore: 缺失值用 em dash 占位（app-screen §11）
     unit,
     prio,
     prioText: ['正常', 'P1 严重', 'P2 高', 'P3 中等', 'P4 提示'][prio] ?? '正常',
-    field: field ?? '—',
+    field: field ?? '—', // taste-skill-ignore: 缺失值用 em dash 占位（app-screen §11）
   }
 })
 
@@ -219,7 +219,7 @@ onMounted(async () => {
   })
 
   // 4) 标签投影：订阅 render 事件每帧重算（挂载时算一次会用未就绪的 camera.aspect，
-  //    标签会冻结在旧投影上——设备越靠画面边缘偏得越远）
+  //    标签会冻结在旧投影上（设备越靠画面边缘偏得越远））
   viewer.emitter.on(Events.render, () => updateLabels())
   updateLabels()
 
@@ -304,7 +304,7 @@ function onKey(e: KeyboardEvent): void {
 
 <style scoped>
 /* 深色 3D 空间层（对齐 threejs-demo 参考项目与 design-taste-frontend 的 app-screen 规则）：
-   画面本身是媒体（深色底由 3D 场景提供），面板是 chrome —— 无渐变、无发光阴影、
+   画面本身是媒体（深色底由 3D 场景提供），面板是 chrome：无渐变、无发光阴影、
    边框与阴影不同时用、字号不低于 12px、唯一的强调色给主数据（实时值）。 */
 .scene3d-page { width: 100vw; height: 100vh; display: flex; flex-direction: column; background: #0b1420; color: #e8f1f8; font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif; }
 .bar { height: 52px; flex: 0 0 52px; display: flex; align-items: center; gap: 18px; padding: 0 20px; background: #0a1420; border-bottom: 1px solid #1e3448; }
@@ -354,7 +354,7 @@ function onKey(e: KeyboardEvent): void {
 .detail-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid #1e3448; }
 .detail-row dt { font-size: 12px; color: #9dbdd0; }
 .detail-row dd { margin: 0; font-size: 13px; color: #e8f1f8; text-align: right; }
-.detail-row dd.mono { font-family: ui-monospace, monospace; font-size: 12px; }
+.detail-row dd.mono { font-family: ui-monospace, monospace; font-size: 12px; } /* taste-skill-ignore: 设备 ID 用等宽（app-screen §7.4） */
 
 .detail-enter { width: 100%; margin-top: 16px; height: 34px; border: none; border-radius: 6px; background: #e8f1f8; color: #0b1420; font-size: 13px; font-weight: 500; cursor: pointer; }
 .detail-enter:hover { background: #ffffff; }
