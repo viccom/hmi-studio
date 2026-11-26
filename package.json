@@ -18,7 +18,9 @@
     "dompurify": "^3.4.17",
     "echarts": "^6.1.0",
     "element-plus": "^2.14.7",
+    "lodash-es": "^4.18.1",
     "maotu": "0.6.5",
+    "mitt": "^3.0.1",
     "pinia": "^4.1.0",
     "three": "0.187.0",
     "vue": "^3.5.44",
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
+    "@types/lodash-es": "^4.17.12",
     "@types/node": "^26.6.5",
     "@types/three": "0.187.0",
     "@vitejs/plugin-vue": "^6.0.10",
