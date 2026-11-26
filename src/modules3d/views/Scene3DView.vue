@@ -12,14 +12,14 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { useRoute, useRouter } from 'vue-router'
 import * as THREE from 'three'
 import type { Intersection } from 'three'
-import Viewer from '../modules3d/Viewer'
-import Events from '../modules3d/Viewer/Events'
-import { buildScene, animateRuntime, type SceneRuntime } from '../modules3d/scene'
-import { C, PRIO_COLOR } from '../modules3d/geometry'
-import { api } from '../lib/api'
-import { createRtdataStream, type RtPoint } from '../lib/sse'
-import { buildDemoScene, devsOf, isScene3D, type SceneDoc, type SceneNode } from '../lib/scene3d'
-import { DEVICE_BY_ID, faceplateSlug } from '../screen-assets/iot-catalog'
+import Viewer from '../Viewer'
+import Events from '../Viewer/Events'
+import { buildScene, animateRuntime, type SceneRuntime } from '../scene'
+import { C, PRIO_COLOR } from '../geometry'
+import { api } from '../../lib/api'
+import { createRtdataStream, type RtPoint } from '../../lib/sse'
+import { buildDemoScene, devsOf, isScene3D, type SceneDoc, type SceneNode } from '../scene3d'
+import { DEVICE_BY_ID, faceplateSlug } from '../../screen-assets/iot-catalog'
 
 const route = useRoute()
 const router = useRouter()

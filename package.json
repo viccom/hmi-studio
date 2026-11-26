@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "modules:verify": "node scripts/verify-module-removal.mjs",
+    "modules:verify:full": "node scripts/verify-module-removal.mjs --full"
   },
   "dependencies": {
     "@incremark/theme": "^1.0.2",

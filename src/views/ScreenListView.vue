@@ -9,7 +9,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { screensApi } from '../lib/screens'
-import { loadScreenCardsByKind, groupSections, type ScreenCard } from '../lib/screen-list'
+import { loadScreenCards, groupSections, type ScreenCard } from '../lib/screen-list'
+import { optionalNav } from '../modules/registry'
 import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
 import { updateScreenMeta, renameGroup, disbandGroup } from '../lib/screen-group'
 import { registerSymbols } from '../symbols'
@@ -33,7 +34,7 @@ const appearDelay = (sIdx: number, i: number) =>
 async function refresh() {
   loading.value = true
   try {
-    cards.value = await loadScreenCardsByKind('2d', sApi)
+    cards.value = await loadScreenCards(sApi)
   } catch {
     ElMessage.error('画面列表加载失败')
   } finally {
@@ -175,7 +176,8 @@ async function doDisbandGroup(g: string) {
         <span class="topbar-sep" aria-hidden="true"></span>
         <nav class="topnav" aria-label="站点导航">
           <span class="topnav-item active">2D 画面</span>
-          <router-link class="topnav-item" to="/screens3d">3D 画面</router-link>
+          <!-- 可选模块（3D 组态等）贡献的导航项；模块目录删除后此处自动为空 -->
+          <router-link v-for="n in optionalNav" :key="n.to" class="topnav-item" :to="n.to">{{ n.label }}</router-link>
           <a class="topnav-item back-console" href="/">控制台 ↗</a>
         </nav>
       </div>

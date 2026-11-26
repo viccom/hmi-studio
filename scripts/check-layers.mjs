@@ -37,6 +37,8 @@ const LIB_ASSETS_ALLOWLIST = new Set([
 ])
 
 function layerOf(rel) {
+  if (rel.startsWith('src/modules3d/')) return 'module3d'
+  if (rel.startsWith('src/modules/')) return 'modules'
   if (rel.startsWith('src/lib/')) return 'lib'
   if (rel.startsWith('src/screen-assets/')) return 'assets'
   if (rel.startsWith('src/symbols/')) return 'symbols'
@@ -54,7 +56,14 @@ const ALLOWED = {
   symbols: ['symbols'], // symbols 源文件不依赖 lib（kit 自包含）；测试文件放宽见下
   components: ['lib', 'components'],
   views: ['lib', 'components', 'symbols'], // 互不依赖另行特判
-  app: ['lib', 'components', 'symbols', 'views', 'dev', 'assets'],
+  // 可选功能模块（如 3D 组态）：只能向下依赖；**任何其它层都不得依赖它**
+  // （module3d 不出现在上面任何一层的允许集里 = 结构性保证"可整体剔除"）。
+  module3d: ['lib', 'components', 'symbols', 'assets', 'module3d'],
+  // 模块注册表（中性层）：只依赖契约与 lib；用 import.meta.glob 动态发现具体模块，
+  // 故**不**依赖 module3d（glob 不产生静态依赖边）。
+  modules: ['lib', 'modules'],
+  // app 壳只允许依赖中性注册表，**不**允许直接依赖具体模块（否则可整体剔除性被绕过）
+  app: ['lib', 'components', 'symbols', 'views', 'dev', 'assets', 'modules'],
 }
 
 function walk(dir, out = []) {

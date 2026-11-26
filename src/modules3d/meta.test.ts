@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { blankScene3D, screensApi } from './screens'
-import { updateScene3DMeta } from './scene3d-meta'
+import { blankScene3D, sceneStore } from './store'
+import { updateScene3DMeta } from './meta'
 
 /**
  * 3D 场景 meta 改写（2026-11-26）。
@@ -13,10 +13,9 @@ describe('updateScene3DMeta', () => {
     const state = { doc: initial, putArgs: [] as Array<[string, unknown]> }
     const client = {
       list: async () => [state.doc.$schema],
+      getRaw: async (id: string) => ({ id, doc: state.doc, version: 1 }),
       get: async (id: string) => ({ id, doc: state.doc, version: 1 }),
-      getScene: async (id: string) => ({ id, doc: state.doc, version: 1 }),
       put: async (id: string, doc: unknown) => { state.putArgs.push([id, doc]); return { status: 'ok', version: 2 } },
-      putScene: async (id: string, doc: unknown) => { state.putArgs.push([id, doc]); return { status: 'ok', version: 2 } },
       del: async () => undefined,
     }
     return { client, state }
@@ -32,7 +31,7 @@ describe('updateScene3DMeta', () => {
     })
     const { client, state } = fake(doc)
 
-    await updateScene3DMeta(client as unknown as ReturnType<typeof screensApi>, 'sc1', { name: '新名', group: '新组' })
+    await updateScene3DMeta(client as unknown as ReturnType<typeof sceneStore>, 'sc1', { name: '新名', group: '新组' })
 
     const written = state.putArgs[0][1] as typeof doc
     expect(written.meta.name).toBe('新名')
@@ -51,7 +50,7 @@ describe('updateScene3DMeta', () => {
     doc.meta.group = '保留组'
     const { client, state } = fake(doc)
 
-    await updateScene3DMeta(client as unknown as ReturnType<typeof screensApi>, 'sc1', { name: '只改名' })
+    await updateScene3DMeta(client as unknown as ReturnType<typeof sceneStore>, 'sc1', { name: '只改名' })
 
     const written = state.putArgs[0][1] as typeof doc
     expect(written.meta.name).toBe('只改名')
@@ -63,7 +62,7 @@ describe('updateScene3DMeta', () => {
     doc.meta.group = '某组'
     const { client, state } = fake(doc)
 
-    await updateScene3DMeta(client as unknown as ReturnType<typeof screensApi>, 'sc1', { group: '' })
+    await updateScene3DMeta(client as unknown as ReturnType<typeof sceneStore>, 'sc1', { group: '' })
 
     const written = state.putArgs[0][1] as typeof doc
     expect(written.meta.group).toBe('')

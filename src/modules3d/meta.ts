@@ -10,10 +10,10 @@
  * 本模块按 SceneDoc 契约原地改 meta：GET → 改 meta.name/meta.group → PUT 原样回写，
  * 其余字段（nodes/links/$schema）一个字节不动。
  */
-import { screensApi, type ApiClient } from './screens'
+import { sceneStore } from './store'
 import type { SceneDoc } from './scene3d'
 
-type ScreensClient = ApiClient | ReturnType<typeof screensApi>
+type ScreensClient = ReturnType<typeof sceneStore>
 
 /** 3D 场景的 meta 补丁：'' = 清空（移出组 / 清名），缺省 = 不动 */
 export interface Scene3DMetaPatch { name?: string; group?: string }
@@ -26,10 +26,10 @@ export async function updateScene3DMeta(
   id: string,
   patch: Scene3DMetaPatch,
 ): Promise<void> {
-  const s = client as ReturnType<typeof screensApi>
-  const { doc } = await s.getScene(id)
+  const s = client
+  const { doc } = await s.get(id)
   const next: SceneDoc = { ...doc, meta: { ...doc.meta } }
   if (patch.name !== undefined) next.meta.name = patch.name
   if (patch.group !== undefined) next.meta.group = patch.group
-  await s.putScene(id, next)
+  await s.put(id, next)
 }

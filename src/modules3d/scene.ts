@@ -6,7 +6,7 @@
 import * as THREE from 'three'
 import type Viewer from './Viewer'
 import { C, makeArea, makeDevice, makeLink, type AnimatedParts } from './geometry'
-import type { SceneDoc } from '../lib/scene3d'
+import type { SceneDoc } from './scene3d'
 
 /** 单台设备的运行期句柄——数据面按字段直接命中设备，不做「遍历全部设备×全部部件」 */
 export interface DeviceRuntime {

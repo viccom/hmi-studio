@@ -122,7 +122,7 @@ for (const f of fields) pv.setDevicePointByID(f.field, f.value)        // __prio
 - 同一台设备在 2D L1 显示 P1 红，3D 场景里可能毫无反应 → 两条线**状态不一致**，这是用户视角最刺眼的分叉。
 - `__area.*.alarm_count` 这类区域级聚合在 3D 里无法呈现。
 
-**补法**：`modules3d-meteor/alarms.ts` 复用 `createAlarmStream` + `aggregateAlarms` + `syntheticFields`，
+**补法**：`src/modules3d/adapter/alarms.ts` 复用 `createAlarmStream` + `aggregateAlarms` + `syntheticFields`，
 把 `dev_wm1.__prio` 映射到"该 devid 对应对象集合的 Highlight 颜色 + 材质 emissive"，`__area.*` 映射到区域高亮/标签。
 **落在 P0.5（新增），不是 P3。**
 
@@ -195,7 +195,7 @@ for (const f of fields) pv.setDevicePointByID(f.field, f.value)        // __prio
 （源码实证，`@5ca4b84`）。172 个 primitive 每个都很轻，实感不明显；但**一个场景里 20 台 GLTF 模型时是 20 次串行网络+解析**，
 首屏时间会线性劣化。
 
-**补法**：`modules3d-meteor/loader.ts` 复用本仓 `batched(items, 4, ...)`（`screen-list.ts` 已有）并行恢复，
+**补法**：`src/modules3d/adapter/loader.ts` 复用本仓 `batched(items, 4, ...)`（`screen-list.ts` 已有）并行恢复，
 随后统一 `applyGlobalNodeGraph`；需保持 `addObject` 的父子/顺序语义（先建父后建子，或恢复后再 reparent）。
 
 ### T2 bundle 与首屏回归

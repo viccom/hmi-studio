@@ -15,15 +15,19 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { screensApi } from '../lib/screens'
-import { loadScreenCardsByKind, groupSections, type ScreenCard } from '../lib/screen-list'
-import { createScene3D, SLUG_PATTERN } from '../lib/screen-create'
-import { updateScene3DMeta } from '../lib/scene3d-meta'
-import ThemeToggle from '../components/ThemeToggle.vue'
+import { groupSections } from '../../lib/screen-list'
+import { loadSceneCards } from '../list'
+import { createScene3D, SLUG_PATTERN } from '../create'
+import { sceneStore } from '../store'
+import { updateScene3DMeta } from '../meta'
+import ThemeToggle from '../../components/ThemeToggle.vue'
+
+/** 卡片类型由加载函数推导（单一事实源，避免与 list.ts 的导出做双向维护） */
+type CardT = Awaited<ReturnType<typeof loadSceneCards>>[number]
 
 const router = useRouter()
-const sApi = screensApi()
-const cards = ref<ScreenCard[]>([])
+const sApi = sceneStore()
+const cards = ref<CardT[]>([])
 const loading = ref(false)
 
 const sections = computed(() => groupSections(cards.value))
@@ -36,7 +40,7 @@ const appearDelay = (sIdx: number, i: number) =>
 async function refresh() {
   loading.value = true
   try {
-    cards.value = await loadScreenCardsByKind('3d', sApi)
+    cards.value = await loadSceneCards(sApi)
   } catch {
     ElMessage.error('3D 场景列表加载失败')
   } finally {
@@ -74,7 +78,7 @@ function openCreate() {
   dlgVisible.value = true
 }
 
-function openEdit(c: ScreenCard) {
+function openEdit(c: CardT) {
   dlgMode.value = 'edit'
   editId.value = c.id
   form.value = { slug: c.id, name: c.name ?? '', group: c.group ?? '' }

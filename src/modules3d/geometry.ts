@@ -4,7 +4,7 @@
  * 与 threejs-demo 的约定一致：每个构建函数返回对象组，拾取列表单独登记（setRaycasterObjects）。
  */
 import * as THREE from 'three'
-import type { SceneNode } from '../lib/scene3d'
+import type { SceneNode } from './scene3d'
 
 /**
  * 3D 空间层主题令牌——深色科技风（对齐 threejs-demo 参考项目的视觉）。
