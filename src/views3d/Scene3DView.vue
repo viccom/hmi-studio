@@ -116,16 +116,14 @@ function connect(): void {
 
 /** 打开设备的 2D faceplate（mitt click 与顶部下拉共用） */
 function openDevice(devid: string): void {
-  const n = doc.nodes.find((x) => x.id === devid)
   selected.value = devid
   for (const [id, g] of (rt?.devices ?? new Map())) {
     const s = g.userData.sel as THREE.Mesh | undefined
     if (s) s.visible = id === devid
   }
-  const kind = n?.kind ?? ''
-  const target = ['flowmeter', 'pump', 'tank'].includes(kind) ? 'iot-faceplate-water'
-    : kind === 'gasmeter' ? 'iot-faceplate-gas'
-      : kind === 'emeter' ? 'iot-faceplate-power' : 'iot-faceplate-env'
+  // 真实画面是设备级 slug：iot-faceplate-<编号>（dev_wm1 → iot-faceplate-wm1）
+  // 不是类型级 iot-faceplate-env/water——那种 slug 在 rs-iot 里不存在（会"画面加载失败"）
+  const target = `iot-faceplate-${devid.replace(/^dev_/, '')}`
   void router.push(`/view/${target}?dev=${devid}`)
 }
 
