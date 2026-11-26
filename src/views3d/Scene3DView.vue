@@ -108,7 +108,14 @@ function updateLabels(): void {
   if (changed) labels.value = out
 }
 
-/** SSE → 设备几何状态（液位/指针/报警光环） */
+/**
+ * SSE → 设备几何状态（液位/指针/报警光环）
+ *
+ * 性能纪律（实测踩坑）：rs-iot 的 snapshot 每秒推 10 帧 × 154 点 ≈ 1540 点/秒。
+ * 若每点都同步调 viewer.render()，主线程被 WebGL 占满（实测 1722 次渲染/秒、
+ * 每秒耗 958ms），DOM 事件排队 20~50 秒——页面看着"卡死"。
+ * 因此这里只更新数据与几何属性，**渲染统一由 rAF 循环按帧驱动**（至多 60 次/秒）。
+ */
 function applyPoint(p: RtPoint): void {
   const n = typeof p.value === 'number' ? p.value : (p.value == null ? NaN : Number(p.value))
   if (Number.isFinite(n)) values.set(p.field, n)
@@ -122,16 +129,28 @@ function applyPoint(p: RtPoint): void {
       if (halo) { halo.visible = v > 0; (halo.material as THREE.MeshStandardMaterial).color.setHex(PRIO_COLOR[v] ?? C.body) }
     }
   }
-  for (const [id, d] of (rt?.devices ?? new Map())) {
-    const f = doc.nodes.find((x) => x.id === id)?.points?.value
-    if (!f || !values.has(f)) continue
-    const v = values.get(f)!
-    const level = d.userData.level as THREE.Mesh | undefined
-    if (level) { const hh = Math.max(0.1, Math.min(1.8, v / 100 * 1.8)); level.scale.y = hh; level.position.y = 0.6 + hh / 2 }
-    rt?.spinners.forEach((s) => { if (d.getObjectById(s.mesh.id) && s.speed < 0.3) s.speed = 0.08 + Math.min(v, 50) / 200 })
-  }
-  viewer?.render()
-  if (still.value) updateLabels()
+  // 该点所属设备（值字段 → devid 的 O(1) 路由；不匹配就是无关点位，直接跳过）
+  const devid = rt?.devOfField.get(p.field)
+  if (!devid) return
+  const h = rt?.handle.get(devid)
+  if (!h) return
+  const v = values.get(p.field)!
+  if (!Number.isFinite(v)) return
+  if (h.level) { const hh = Math.max(0.1, Math.min(1.8, v / 100 * 1.8)); h.level.scale.y = hh; h.level.position.y = 0.6 + hh / 2 }
+  for (const s of h.spinners) { if (s.speed < 0.3) s.speed = 0.08 + Math.min(v, 50) / 200 }
+  // 静态模式（?still=1，rAF 循环已停）没有按帧渲染，需在此补一帧——但要点多，
+  // 按 200ms 节流（每秒 ≤5 帧），不能每点都渲染。
+  if (still.value) scheduleStillRefresh()
+}
+
+/** 静态模式的补渲染节流（每 200ms 最多一次） */
+let stillTimer = 0
+function scheduleStillRefresh(): void {
+  if (stillTimer) return
+  stillTimer = window.setTimeout(() => {
+    stillTimer = 0
+    viewer?.renderAndNotify()
+  }, 200)
 }
 
 function connect(): void {
@@ -308,8 +327,11 @@ function onKey(e: KeyboardEvent): void {
         :style="{ left: l.x + 'px', top: l.y + 'px' }"
       ><span class="tag">{{ l.text }}</span><span class="val">{{ l.value }}</span></div>
 
-      <!-- 同页设备详情：选中对象的详情栏（threejs-demo 的 Popover 范式，不跳页） -->
-      <aside v-if="detail" ref="panelEl" class="detail-panel" aria-label="设备详情">
+      <!-- 同页设备详情：选中对象的详情栏（threejs-demo 的 Popover 范式，不跳页）
+           @click.stop：面板在 .stage 内，而 .stage 上挂着 raycaster 的 click 监听——
+           不阻止冒泡的话，点「×」会冒到舞台被射线命中面板下方的设备，把刚关掉的
+           面板又选中（表现为「面板关不掉」）。Esc 键不冒泡，所以只有按钮复现。 -->
+      <aside v-if="detail" ref="panelEl" class="detail-panel" aria-label="设备详情" @click.stop>
         <header class="detail-head">
           <div class="detail-ident">
             <span class="detail-tag">{{ detail.tag }}</span>

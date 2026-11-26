@@ -8,8 +8,20 @@ import type Viewer from './Viewer'
 import { C, makeArea, makeDevice, makeLink, type AnimatedParts } from './geometry'
 import type { SceneDoc } from '../lib/scene3d'
 
+/** 单台设备的运行期句柄——数据面按字段直接命中设备，不做「遍历全部设备×全部部件」 */
+export interface DeviceRuntime {
+  /** 该设备自有的指针/叶轮 */
+  spinners: Array<{ mesh: THREE.Object3D; speed: number }>
+  /** 液位网格（储罐） */
+  level?: THREE.Mesh
+}
+
 export interface SceneRuntime {
   devices: Map<string, THREE.Group>
+  /** devid → 运行期句柄 */
+  handle: Map<string, DeviceRuntime>
+  /** 字段（devid.tag）→ devid——SSE 点到设备的 O(1) 路由 */
+  devOfField: Map<string, string>
   anim: AnimatedParts
   spinners: Array<{ mesh: THREE.Object3D; speed: number }>
   pulses: Array<{ mesh: THREE.Mesh; phase: number }>
@@ -20,6 +32,8 @@ export function buildScene(viewer: Viewer, doc: SceneDoc): SceneRuntime {
   const scene = viewer.scene
   const anim: AnimatedParts = { spinners: [], pulses: [] }
   const devices = new Map<string, THREE.Group>()
+  const handle = new Map<string, DeviceRuntime>()
+  const devOfField = new Map<string, string>()
   const pickables: THREE.Object3D[] = []
 
   // 清空上一场景（保留光源；引擎重建时也无所谓）
@@ -50,6 +64,13 @@ export function buildScene(viewer: Viewer, doc: SceneDoc): SceneRuntime {
     devices.set(n.id, g)
     scene.add(g)
     g.traverse((o) => { if (o instanceof THREE.Mesh) pickables.push(o) })
+    // 运行期句柄：值字段 → 设备；指针/液位按设备登记（数据面 O(1) 命中，不再遍历场景）
+    const valueField = n.points?.value
+    handle.set(n.id, {
+      spinners: (g.userData.spinners as DeviceRuntime['spinners']) ?? [],
+      level: g.userData.level as THREE.Mesh | undefined,
+    })
+    if (valueField) devOfField.set(valueField, n.id)
   }
   for (const l of doc.links) {
     const grp = makeLink(
@@ -61,7 +82,7 @@ export function buildScene(viewer: Viewer, doc: SceneDoc): SceneRuntime {
 
   // 关键：拾取只在设备几何上（threejs-demo 同款 setRaycasterObjects）
   viewer.setRaycasterObjects(pickables)
-  return { devices, anim, spinners: anim.spinners, pulses: anim.pulses }
+  return { devices, handle, devOfField, anim, spinners: anim.spinners, pulses: anim.pulses }
 }
 
 /** 动画回调工厂（交给 viewer.addAnimate，每帧统一执行） */

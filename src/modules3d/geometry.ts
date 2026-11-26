@@ -43,6 +43,9 @@ export function makeDevice(n: SceneNode, anim: AnimatedParts): THREE.Group {
   g.position.set(n.pos[0], n.pos[1], n.pos[2])
   g.rotation.y = n.rotY ?? 0
   g.userData.devid = n.devId
+  // 本设备新建的 spinner 起点（结束时切片登记到 userData.spinners）——
+  // 运行时要按设备更新指针转速，若不留归属就得 getObjectById 遍历子树（每点都做会打满主线程）
+  const spinnerBase = anim.spinners.length
 
   switch (n.kind) {
     case 'flowmeter':
@@ -116,6 +119,7 @@ export function makeDevice(n: SceneNode, anim: AnimatedParts): THREE.Group {
   const sel = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.03, 6, 24), matte(C.live, { emissive: C.live, emissiveIntensity: 0.4 }))
   sel.rotation.x = -Math.PI / 2; sel.position.y = 0.22; sel.visible = false; g.add(sel)
   g.userData.sel = sel
+  g.userData.spinners = anim.spinners.slice(spinnerBase)
   g.scale.setScalar(2)
   return g
 }
