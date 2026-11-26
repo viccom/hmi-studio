@@ -35,6 +35,20 @@ export const IOT_FACEPLATES = [
   'iot-faceplate-env1', 'iot-faceplate-pt1',
 ] as const
 
+// ---- 3D 场景（P0.5，2026-11-26）：独立资源族 `scenes`，保护清单也独立 ----
+// 为什么分两族：3D 场景存 `/api/v1/scenes`（cap 1 MiB），2D 存 `/api/v1/screens`（128 KiB）。
+// 删除闸/清扫守卫按族校验——用 `isProtectedSlug` 判 3D 会漏（它只看 screens）。
+/** 智慧工厂车间（172 对象，迁移自 Meteor DEMO） */
+export const IOT_WORKSHOP_3D = 'iot-workshop-3d'
+/** 机器人展厅（43 对象，3 台骨骼动画 GLTF） */
+export const IOT_ROBOT_HALL_3D = 'iot-robot-hall-3d'
+/** v1 程序化 3D 场景（既有长期资产；此前漏登记，属既有缺陷，本次补上） */
+export const IOT_PLANT_3D = 'iot-plant-3d'
+
+export const PROTECTED_SCENE_SLUGS = [
+  IOT_PLANT_3D, IOT_WORKSHOP_3D, IOT_ROBOT_HALL_3D,
+] as const
+
 export const PROTECTED_SLUGS = [
   DEMO_A, DEMO_B, DEMO_CATALOG,
   HOME_E, HOME_W, HOME_G,
@@ -42,10 +56,18 @@ export const PROTECTED_SLUGS = [
   HOME_E_FACEPLATE, BI_STATION,
   IOT_L1, IOT_WATER, IOT_POWER, IOT_GAS, IOT_ENV, IOT_BI_STATION,
   ...IOT_FACEPLATES,
+  // 3D 场景与 2D 画面同处一张保护总表：删除闸只需问"这个 slug 能不能删"，
+  // 不必先判族（族分离是存储层的事，保护是运维语义）。
+  ...PROTECTED_SCENE_SLUGS,
 ] as const
 
 export type ProtectedSlug = (typeof PROTECTED_SLUGS)[number]
 
 export function isProtectedSlug(slug: string): boolean {
   return (PROTECTED_SLUGS as readonly string[]).includes(slug)
+}
+
+/** 3D 场景保护判定（删除闸在 scenes 族用这个；2D 用 isProtectedSlug） */
+export function isProtectedSceneSlug(slug: string): boolean {
+  return (PROTECTED_SCENE_SLUGS as readonly string[]).includes(slug)
 }

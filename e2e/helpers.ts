@@ -47,6 +47,26 @@ export async function rsiotPutScreen(id: string, doc: unknown): Promise<void> {
   if (!res.ok) throw new Error(`rsiotPutScreen: rs-iot ${res.status}`)
 }
 
+/** 3D 场景播种（`scenes` 资源族，cap 1 MiB——与 screens 分开，P0.5） */
+export async function rsiotPutScene(id: string, doc: unknown): Promise<void> {
+  const res = await authedFetch(`/api/v1/scenes/${id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(doc),
+  })
+  if (!res.ok) throw new Error(`rsiotPutScene: rs-iot ${res.status}`)
+}
+
+/** 直接打 rs-iot 取 3D 场景 doc */
+export async function rsiotGetScene(id: string): Promise<{ id: string; doc: Record<string, unknown>; version: number }> {
+  const res = await authedFetch(`/api/v1/scenes/${id}`)
+  if (!res.ok) throw new Error(`rsiotGetScene: rs-iot ${res.status}`)
+  return res.json()
+}
+
+/** 删 3D 场景（测试自洁；DELETE 幂等） */
+export async function rsiotDeleteScene(id: string): Promise<void> {
+  await authedFetch(`/api/v1/scenes/${id}`, { method: 'DELETE' })
+}
+
 /** 直接打 rs-iot 取画面 doc（{id,doc,version}——version 为 P0 版本号） */
 export async function rsiotGetScreen(id: string): Promise<{ id: string; doc: Record<string, unknown>; version: number }> {
   const res = await authedFetch(`/api/v1/screens/${id}`)
