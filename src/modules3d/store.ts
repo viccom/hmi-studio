@@ -12,6 +12,7 @@
  * 版本/乐观锁/回滚/级联删除/判重由 rs-iot 的 MetaKind 机制提供，与 screens 同源。
  */
 import { api } from '../lib/api'
+import type { ScreenVersionDoc, ScreenVersionMeta } from '../lib/screens'
 import type { SceneDoc } from './scene3d'
 
 /** 与 lib/screens 的 ApiClient 同一物（api() 的返回类型） */
@@ -43,6 +44,18 @@ export function sceneStore(client: HttpClient = api()) {
         doc,
       ) as Promise<PutResult>,
     del: (id: string): Promise<unknown> => client.del(`${BASE}/${id}`),
+    // 版本面（与 screensApi 同形；VersionPanel 泛化后可直接复用）
+    versions: async (id: string): Promise<ScreenVersionMeta[]> =>
+      ((await client.get(`${BASE}/${id}/versions`)) as { versions: ScreenVersionMeta[] }).versions,
+    versionDoc: (id: string, seq: number): Promise<ScreenVersionDoc> =>
+      client.get(`${BASE}/${id}/versions/${seq}`) as Promise<ScreenVersionDoc>,
+    rollback: (id: string, toVersion: number, ifVersion?: number): Promise<PutResult> =>
+      client.post(
+        ifVersion !== undefined
+          ? `${BASE}/${id}/rollback?if_version=${ifVersion}`
+          : `${BASE}/${id}/rollback`,
+        { to_version: toVersion },
+      ) as Promise<PutResult>,
   }
 }
 

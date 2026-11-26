@@ -31,14 +31,37 @@ import { ScenesDbManager, ConflictError } from '../adapter/store-adapter'
 import { sceneStore } from '../store'
 import { getAuthedUser, logout } from '../../lib/auth'
 import ThemeToggle from '../../components/ThemeToggle.vue'
+import BindingPanel from '../components/BindingPanel.vue'
+import EventPanel from '../components/EventPanel.vue'
+import VersionPanel from '../../components/VersionPanel.vue'
+import { useEditorStore } from '../vendor/meteor3d/editor/stores/editorStore.js'
+import type { SceneDoc } from '../scene3d'
 
 const route = useRoute()
 const router = useRouter()
 const sceneId = computed(() => String(route.params.id ?? ''))
 const meta = ref<{ name?: string; group?: string }>({})
 const user = getAuthedUser()
-const activeTab = ref<'properties' | 'material' | 'animation' | 'settings'>('properties')
+const activeTab = ref<'properties' | 'material' | 'animation' | 'settings' | 'binding' | 'event'>('properties')
 const store = sceneStore()
+
+/** 当前场景文档（绑定/事件面板读写它；保存时与上游 objects 合并） */
+const doc = ref<SceneDoc | null>(null)
+/** 上游 store 的选中对象（响应式：面板据此显示"绑定对象"） */
+const editorStore = useEditorStore()
+const selectedBid = computed(() => (editorStore.selectedObject as { userData?: { bid?: string } } | null)?.userData?.bid ?? '')
+const selectedName = computed(() => (editorStore.selectedObject as { name?: string } | null)?.name ?? '')
+const hasAnimation = computed(() => {
+  const o = editorStore.selectedObject as { animations?: unknown[] } | null
+  return Array.isArray(o?.animations) && o.animations.length > 0
+})
+
+/** 脏标记：绑定/事件改动后置脏（自动保存只保存脏场景；上游定时器已由 PATCH-03 关闭） */
+const dirty = ref(false)
+const verDrawer = ref(false)
+/** 自动保存定时器（脏才保存；409 后停） */
+let autoTimer = 0
+const AUTO_SAVE_MS = 15_000
 
 /** 把适配器与自动保存策略挂到模块约定位置（Viewport/Toolbar 读它，见 PATCHES PATCH-01/03） */
 function installModuleBridge(): ScenesDbManager {
@@ -55,29 +78,70 @@ function installModuleBridge(): ScenesDbManager {
 // **必须在 setup 同步执行**：Vue 子组件的 onMounted 先于父组件，
 // Viewport 挂载时就要读 window.__hmi3d.createDbManager，放到 onMounted 里会晚一步
 // （实测后果：上游 DBManager 打 /scene/load → 404，编辑器空场景）。
-installModuleBridge()  // 早于子组件挂载（见上）
+const db: ScenesDbManager = installModuleBridge()  // 早于子组件挂载（见上）；同时供 saveNow/自动保存使用
 
 onMounted(async () => {
   // 读一次元信息（标题/分组）——saveScene 时由适配器补齐，不会因这里读不到而丢
   try {
-    const { doc } = await store.get(sceneId.value)
-    meta.value = { name: doc.meta?.name, group: doc.meta?.group }
+    const r = await store.get(sceneId.value)
+    doc.value = r.doc
+    meta.value = { name: r.doc.meta?.name, group: r.doc.meta?.group }
   } catch (e) {
     ElMessage.error(`场景读取失败：${(e as Error).message}`)
   }
+  // 自动保存：只在脏时保存；适配器进入冲突态后停（方案 §5.3）
+  autoTimer = window.setInterval(() => {
+    if (!dirty.value || !doc.value) return
+    if (db?.hasConflict()) { dirty.value = false; return } // 已冲突：不再尝试，等用户处置
+    void saveNow(true)
+  }, AUTO_SAVE_MS)
+
   // 乐观锁冲突全局提示（适配器抛 ConflictError）
   const onUnhandled = (ev: PromiseRejectionEvent) => {
     if (ev.reason instanceof ConflictError) {
-      ElMessage.error(ev.reason.message)
+      ElMessage({
+        type: 'error',
+        duration: 0,
+        showClose: true,
+        message: `${ev.reason.message}。自动保存已停止——请刷新页面加载他人修改，或另存为新场景。`,
+      })
       ev.preventDefault()
     }
   }
   window.addEventListener('unhandledrejection', onUnhandled)
-  onBeforeUnmount(() => window.removeEventListener('unhandledrejection', onUnhandled))
+  onBeforeUnmount(() => {
+    window.removeEventListener('unhandledrejection', onUnhandled)
+    if (autoTimer) { window.clearInterval(autoTimer); autoTimer = 0 }
+  })
 })
 
 // 切场景 = 重挂 Viewport（上游按 route.params 初始化，不重挂会沿用旧 sceneId）
 watch(sceneId, () => { /* 路由变化时由 router-view :key 重挂（见模板） */ })
+
+/** 手动/自动保存：把最新语义层交给适配器，再触发上游保存 */
+async function saveNow(silent = false): Promise<void> {
+  if (!doc.value) return
+  // 1) 语义层先入适配器（bindings/events 上游不认识，必须由我们合并）
+  db.setSemantic(doc.value)
+  // 2) 触发上游 Toolbar 的保存（它负责序列化 objects/scene → 调适配器 saveScene）
+  //    注意：不能用"找含保存字样的按钮"——会命中壳层自己这个按钮（死循环）。
+  const toolbarBtn = document.querySelector('.edit3d-toolbar button[class*=save], .edit3d-toolbar .el-button--primary') as HTMLElement | null
+  const anyBtn = toolbarBtn ?? [...document.querySelectorAll('.edit3d-toolbar button')].find((b) => b.textContent?.includes('保存')) as HTMLElement | undefined
+  anyBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  dirty.value = false
+  if (!silent) ElMessage.success('已保存')
+}
+
+/** 面板改动写回本地 doc 并置脏（不立即保存——由手动保存/自动保存决定时机） */
+function onDocUpdate(next: SceneDoc): void {
+  doc.value = next
+  dirty.value = true
+}
+
+function onRollbackDone(): void {
+  // 回滚后重新加载编辑器（上游 SceneManager 已按旧文档建好对象图，重挂最干净）
+  window.location.reload()
+}
 
 function doLogout(): void {
   logout()
@@ -94,7 +158,9 @@ function doLogout(): void {
       <span class="scene-slug">{{ sceneId }}</span>
       <el-tag v-if="meta.group" size="small" type="info">{{ meta.group }}</el-tag>
       <span class="topbar-right">
-        <el-tag size="small" type="warning" effect="plain" title="P0 最小闭环：自动保存已关闭，请手动保存">P0</el-tag>
+        <el-tag v-if="dirty" size="small" type="warning" effect="plain">未保存</el-tag>
+        <el-button size="small" type="primary" data-testid="save3d-btn" @click="saveNow()">保存</el-button>
+        <el-button size="small" text data-testid="version-btn" @click="verDrawer = true">版本</el-button>
         <span v-if="user" class="topbar-user">{{ user.user_id }}</span>
         <el-button size="small" text @click="doLogout">退出</el-button>
         <ThemeToggle />
@@ -124,6 +190,8 @@ function doLogout(): void {
               { id: 'properties', label: '属性' },
               { id: 'material', label: '材质' },
               { id: 'animation', label: '动画' },
+              { id: 'binding', label: '绑定' },
+              { id: 'event', label: '事件' },
               { id: 'settings', label: '场景' },
             ] as const)"
             :key="t.id"
@@ -137,9 +205,26 @@ function doLogout(): void {
           <MaterialPanel v-show="activeTab === 'material'" />
           <AnimationPanel v-show="activeTab === 'animation'" />
           <SceneSettingsPanel v-show="activeTab === 'settings'" />
+          <BindingPanel
+            v-if="doc"
+            v-show="activeTab === 'binding'"
+            :doc="doc" :selected-bid="selectedBid" :selected-name="selectedName"
+            :has-animation="hasAnimation"
+            @update-doc="onDocUpdate"
+          />
+          <EventPanel
+            v-if="doc"
+            v-show="activeTab === 'event'"
+            :doc="doc" :selected-bid="selectedBid" :selected-name="selectedName"
+            @update-doc="onDocUpdate"
+          />
         </div>
       </aside>
     </div>
+
+    <el-drawer v-model="verDrawer" title="版本历史" size="360px">
+      <VersionPanel :slug="sceneId" :client="store" @rollback-done="onRollbackDone" />
+    </el-drawer>
   </div>
 </template>
 

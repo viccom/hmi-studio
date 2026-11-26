@@ -123,6 +123,70 @@ describe('保存保真：上游不传的字段必须保留', () => {
   })
 })
 
+describe('语义层保真：bindings/events 不被上游载荷抹掉', () => {
+  /**
+   * 实测缺陷（2026-11-26，P2 绑定面板端到端测出）：
+   * 在面板里加一条绑定 → 保存 → 库里 bindings 变成 **空数组**（原有那条也丢了）。
+   * 根因：上游 saveScene 载荷完全没有 bindings/events 字段，`upstreamToDoc` 产出
+   * `bindings: []`，合并时只保 scene 不保语义层 → 被空数组覆盖。
+   * 修法：语义层以 `setSemantic` 缓存的为准（编辑器持有唯一真相），载荷永远不覆盖。
+   */
+  const loaded = {
+    $schema: 'agent-hmi.scene3d/1',
+    meta: { name: 'x', group: '', unit_m: 1, home: { pos: [0, 0, 0], target: [0, 0, 0] } },
+    nodes: [], links: [],
+    objects: [{ bid: 'b1' }],
+    scene: { lightingConfig: { enabled: true } },
+    bindings: [{ id: 'old', targetBid: 'b1', field: 'dev_a.x', devId: 'dev_a', kind: 'color', config: {} }],
+    events: [{ id: 'e_old', on: { type: 'click', targetBid: 'b1' }, do: { type: 'focus', targetBid: 'b1' } }],
+  }
+
+  function dbWith() {
+    const puts: unknown[] = []
+    const db = new ScenesDbManager()
+    ;(db as unknown as { store: unknown }).store = {
+      get: async () => ({ doc: loaded, version: 1 }),
+      put: async (_id: string, doc: unknown) => { puts.push(doc); return { status: 'ok', version: 2 } },
+    }
+    return { db, puts }
+  }
+
+  it('未调 setSemantic 时，加载到的语义层在保存后仍在', async () => {
+    const { db, puts } = dbWith()
+    await db.getSceneData('x')
+    await db.saveScene({ id: 'x', objects: [{ bid: 'b1' }] })
+    const saved = puts[0] as { bindings: unknown[]; events: unknown[] }
+    expect(saved.bindings).toHaveLength(1)
+    expect(saved.events).toHaveLength(1)
+  })
+
+  it('setSemantic 后的语义层覆盖旧值（面板新增的绑定能落库）', async () => {
+    const { db, puts } = dbWith()
+    await db.getSceneData('x')
+    const withNew = {
+      ...loaded,
+      bindings: [
+        ...loaded.bindings,
+        { id: 'new', targetBid: 'b1', field: 'dev_b.y', devId: 'dev_b', kind: 'label', config: {} },
+      ],
+    }
+    db.setSemantic(withNew as never)
+    await db.saveScene({ id: 'x', objects: [{ bid: 'b1' }] })
+    const saved = puts[0] as { bindings: Array<{ id: string }> }
+    expect(saved.bindings.map((b) => b.id)).toEqual(['old', 'new'])
+  })
+
+  it('语义层为空数组是**有意的清空**，不该被旧值还原', async () => {
+    const { db, puts } = dbWith()
+    await db.getSceneData('x')
+    db.setSemantic({ ...loaded, bindings: [], events: [] } as never)
+    await db.saveScene({ id: 'x', objects: [{ bid: 'b1' }] })
+    const saved = puts[0] as { bindings: unknown[]; events: unknown[] }
+    expect(saved.bindings).toEqual([])
+    expect(saved.events).toEqual([])
+  })
+})
+
 describe('ScenesDbManager 乐观锁', () => {
   function fake(putImpl: () => Promise<unknown>) {
     const db = new ScenesDbManager()

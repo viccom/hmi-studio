@@ -61,12 +61,38 @@ export class ScenesDbManager {
    * 与 nodeGraph（它自己算了 nodeGraph 却没放进载荷），不合并就会保存一次丢一次。
    */
   private lastDoc: SceneDoc | null = null
+  /** 409 冲突标记：置位后编辑器停掉自动保存（方案 §5.3） */
+  private conflict = false
+  /**
+   * 语义层（bindings/events/meta）的唯一真相：由编辑器持有并 setSemantic 写入。
+   * 上游 saveScene 载荷完全没有这两个字段，若从载荷重建会得到空数组 → 保存即清空
+   * （实测：面板加了绑定，保存后库里 bindings=[]）。故这里独立保存、保存时优先用它。
+   */
+  private semantic: Pick<SceneDoc, 'bindings' | 'events' | 'meta'> | null = null
   private store = sceneStore()
 
   /** 兼容上游 `new DBManager({apiBaseUrl})` 的构造形状（apiBaseUrl 由 sceneStore 内的 api() 决定） */
   constructor(_opts?: { apiBaseUrl?: string }) { /* noop */ }
 
   async init(): Promise<void> { /* 上游为占位（API 模式无连接态） */ }
+
+  /**
+   * 更新"语义层"（bindings/events/meta）——绑定/事件面板改动后由编辑器调用。
+   *
+   * 上游 saveScene 完全不认识 bindings/events（它只序列化 objects + 场景配置），
+   * 所以语义层必须由编辑器单独持有、在保存时合并进文档。这里更新缓存，
+   * 下一次 saveScene 的合并就会带上最新语义层。
+   */
+  setSemantic(d: SceneDoc): void {
+    this.semantic = { bindings: d.bindings ?? [], events: d.events ?? [], meta: d.meta }
+    this.lastDoc = { ...(this.lastDoc ?? d), ...d }
+  }
+
+  /** 当前是否处于"乐观锁冲突"状态（UI 据此停掉自动保存，避免反复覆盖） */
+  hasConflict(): boolean { return this.conflict }
+
+  /** 用户处置冲突后恢复（重新加载或另存为） */
+  clearConflict(): void { this.conflict = false }
 
   getVersion(): number { return this.version }
 
@@ -75,6 +101,7 @@ export class ScenesDbManager {
     const { doc, version } = await this.store.get(docIdOf(sceneId))
     this.version = version
     this.lastDoc = doc
+    this.semantic = { bindings: doc.bindings ?? [], events: doc.events ?? [], meta: doc.meta }
     return docToUpstream(doc)
   }
 
@@ -87,8 +114,19 @@ export class ScenesDbManager {
     // **不传 initialView，也不传 nodeGraph**（PersistenceManager 算了 nodeGraph 但没放进载荷）。
     // 实测后果：不合并的话保存一次就把 nodeGraph（展厅 292 条）与初始视角抹掉。
     // 取舍：本次载荷里有的字段用新值；没有的保留旧值（宁可让 nodeGraph 略旧，也不能丢）。
+    // 合并三部分：
+    //   scene  —— 旧值打底 + 载荷覆盖（载荷不传 initialView/nodeGraph，见上）
+    //   语义层 —— **以 semantic 为准**（载荷没有 bindings/events，用载荷会清空）
+    //   meta    —— 语义层优先，否则载荷的 name/id
+    const sem = this.semantic
     const doc = this.lastDoc
-      ? ({ ...next, scene: { ...(this.lastDoc.scene ?? {}), ...(next.scene ?? {}) } } as SceneDoc)
+      ? ({
+          ...next,
+          scene: { ...(this.lastDoc.scene ?? {}), ...(next.scene ?? {}) },
+          meta: sem?.meta ?? next.meta,
+          bindings: sem?.bindings ?? this.lastDoc.bindings ?? next.bindings,
+          events: sem?.events ?? this.lastDoc.events ?? next.events,
+        } as SceneDoc)
       : next
     if (!isScene3D(doc)) throw new Error('saveScene: 适配器产出的不是 3D 文档（内部错误）')
     try {
@@ -100,6 +138,7 @@ export class ScenesDbManager {
       if (status === 409) {
         const cur = Number((e as { body?: { current_version?: number } }).body?.current_version ?? 0)
         this.version = cur
+        this.conflict = true // 停自动保存，等用户处置（否则会反复覆盖他人修改）
         throw new ConflictError(cur)
       }
       throw e
