@@ -32,6 +32,7 @@
 - **图元与插件体系——分类与开发指南（AI Agents 开发图元入口，自包含）**：docs/widgets-plugins-guide.md
 - **工业 HMI 组态规范（HP-HMI/ISA-101 落地）**：docs/hmi-style-guide.md；工业画面集计划：docs/plans/2026-11-24-iot-scada-screens-plan.md
 - **3D HMI 空间层设计（独立于 2D：独立场景文档/路由/单一 WebGL 上下文）**：docs/plans/2026-11-26-3d-hmi-design.md
+- **3D 组态编辑器实施方案**（Meteor3DEditor 内核，2D/3D 两条平行功能线）：docs/plans/2026-11-26-3d-editor-meteor-implementation-plan.md；系统级审查：docs/plans/2026-11-26-3d-editor-plan-review.md（15 层对照矩阵，修订结论见方案 §13）
 - maotu 图元开发宪法：docs/maotu-symbol-development-guide.md；maotu 实证映射：docs/maotu-rsiot-architecture.md
 - BI 大屏内容体系：docs/plans/2026-10-29-bi-monitoring-dashboard-design.md
 - AI 助手与扩展体系设计：docs/plans/2026-10-30-ai-assistant-and-extension-system-design.md

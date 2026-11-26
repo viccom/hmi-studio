@@ -2,8 +2,9 @@
 
 > 日期：2026-11-26 · 状态：**方案待批准**（未实施）
 > 取代：`2026-11-26-3d-hmi-editor-design.md`（该文档的选型结论已被本文档取代；其 §12 的实测评估仍是本文档的证据来源，正文 §3~§11 基于 three-editor-cores，**不再有效**）
+> **系统级审查**：`2026-11-26-3d-editor-plan-review.md`（15 层平行线对照矩阵、存储资源族决策、7 项缺口）→ 修订结论见本文 **§13（生效）**
 > 关联：`2026-11-26-3d-hmi-design.md`（3D 空间层总设计）、`docs/hmi-style-guide.md` §0/§2
-> 上游基线：`z2586300277/threejs-editor` 同作者的 `nikonikoCW/Meteor3DEditor` @ commit **`5ca4b84`**（2026-11-11，MIT）
+> 上游基线：`nikonikoCW/Meteor3DEditor` @ commit **`5ca4b84`**（2026-11-11，MIT）
 
 ---
 
@@ -24,7 +25,7 @@
 
 | # | 约束 | 实测 | 方案处置 |
 |---|---|---|---|
-| C1 | rs-iot 单文档上限 **128 KiB** | ① 172 对象场景**原样存储 139 KiB，超限**；② 上游的 `nodeGraph`+`nodeBindings` 更重：**仅 3 台 GLTF 就 189 KiB**（105+84），全量存 217 KiB | 适配层**必须**做两件事：(a) 精简序列化（去 Mongo 键/材质默认值/重复 id）→ 172 对象场景 **68.4 KiB**（均 407 B/对象，上限约 **311 个**）；(b) **不保存 nodeGraph/nodeBindings**（否则含模型的场景必超限）。超限走 §6.3 |
+| C1 | rs-iot 单文档上限 **128 KiB** | ① 172 对象场景**原样存储 139 KiB，超限**；② 上游的 `nodeGraph`+`nodeBindings` 更重：**仅 3 台 GLTF 就 189 KiB**（105+84），全量存 217 KiB | 适配层**必须**做两件事：(a) 精简序列化（去 Mongo 键/材质默认值/重复 id）→ 172 对象场景 **68.4 KiB**（均 407 B/对象，上限约 **311 个**）；(b) **不保存 nodeGraph/nodeBindings**（否则含模型的场景必超限）。超限走 §6.3。**注：若采纳 §13.2 的 `scenes` 独立资源族（cap 1 MiB），本条降为优化项——compact 变为可选** |
 | C2 | 上游有 **10 秒自动保存且无并发保护** | 实测旧标签页每 10s 覆盖服务端数据 | 接 rs-iot `if_version` 乐观锁；自动保存改为"脏且静默"才触发，冲突走 UI 提示（§5.3） |
 | C3 | 上游缺陷：**实测确认 3 项**，另 1 项曾被误判已更正 | 见 §8 | 需进 vendor 源码的补丁仅 1 处（D4 自动保存）；其余在适配层规避或不适用 |
 
@@ -94,18 +95,23 @@ hmi-studio/src/
 └─ router.ts                        ★ 新增 /edit3d/:id；/view3d/:id 按 $schema 分派 v1/v2
 ```
 
-**不引入的东西**：`meteor3d-server`（Express+MongoDB+Redis）、`asset-manager` 包、`3d-tiles-renderer`/`@sparkjsdev/spark`（GIS 瓦片与特效，工业场景不需要；vendor 时按需裁剪，见 Q5）。文档存储一律走 **rs-iot `screen:*`**。
+**不引入的东西**：`meteor3d-server`（Express+MongoDB+Redis）、`asset-manager` 包、`@sparkjsdev/spark`（动态 import，不装则泼溅不可用）。
+> `3d-tiles-renderer` **必须安装**：core 顶层静态 import（`SceneManager`/`PersistenceManager` 耦合 GIS/tiles，实测不可裁，§6.2）——用 `manualChunks` 隔离为独立 chunk。
+文档存储走 **rs-iot 元数据资源族**：建议新增 `scene:*`（Q1a），回退方案为 `screen:*` + compact。
 
 ### 3.1 数据流
 
 ```
 编辑：/edit3d/:id ──getScene──▶ scene3d/2 doc ──restoreScene──▶ Meteor 编辑器
                                    ▲                                  │ saveScene
-                                   └── putScene(精简, if_version) ◀────┘
+                                   └── putScene(if_version；精简可选) ◀──┘
 
 运行：/view3d/:id ──getScene──▶ $schema 判别 ──┬─ v1 → Scene3DView（现有）
                                               └─ v2 → Scene3DRunView ─ restoreScene(doc,{syncEditorStore:false})
-                                                        └─ createRtdataStream(devs) ─onPoint─▶ bindings.apply(bid, value)
+                                                        ├─ createRtdataStream(boundDevsOf) ─▶ bindings.apply
+                                                        ├─ createAlarmStream ─▶ syntheticFields ─▶ prioMap ─▶ Highlight
+                                                        ├─ installBridge(view) ─▶ 事件 command 下发
+                                                        └─ setAgentPageScreenInfo ─▶ AI 页面上下文
 ```
 
 ---
@@ -134,7 +140,9 @@ interface SceneDocV2 {
 interface SceneBinding {
   id: string                 // 稳定 id
   targetBid: string          // 指向 objects[].bid（Meteor 的持久节点标识）
-  field: string              // rs-iot 点位：'<devid>.<tag>'
+  field: string              // rs-iot 点位：'<devid>.<tag>'，判定规则复用 binds.ts 的 isSyntheticField
+  /** 冗余记录 devid（field 前段解析得到），供命令下发反查目标设备（§13.3） */
+  devId: string
   kind: 'color' | 'visible' | 'label' | 'emissive' | 'animationSpeed'
   /** kind 的参数，例如 color: 阈值→颜色表；label: 模板与单位；visible: 真值映射 */
   config: Record<string, unknown>
@@ -144,7 +152,8 @@ interface SceneEventRule {
   id: string
   on: { type: 'click'; targetBid?: string }      // targetBid 省略 = 任意对象
   do: (
-    | { type: 'navigate'; slug: string; dev?: string }        // → 2D 画面（faceplate 等）
+    | { type: 'navigate'; slug: string; dev?: string }        // → 2D 画面（faceplate 等），复用 nav.ts parseNavTarget
+    | { type: 'command'; targetBid: string; cmd: string; params?: Record<string, unknown> } // 走 bridge（§13.3）
     | { type: 'focus'; targetBid: string }
     | { type: 'setCamera'; view: { position: Vec3; target: Vec3 } }
   )
@@ -166,12 +175,17 @@ interface SceneEventRule {
 
 ### 5.1 存储适配（`store-adapter.ts` + `compact.ts`）
 
-替换 Meteor `DBManager` 的两个方法：
+替换 Meteor `DBManager` 的两个方法。**客户端按 Q1a 决策二选一**：
+
+| 资源族 | 客户端 |
+|---|---|
+| 采纳 `scenes`（推荐） | `scenesApi.getScene/putScene/versions/rollback`（结构与 `screensApi` 同形，共用 `api()` 与 401 链） |
+| 回退 `screens` | `screensApi.getScene/putScene`（已落地），且 compact **必做** |
 
 | Meteor 原方法 | 适配实现 |
 |---|---|
-| `getSceneData(sceneId)` → `{objects, metadata}` | `screensApi.getScene(id)` → v2 doc → `expand()` 还原默认值 → `{objects, metadata:{lightingConfig, initialView, …}}` |
-| `saveScene({objects, metadata,…})` | `compact(objects)` + 合并 doc 的 `bindings/events/meta` → `screensApi.putScene(id, doc, version)`；**版本号由适配层持有**（加载时取、保存时传、成功后更新） |
+| `getSceneData(sceneId)` → `{objects, metadata}` | `getScene(id)` → v2 doc → `expand()` 还原默认值 → `{objects, metadata:{lightingConfig, initialView, …}}` |
+| `saveScene({objects, metadata,…})` | `compact(objects)`（采纳 scenes 时可选）+ 合并 `bindings/events/meta` → `putScene(id, doc, version)`；**版本号由适配层持有**（加载时取、保存时传、成功后更新） |
 
 **精简规则（compact，C1 的核心，纯函数可单测）**
 - 删除：`_id/__v/sceneId/createdAt/updatedAt`（Mongo 键，本就不该进 rs-iot）
@@ -201,17 +215,30 @@ interface SceneEventRule {
 
 ### 5.5 运行页（`Scene3DRunView.vue`）
 
+运行页必须接 **5 条与 2D 同源的数据通路**（`ViewView.vue` 的真实结构，见 §13.1）。只接第 1 条就不是平行线：
+
 ```
 getScene(id) → doc(v2)
 sceneManager = new SceneManager(canvas)
 persistenceManager = new PersistenceManager(sceneManager, null, null, {dracoPath, ktx2Path})   // 不传 store
-await persistenceManager.restoreScene(doc, {syncEditorStore:false, notifyFailures:false, serverUrl})
-view = sceneManager.initialView（有则 setView，无则 fitCameraToScene）
-stream = createRtdataStream({ devs: bindFieldsOf(doc), onPoint: p => bindings.apply(sceneManager, p) })
-sceneManager.on('scene-click', e => events.handle(e, { router }))
+await restoreAll(doc)            // 并行恢复（batched cap 4），见 §13.4 T1
+view = doc.scene.initialView（有则 setView，无则 fitCameraToScene）
+
+① 实时值   stream = createRtdataStream({ devs: boundDevsOf(doc), onPoint: p => bindings.apply(sceneManager, p) })
+           // boundDevsOf = bindings[].field ∪ events 引用点，口径同 binds.ts collectBinds；不是"场景内所有设备"
+② 告警     alarmStream = createAlarmStream({...}) → AlarmStore
+           onAlarmChange: agg = aggregateAlarms(store.active())
+                          syntheticFields(agg, devs, qualityOfStream(state), fields)
+                          → prioMap: devId → prio  → highlight.apply(sceneManager, prioMap)
+③ 合成点   __area.*.alarm_count / __sys.quality → 场景级 HUD（Labels 或 DOM 角标），与 2D 口径一致
+④ 命令     bridge = installBridge({ mode: 'view', router })   // 与 ViewView 同款
+           事件 command → bridge.send(devId, cmd, params)      // devId 来自 SceneBinding.devId
+⑤ 上下文   setAgentPageScreenInfo({ slug, name, group })       // AI 页面上下文与 2D 对齐
 ```
 
-`bindings.apply` 按 `kind` 落到 Meteor 运行时能力：`color`/`emissive` → 材质；`visible` → 布尔映射；`label` → `LabelManager.createLabel/updateLabel`（悬浮数值标签）；`animationSpeed` → `AnimationManager.setAnimationSpeed`；告警态额外调 `HighlightManager.enable`。
+`bindings.apply` 按 `kind` 落到 Meteor 运行时能力：`color`/`emissive` → 材质；`visible` → 布尔映射；
+`label` → `LabelManager.createLabel/updateLabel`；`animationSpeed` → `AnimationManager.setAnimationSpeed`。
+**告警不走 bindings**，而是②的 `prioMap` → `HighlightManager`/`OutlineManager`（与 2D 的 `__prio` 注入语义等价）。
 
 ---
 
@@ -276,6 +303,9 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 | R9 | GLB/贴图资产托管位置未定（Q3） | 低 | P0 先用 rs-iot 静态目录/gateway 静态机制；draco/ktx2 解码器需自托管（vendor `public/draco`） |
 | R10 | 编辑器 UI 与 hmi-studio 风格不一致（原生 input vs element-plus） | 低 | P2 统一主题变量（`--el-*`）；不重写面板 |
 | R11 | 现有 v1 运行页与 v2 并存增加维护面 | 低 | 明确 v1 冻结（只修 bug）；新场景一律 v2 |
+| **R12** | **场景恢复串行**（上游 `restoreScene` 逐个 `await`）：GLTF 多时首屏线性劣化 | 中 | 适配层 `restoreAll` 用 `batched(cap 4)` 并行，随后统一节点图/父子排序（§13.4 T1） |
+| **R13** | **bundle 增量**（tiles/postprocessing/vendor ≈ +1.5~2.5 MB）拖慢 2D 首屏 | 中 | `/edit3d`、v2 运行页路由级懒加载 + `manualChunks` 隔离；验收含"2D 首屏不回归"（验收 19） |
+| **R14** | **vendor 长期可持续性**（14k 行 + 补丁，上游单人维护） | 中 | P0 出口做升级演练（验收 20）；不通过则改 fork + submodule |
 
 ---
 
@@ -293,7 +323,7 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 | D7 | `pnpm-workspace.yaml` 的 `allowBuilds` 是无效占位文本；`sharp` 原生依赖 install 被拦 | 构建配置 / `asset-manager`+`server` |
 | D8 | 资产管线 meshopt 压缩后模型 bounds 缩小约 24 倍且无单位提示 | `asset-manager` / `server` pipeline |
 
-→ 文档走 rs-iot `screen:*`、资产不经其管线，以上 5 项**均不进入 hmi-studio**。但 D2 的教训（默认值被静默剥除导致保真丢失）由 `compact.ts` 的往返保真单测承接（§5.1）。
+→ 文档走 rs-iot 元数据资源族、资产不经其管线，以上 5 项**均不进入 hmi-studio**。但 D2 的教训（默认值被静默剥除导致保真丢失）由 `compact.ts` 的往返保真单测承接（§5.1）。
 
 ### 8.2 编辑器行为问题（适配层处理）
 
@@ -321,7 +351,7 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 
 每期给「步骤 → 验证」，验证须可复现（命令 + 真实输出）。**P0 结束设停止点**，汇报后由用户决定是否继续。
 
-### P0 — vendor 与最小闭环（预计 4~6 天）
+### P0 — vendor 与最小闭环（预计 6~9 天；含 rs-iot 存储决策，见 §13.2）
 
 **步骤**
 1. 按三档落地（§6.2）：**全量**拷贝 `packages/core/src`；`scene-editor/src` **不带** GIS/地图/天气面板与 `leaflet`；带 `LICENSE`；建 `PATCHES.md`
@@ -330,18 +360,46 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 4. `schema.ts`（v2 契约 + `scene3dVersion`）、`compact.ts`（+ 单测：往返保真、体积断言）
 5. `store-adapter.ts`（getScene/putScene + version 持有）
 6. `Scene3DEditView.vue` + 路由 `/edit3d/:id`；3D 列表页"编辑"按钮接到它
-7. 把两个 DEMO 场景（工厂 172 / 展厅 43）经 compact 写入 rs-iot `screen:*`（成为长期回归资产）
+7. **存储决策落地**（Q1，建议采纳）：rs-iot 新增 `scene` MetaKind（cap 1 MiB）——
+   1 const + 7 薄 handler + 4 路由 + `validate_put` 加 cap 参数 + 指标数组 3→4（约 150 行）；
+   hmi-studio 侧 `scenesApi`（`getScene/putScene/versions/rollback`）、列表页改 `/api/v1/scenes`、
+   `screen-list.ts` 去掉 `is3d` 过滤、迁移现有 `iot-plant-3d`
+   （若不采纳：保持 `screens`+compact，并在 `docs/` 登记"对象数>250 或体积>110KiB 即启动改造"的触发条件）
+8. 把两个 DEMO 场景（工厂 172 / 展厅 43）播种为长期回归资产（配合 P0.5 的 e2e 播种）
 
 **验证**
 - `pnpm typecheck`、`pnpm test`（新增 compact/schema 单测）、`node scripts/check-layers.mjs` 通过（适配层为唯一 vendor 出口，需在分层规则中登记）
 - core 单测在 0.187 下 11/11
 - `git diff` 核对：vendor 相对上游 `5ca4b84` 的改动仅 D4（Toolbar 自动保存）+ 被裁面板的模板删除，与 `PATCHES.md` 一致
 - `/edit3d/<工厂>` 打开：172 对象全部渲染、灯光开启、场景树完整
-- 拖动一个对象 → 保存 → `GET /api/v1/screens/<id>` 体积 **< 128 KiB**（实测值写入验收记录）→ 刷新位置保持
+- 拖动一个对象 → 保存 → 读回体积（采纳 scenes：**< 1 MiB**；不采纳：**< 128 KiB**，实测值写入验收记录）→ 刷新位置保持
+- 采纳 scenes 时：`GET /api/v1/scenes` 只返回 3D 场景，`GET /api/v1/screens` 只返回 2D 画面（互不混入）
+- **升级演练**（§13.4 T3）：改上游一处无关代码 → 重放 D4 补丁 → core 单测 11/11 + 两 DEMO 场景回归通过
 - `/edit3d/:id` ↔ `/edit/:id` 来回 10 次：无报错、无白屏
 - `pnpm build`（带 `VITE_API_BASE=/api/rsiot VITE_LOGIN_PATH=/api/gw/login`）通过并部署到 gateway
 
 **停止点**：汇报 P0 实测结果（尤其 three 兼容性、裁剪结果、体积实测），确认后进 P1。
+
+### P0.5 — 数据面与治理对齐（**新增**，预计 4~6 天；见审查 §3）
+
+**目的**：把 2D 线已有的 5 条数据通路与治理项补齐到 3D，否则不是平行线（审查结论）。
+
+**步骤**
+1. **订阅面**：`boundDevsOf(doc)` = `bindings[].field` ∪ `events` 引用点（口径同 `binds.ts` `collectBinds`），
+   替换现有"订阅场景内全部设备"的 `bindFieldsOf`
+2. **告警合成**：`modules3d-meteor/alarms.ts` —— `createAlarmStream` → `AlarmStore` → `aggregateAlarms` →
+   `syntheticFields` → `prioMap(devId → prio)` → `HighlightManager`/`OutlineManager`；
+   区域聚合 `__area.*` 映射到场景级 HUD
+3. **资产保护**：`protected.ts` 登记 `IOT_PLANT_3D` 与后续 3D 长期资产（**当前 `iot-plant-3d` 不在册，属既有缺陷**）
+4. **e2e 播种**：`seed3DScenes()`（工厂 172 / 展厅 43）纳入 `global-setup.ts`；`is3d` 相关 e2e 断言
+5. **MCP 资源族分派**：`hmi-mcp` 的 screen 工具不再把 3D 文档当 2D 校验
+   （采纳 `scenes` 则天然分离；否则 `hmi_validate_screen` 需按 `$schema` 早退）
+
+**验证**
+- 订阅面等价性单测：给定 v2 文档，`boundDevsOf` 输出 ⊆ 2D 同口径结果，且不含未绑定设备
+- 告警一致性：让模拟器把 `dev_wm1` 推到 P1 → **2D L1 区域卡与 3D 场景同时变红**（截图对比），清除后同时恢复
+- `iot-plant-3d` 出现在 `PROTECTED_SLUGS`；hmi-mcp 删除请求被拒
+- `pnpm e2e` 含 3D 播种用例；e2e 清扫后 3D 场景仍在
 
 ### P1 — 运行页 + 实时驱动（预计 5~7 天）
 
@@ -349,7 +407,8 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 1. `Scene3DRunView.vue`：`restoreScene(doc,{syncEditorStore:false})` + 初始视角 + dispose 纪律
 2. `/view3d/:id` 按 `$schema` 分派 v1/v2
 3. `bindings.ts`：`kind: color/visible/emissive/label/animationSpeed` 的 apply 实现（纯逻辑单测 + 薄 three 调用）
-4. SSE 接入：`createRtdataStream({devs: bindFieldsOf(doc)})`（复用 `src/lib/sse.ts`）
+4. SSE 接入：`createRtdataStream({devs: boundDevsOf(doc)})`（复用 `src/lib/sse.ts`；订阅面由 P0.5 的 `boundDevsOf` 提供）
+5. 并行恢复：`restoreAll(doc)` 用 `batched(items, 4, ...)`（复用 `screen-list.ts`），保持父子顺序语义（§13.4 T1）
 5. 手写一份 bindings 的 v2 场景做端到端样例（工厂场景 3 台机床三色灯绑 `dev_*` 点位）
 
 **验证**
@@ -363,17 +422,20 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 **步骤**
 1. 绑定面板（新组件，语义对齐 2D `BindPanel.vue`：设备树 `fetchDeviceTree` → 选点 → 选 kind → 配置）
 2. 属性面板挂入口：选中对象 →「数据绑定」页签
-3. `events.ts`：`click → navigate/focus/setCamera`；`navigate` 复用 `parseNavTarget`/`router`
-4. 悬空绑定校验（R3）
-5. 自动保存改造（§5.3）与版本面板接入（复用 `VersionPanel.vue`）
+3. `events.ts`：`click → navigate/focus/setCamera/command`；`navigate` 复用 `parseNavTarget`/`router`
+4. **命令下发**（§13.3）：`installBridge({mode:'view'})` + `events.command` → `bridge.send(devId, cmd, params)`；
+   目标 devId 由 `SceneBinding.devId` 反查
+5. 悬空绑定校验（R3）
+6. 自动保存改造（§5.3）；**`VersionPanel.vue` 泛化**（`screensApi` → 注入 client，使其同时服务 2D/3D）
 
 **验证**
 - 在编辑器里给对象绑定 `dev_wm1.flow_rate`，保存 → 运行页生效
 - 点击 3D 设备 → 跳到对应 2D faceplate（`/view/iot-faceplate-*?dev=…`）
 - 两窗口同时编辑同一场景：后保存者收到 409 提示，无静默覆盖
-- 版本面板可列出/回滚 v2 场景
+- 版本面板可列出/回滚 v2 场景（同一组件在两个编辑器内工作，未复制第二份）
+- **命令**：3D 点击设备 → 下发命令 → rs-iot 收到（与 2D L2 画面的命令走同一 bridge，日志可见同构请求）
 
-### P3 — 工业图元库与体验对齐（预计 5~8 天）
+### P3 — 工业图元库与体验对齐（预计 6~9 天）
 
 **步骤**
 1. `assets.ts` + 首批工业图元：把 `src/modules3d/geometry.ts` 的设备工厂（水表/燃气表/电表/压力变送器/环境机/泵/罐）改造为"可拖放的组合对象"（Group + 子件 bid 稳定）
@@ -386,7 +448,8 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 - 深色/浅色主题切换面板无硬编码色残留（`lint.mjs --app` 0 FAIL）
 - 新建 3D 场景 → 拖图元 → 绑定 → 保存 → 运行，全流程 ≤ 5 分钟可完成（低代码体验验收）
 
-**合计：约 20~29 天**（不含 Q1~Q5 待决造成的等待）。
+**合计：约 29~42 天**（P0 6~9 · P0.5 4~6 · P1 5~7 · P2 6~8 · P3 6~9；含审查新增的数据面与治理项，不含待决等待）。
+> 相对首版 20~29 天的增量，来自补齐 2D 线已有的 5 条数据通路与 rs-iot 资源族——**不是范围膨胀，是原方案漏算了平行线的另一半**（审查 §1）。
 
 ---
 
@@ -412,6 +475,15 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 13. `/edit3d` ↔ `/edit` 切换 10 次无 WebGL 上下文泄漏
 14. 运行页 SSE per-point 回调不触发强制渲染
 
+**平行线一致性（审查新增，§13.1）**
+15. **告警一致**：同一设备 P1 时，2D L1 区域卡与 3D 场景同时变红；清除后同时恢复（截图对比留档）
+16. **命令一致**：3D 点击设备下发命令，与 2D L2 画面走同一 bridge，rs-iot 侧日志同构
+17. **订阅面等价**：3D 运行页订阅设备集 ⊆ 绑定/事件/告警引用集，不含未绑定设备（单测 + 运行时打印）
+18. **资产保护**：3D 长期场景在 `PROTECTED_SLUGS`；hmi-mcp 拒删；e2e 清扫不误删
+19. **首屏不回归**：`/hmi/`（2D 列表与 2D 编辑器）的 chunk 体积与 LCP 对比改动前无回归
+20. **vendor 可持续**：升级演练通过（改上游一处 → 重放补丁 → core 单测 + 两 DEMO 回归）
+21. **AI 边界**：hmi-mcp 对 3D 文档不再走 2D 校验（读可用；写按 Q10 决策，未实现时明确报错而非写坏）
+
 ---
 
 ## 11. 待决事项
@@ -419,10 +491,17 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 | # | 待决 | 建议 | 阻塞 |
 |---|---|---|---|
 | Q1 | **方案批准**（本文件） | — | 全部 |
+| **Q1a** | **3D 场景存储资源族**：`screens`+compact vs 新增 `scenes`（cap 1 MiB） | **`scenes`**——约 150 行 Rust，换来平行线在存储层物理分开，并消除 128KiB 四级策略/列表过滤/AI 误判三项补偿设计（审查 §2） | P0（+2~3 天） |
 | Q2 | three 版本：0.187 兼容实测后定 | 先实测，倾向不动 | P0 |
 | Q3 | GLB/贴图资产托管位置 | rs-iot 静态目录（复用 gateway 机制） | P1（运行页加载模型） |
 | Q4 | 绑定悬空的长期方案（对象重建后 bid 不延续） | P2 出设计：组合对象/图元实例 id | P2 |
 | ~~Q5~~ | ~~vendor 裁剪范围~~ | **已闭**：实测 core 与 GIS/tiles 静态耦合不可裁 → core 全量带入、面板按需（§6.2） | — |
+| Q6 | vendor 方式 | **已定**：源码拷贝进仓（§6.1） | — |
+| **Q7** | 3D 场景 cap（若采纳 Q1a） | **1 MiB**（≈2600 primitive，覆盖现实厂区） | P0 |
+| **Q8** | 3D 编辑器 UI 基座：vendor 原生 input vs 重写为 element-plus | 先主题变量映射；若要求像素级一致需重写面板（+10~15 天） | P1 前 |
+| **Q9** | 3D 是否支持命令下发 | **支持**（2D 已有，工业刚需） | P2 |
+| **Q10** | 3D 是否纳入 AI 读写 | **读纳入、写暂缓**（3D 文档复杂，AI 易产悬空绑定） | P0.5/P2 |
+| **Q11** | 3D 图元是否允许站点自建/插件 | 建议仅随版本发布，并在文档写明与 2D 的差异 | P3 前 |
 
 ---
 
@@ -433,3 +512,65 @@ Meteor `^0.184` vs hmi-studio `0.187.0`。P0 首日实测：vendor 后在 0.187 
 - Meteor 的 `meteor3d-server` / `asset-manager`（文档走 rs-iot；资产托管另议 Q3）
 - GIS 瓦片底图、3D Tiles、高斯泼溅、天气特效
 - 应用编辑器（上游商业组件，未开源）
+
+---
+
+## 13. 系统级审查修订（2026-11-26 晚，生效）
+
+> 完整审查证据与 15 层对照矩阵见 **`2026-11-26-3d-editor-plan-review.md`**。本节只列结论与对本文的改动。
+
+### 13.1 核心修正：数据面不是 1 条通路，是 5 条
+
+首版把 3D 的数据面简化为「SSE → bindings」。对照 2D 运行页（`ViewView.vue`）的真实结构，实际有 5 条：
+
+| # | 通路 | 2D 实现 | 3D 首版 | 已修订为 |
+|---|---|---|---|---|
+| ① | 实时值 | `createRtdataStream` → `setDevicePointByID` | ✓ | ✓（但订阅面收窄，见下） |
+| ② | 告警 | `createAlarmStream` → `AlarmStore` → `aggregateAlarms` | ✗ | §5.5 ② |
+| ③ | 合成点位 | `syntheticFields`（`__prio`/`__area`/`__sys`） | ✗ | §5.5 ③ |
+| ④ | 命令 | `installBridge({mode:'view'})` | ✗ | §5.5 ④ + §13.3 |
+| ⑤ | 页面上下文 | `setAgentPageScreenInfo` | ✗ | §5.5 ⑤ |
+
+**订阅面修正**：首版 `bindFieldsOf(doc)` 订阅"场景内全部设备"；2D 只订阅**被绑定字段所属设备**。
+已改为 `boundDevsOf(doc)`（`bindings[].field` ∪ `events` 引用点），口径同 `binds.ts` `collectBinds`。
+
+### 13.2 存储：建议新增 rs-iot `scenes` 资源族（Q1a）
+
+**问题**：把 3D 塞进 `screens` 会连带三项补偿性设计——128 KiB 四级超限策略、列表逐 doc 读 `$schema` 过滤、
+hmi-mcp 的 2D 校验器误判 3D 文档（`hmi_validate_screen`）。
+
+**成本实测**：`MetaKind` 已参数化（`routes_meta.rs:47`），新增一族 = 1 const + 7 薄 handler + 4 路由 +
+`validate_put` 加 cap 参数 + 指标数组 3→4 + 隔离测试数组加一项 ≈ **150 行 Rust**；
+版本/乐观锁/回滚/级联删除/判重随机制**免费继承**；`/api/rsiot/*` 网关零改动；`scene` 前缀不撞现有三族。
+
+**收益**：平行线在存储层物理分开；2D 列表天然干净；观测可分开（`kind="scene"`）；cap 提到 1 MiB。
+
+**若采纳**：`compact` 从"必做"降为"优化"；§6.3 四级策略仅保留"保存前体积校验"。
+**若不采纳**：必须登记触发条件（对象数 > 250 或体积 > 110 KiB 即启动改造），不让 128 KiB 静默成为天花板。
+
+### 13.3 命令下发（补 2D 已有能力）
+
+`events.do` 增 `{type:'command', targetBid, cmd, params}`；运行页 `installBridge({mode:'view'})`；
+`SceneBinding` 增 `devId` 字段（由 field 前段解析）供反查目标设备。缺此能力 3D 只能"看"不能"操作"，不构成平行线。
+
+### 13.4 三个被低估的技术风险
+
+| # | 风险 | 证据 | 补法 |
+|---|---|---|---|
+| T1 | 恢复串行 | 上游 `restoreScene` 对象循环逐个 `await` | `restoreAll` 复用 `batched(cap 4)`，保持父子顺序 |
+| T2 | bundle 增量 | core 顶层静态 import tiles + three/examples 全家桶 | 路由级懒加载 + `manualChunks`；验收"2D 首屏不回归" |
+| T3 | vendor 可持续 | 14k 行 + 1 处补丁 | P0 出口做升级演练（改上游 → 重放补丁 → 回归） |
+
+### 13.5 治理项（原方案完全缺失）
+
+| 项 | 2D 现状 | 3D 补法 | 期 |
+|---|---|---|---|
+| 资产保护 | `protected.ts` + hmi-mcp 删除闸 | 登记 3D 长期场景（**现有 `iot-plant-3d` 不在册，属既有缺陷**） | P0.5 |
+| e2e 播种 | `seedIotScreens()` | `seed3DScenes()` 纳入 global-setup | P0.5 |
+| AI/MCP | 9 读 + 7 写工具 | 按 `$schema`/资源族分派；3D 读纳入、写暂缓（Q10） | P0.5/P2 |
+| 观测 | `rs_iot_meta_*{kind}` | 新资源族自带 `kind="scene"`；否则污染 screen 指标 | 随 Q1a |
+| 图元扩展 | registry + 插件 + 站点自建 | 明确"仅随版本发布"（Q11） | P3 前 |
+
+### 13.6 工期影响
+
+20~29 天 → **29~42 天**（+P0.5 4~6 天、P0 +2~3、P2 +2~3、P3 +1）。增量全部来自补齐平行线的另一半。
