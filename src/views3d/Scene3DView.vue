@@ -253,7 +253,7 @@ function onKey(e: KeyboardEvent): void {
   <div class="scene3d-page">
     <header class="bar">
       <button class="back" @click="router.push('/')">← 画面管理</button>
-      <div class="title">{{ doc.meta.name }}</div>
+      <h1 class="title">{{ doc.meta.name }}</h1>
       <div class="badges">
         <span class="badge">{{ status }}</span>
         <span class="badge">设备 {{ alarmCount }}</span>
@@ -311,7 +311,7 @@ function onKey(e: KeyboardEvent): void {
 .back { border: 1px solid #2a455e; background: #0f1f30; border-radius: 6px; padding: 7px 12px; cursor: pointer; font-size: 13px; color: #b8d6e8; }
 .back:hover { border-color: #1de0ff; color: #1de0ff; }
 .back:focus-visible, .dev-picker:focus-visible, .detail-close:focus-visible, .detail-enter:focus-visible { outline: 2px solid #1de0ff; outline-offset: 2px; }
-.title { font-size: 16px; font-weight: 600; color: #eaf6ff; }
+.title { margin: 0; font-size: 18px; font-weight: 600; color: #eaf6ff; }
 .badges { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 .badge { font-size: 12px; color: #9dbdd0; background: #0f1f30; border-radius: 4px; padding: 5px 9px; font-variant-numeric: tabular-nums; }
 .dev-picker { font-size: 12px; padding: 6px 9px; border: 1px solid #2a455e; border-radius: 6px; background: #0f1f30; color: #c8e4f4; cursor: pointer; }
