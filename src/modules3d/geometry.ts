@@ -120,13 +120,13 @@ export function makeDevice(n: SceneNode, anim: AnimatedParts): THREE.Group {
   return g
 }
 
-/** 厂房区域：地面色块 + 边框 + 四角立柱 */
+/** 厂房区域：地面色块 + 边框 + 四角立柱（深色场景：底板比地面高一档的暗色，不用浅色板） */
 export function makeArea(scene: THREE.Scene, n: SceneNode): void {
   const s = n.scale ?? 1, w = 10 * s, d = 10 * s
   const tints: Record<string, number> = {
-    'area-water': 0xdfe8ee, 'area-power': 0xe8e3f0, 'area-gas': 0xe2ebe2, 'area-env': 0xeae7df,
+    'area-water': 0x16283a, 'area-power': 0x1b2438, 'area-gas': 0x172a2a, 'area-env': 0x2a2830,
   }
-  const pad = new THREE.Mesh(new THREE.PlaneGeometry(w, d), matte(tints[n.id] ?? C.floor))
+  const pad = new THREE.Mesh(new THREE.PlaneGeometry(w, d), matte(tints[n.id] ?? 0x16212e))
   pad.rotation.x = -Math.PI / 2; pad.position.set(n.pos[0], n.pos[1], n.pos[2]); scene.add(pad)
   const edge = new THREE.LineSegments(
     new THREE.EdgesGeometry(new THREE.BoxGeometry(w, 0.02, d)),

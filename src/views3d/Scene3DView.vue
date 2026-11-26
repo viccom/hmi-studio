@@ -160,7 +160,8 @@ const detail = computed(() => {
     tag: meta?.pos ?? id,                 // 位号 WM-101
     title: meta?.title ?? (n.label ?? id), // 1# 远传水表
     area: AREA_TEXT[meta?.area ?? 'env'],
-    valueText: has ? raw!.toFixed(2) : '—', // taste-skill-ignore: 缺失值用 em dash 占位（app-screen §11）
+    valueText: has ? raw!.toFixed(2) : '',
+    hasValue: has,
     unit,
     prio,
     prioText: ['正常', 'P1 严重', 'P2 高', 'P3 中等', 'P4 提示'][prio] ?? '正常',
@@ -285,7 +286,9 @@ function onKey(e: KeyboardEvent): void {
         <!-- 主数据：标签在上、值在下；唯一的强调色给这一个数字 -->
         <div class="detail-figure">
           <span class="detail-label">实时值</span>
-          <span class="detail-value">{{ detail.valueText }}<small>{{ detail.unit }}</small></span>
+          <span v-if="detail.hasValue" class="detail-value">{{ detail.valueText }}<small>{{ detail.unit }}</small></span>
+          <!-- 缺失值：小一号的灰破折号，不带单位（32px 的破折号会被读成"加载中"） -->
+          <span v-else class="detail-value detail-missing">暂无数据</span>
         </div>
 
         <!-- 键值行：左标签右值，同一右边界 -->
@@ -348,6 +351,7 @@ function onKey(e: KeyboardEvent): void {
 .detail-label { font-size: 12px; color: #9dbdd0; }
 .detail-value { font-size: 32px; font-weight: 600; color: #1de0ff; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .detail-value small { font-size: 13px; font-weight: 400; color: #9dbdd0; margin-left: 4px; }
+.detail-value.detail-missing { font-size: 14px; font-weight: 400; color: #8aa7ba; }
 
 /* 键值行：左标签右值，同一右边界；行间 1px 细线 */
 .detail-rows { margin: 14px 0 0; padding: 0; border-top: 1px solid #1e3448; }

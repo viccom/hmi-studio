@@ -114,8 +114,8 @@ export default class Viewer {
 
   private initCamera(): void {
     this.camera = new PerspectiveCamera(50, 1, 0.1, 400)
-    this.camera.position.set(26, 15, 28)
-    this.camera.lookAt(0, 1, 0)
+    this.camera.position.set(19, 11, 21)
+    this.camera.lookAt(0, 0, 0)
   }
 
   private initLight(): void {
@@ -127,7 +127,7 @@ export default class Viewer {
 
   private initControl(): void {
     this.controls = new OrbitControls(this.camera as Camera, this.renderer.domElement)
-    this.controls.target.set(0, 1, 0)
+    this.controls.target.set(0, 0, 0)
     this.controls.enableDamping = true
     this.controls.dampingFactor = 0.08
     this.controls.maxPolarAngle = Math.PI / 2.15
