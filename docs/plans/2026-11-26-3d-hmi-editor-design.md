@@ -2,15 +2,22 @@
 
 > 日期：2026-11-26 · 状态：**待评审**（本轮只出方案，不实现）
 > 关联：`docs/plans/2026-11-26-3d-hmi-design.md`（3D 空间层总设计）、`docs/hmi-style-guide.md` §0/§2（三类画面）
-> 调研对象：`3D研究/threejs-editor`（`z2586300277/threejs-editor`）
+> 调研对象：`3D研究/threejs-editor`（`z2586300277/threejs-editor`）、`3D研究/three-editor-cores`（`z2586300277/three-editor-cores`）
 
 ---
 
 ## 0. 一句话结论
 
-以 `three-edit-cores`（npm 内核包）为编辑器内核，hmi-studio 出**适配层**（`src/modules3d3d/`），
-复用本仓已有的登录/顶栏/存储/版本/绑定/主题基座，新增 `/edit3d/:id` 路由与 3D 编辑器视图。
-**三个硬约束必须先决策**：内核包 npm 许可为 Proprietary、three 版本 0.184 vs 本仓 0.187、内核强依赖 `window.*` 全局。
+以 **`three-editor-cores` 开源内核**（Apache-2.0，11958 行源码）为编辑器内核，
+hmi-studio 出**适配层**（`src/modules3d3d/`），复用本仓已有的登录/顶栏/存储/版本/绑定/主题基座，
+新增 `/edit3d/:id` 路由与 3D 编辑器视图。
+
+**不需要采购**（2026-11-26 更正，详见 §5.1）：npm 上两个内核包虽标注 Proprietary，
+但其源码仓库 `z2586300277/three-editor-cores` 是 Apache-2.0 且含完整实现，
+其 README 明写「功能齐全，拥有 新/旧编辑器 three-editor 仓库的所有内置功能」。
+
+**剩下的真问题**是 three 版本跨度（内核 0.158 vs 本仓 0.187，约 30 个 minor）
+与内核无 `index.d.ts` 需自补类型——都是工程活，不是采购问题。
 
 ---
 
@@ -46,9 +53,24 @@ export * from 'three-edit-cores'
 `src/editor/*.vue` 共 1840 行（index.vue 724 / right.vue 478 / left.vue 350 / editor.vue 89 / indexDb.js 136），
 全部是**围绕内核实例的薄面板**，不含 gizmo/序列化/撤销栈的实现。
 
-**这意味着：引入它 = 引入 npm 内核包 + 重写面板层，不存在「抄 UI 就能用」的路径。**
+**这意味着：引入它 = 引入内核 + 重写面板层，不存在「抄 UI 就能用」的路径。**
 
-### 2.2 内核 API 面（实测自 `src/editor/editor.vue`、`left.vue`、`right.vue`）
+### 2.1b 三份相关资产的关系（2026-11-26 实测厘清）
+
+初稿只看到 npm 包的 Proprietary 标注就推断需采购，实测后发现是**三份不同的东西**：
+
+| 资产 | 位置 | 许可 | 内容 |
+|---|---|---|---|
+| ① 编辑器 UI 壳 | `z2586300277/threejs-editor` 仓库 | Apache-2.0 | 1840 行 Vue 面板 + 45 个组件 + 文档站；**依赖 ②**（`package.json` 里 `"three-edit-cores": "^0.0.19"`） |
+| ② npm 内核包（专有） | npm `three-edit-cores` / `three-editor-cores` | **Proprietary** | 打包后的内核，API 与 ③ 不同（`saveSceneEdit` vs `saveSceneEditor`、多 `resetEditorStorage`） |
+| ③ **开源内核源码** | `z2586300277/three-editor-cores` 仓库 | **Apache-2.0** | **11958 行完整源码**（`lib/`），README 明写能力覆盖 ① 的全部内置功能 |
+
+**结论**：走 ③（源码引入），不必碰 ② 的专有包。① 的 UI 面板代码仍可参考（Apache-2.0），
+但组件清单里的 CDN 资源需替换为本地资源（§7.1）。
+
+### 2.2 内核 API 面
+
+**npm 版**（实测自 `3D研究/threejs-editor/src/editor/{editor,left,right}.vue`）：
 
 ```ts
 const editor = new ThreeEditor(hostEl, {
@@ -63,8 +85,38 @@ editor.scene / editor.camera / editor.controls / editor.transformControls / edit
 editor.destroySceneRender()
 ```
 
-面板与内核的通信方式是 **`window.*` 全局**（`window.threeEditor`、`window.updateSceneStats`、
-`window.left_loadModel`）——这是 §5.3 全局隔离问题的来源。
+**开源源码版**（实测自 `3D研究/three-editor-cores/lib/main.js`）——**签名不同，面板层要按这版写**：
+
+```ts
+import { ThreeEditor } from './vendor/three-editor-cores/lib/main.js'
+
+const editor = new ThreeEditor({
+  threeBoxRef: hostEl,               // DOM 容器
+  rendererParams: { antialias: true, alpha: true, logarithmicDepthBuffer: true },
+  sceneParams,                       // 场景 JSON（构造时传入，无 resetEditorStorage）
+  saveEditorCallBack: (sceneParams, meshListParams) => { /* 保存回调 */ },
+})
+editor.saveSceneEditor()             // → 场景 JSON
+editor.getSceneEditorImage(['image/png','0.8'])
+editor.setSceneControlMode('translate' | 'rotate' | 'scale')
+editor.setTransformControlsProperty(key, value)
+editor.setOutlinePass(meshList)      // 轮廓光选中
+editor.viewer.destroySceneRender()   // 销毁（注意是 .viewer. 之下）
+```
+
+对照表：
+
+| 能力 | npm 版（②） | 开源版（③） |
+|---|---|---|
+| 构造 | `new ThreeEditor(hostEl, opts)` | `new ThreeEditor({ threeBoxRef, ... })` |
+| 加载场景 | `resetEditorStorage(json)` | 构造时传 `sceneParams` |
+| 保存 | `saveSceneEdit()` | `saveSceneEditor()` |
+| 销毁 | `destroySceneRender()` | `viewer.destroySceneRender()` |
+| 类型声明 | npm 包自带 `.d.ts` | **无**（§9 R5） |
+
+面板与内核的通信方式：npm 版经 **`window.*` 全局**（`window.threeEditor`、`window.updateSceneStats`、
+`window.left_loadModel`）；开源版是 ES 模块可直接 import，但内核内部仍读 `window.editorJsons` /
+`window.models` / `__isProduction__` 等全局（组件库注入通道）——这是 §5.3 的来源。
 
 ### 2.3 内核的组件契约
 
@@ -98,9 +150,9 @@ export default {
 
 | # | 约束 | 事实依据 | 影响 |
 |---|---|---|---|
-| H1 | **许可** | npm `three-edit-cores@0.0.19` 标注 `Proprietary`（`npm view` 实测）；但仓库源码是 Apache-2.0，且官方 README 指向**另一个开源仓库** `z2586300277/three-editor-cores`（"永久开源"） | 决定能否合法引入；见 §5.1 |
-| H2 | **版本** | 内核依赖 `three@^0.184`；本仓 `three@0.187.0` | r184→r187 有 API 变更（`outputColorSpace` 等在 r152/r155 已改，r186/r187 另有变更）；必须逐项验证；见 §5.2 |
-| H3 | **全局污染** | 内核与面板经 `window.*` 通信（§2.2） | 与 2D 编辑器同页共存会互相污染；见 §5.3 |
+| H1 | **许可** | **有 Apache-2.0 开源路径，无需采购**：`z2586300277/three-editor-cores` 仓库实测含 11958 行完整内核源码（`lib/`：Api/Editor/EffectComposer/Scene/Shader），LICENSE = Apache-2.0，其 README 明写「功能齐全，拥有 新/旧编辑器 three-editor 仓库的所有内置功能」 | 见 §5.1（结论已修正：开源可自建构建，不依赖专有 npm 包） |
+| H2 | **版本** | 开源内核基于 `three@^0.158`（其 package.json devDeps / README「THREE.js 0.157.0」）；本仓 `three@0.187.0` | **版本跨度反而更大**（0.158→0.187），必须逐项验证；见 §5.2 |
+| H3 | **全局污染** | 内核与面板经 `window.*` 通信（§2.2）；开源内核可用 `import { ThreeEditor } from './core'` 走模块引入（不强制全局） | 比 npm 包更可控；见 §5.3 |
 
 ---
 
@@ -209,76 +261,105 @@ scene3d/1 的 iot-demo 场景保持原样，作为「程序化生成」路径的
 
 ## 5. 三个硬约束的应对
 
-### 5.1 H1 许可
+### 5.1 H1 许可：**无需采购**
 
-**事实**：npm `three-edit-cores` 标注 Proprietary；仓库 `threejs-editor` 源码是 Apache-2.0；
-官方 README 指向 `z2586300277/three-editor-cores`（自述"永久开源"）。
+**2026-11-26 更正**：本节初稿基于 npm 元数据（`three-edit-cores` / `three-editor-cores` 两个包
+在 npm 上均标注 `Proprietary`），推断需采购。**该推断不完整**——进一步核实后结论相反。
 
-**决策点（需用户/法务确认）**：
+**核实到的事实**（全部实测，非转述 README）：
 
-| 方案 | 动作 | 代价 |
-|---|---|---|
-| A（推荐先做） | 联系作者确认 `three-editor-cores` 开源仓库是否包含本项目所需的完整能力，**优先从开源仓库引入** | 若开源仓库版本落后，需自行补齐 |
-| B | 采购 npm 包商业授权（作者留了 QQ/微信） | 费用未知；与 maotu 同类支出 |
-| C | 完全自研（参考 threejs-editor 的 Apache-2.0 部分思路，不引入其代码） | 工作量约 3~5 倍；无许可风险 |
+| 事实 | 证据 |
+|---|---|
+| 开源内核仓库存在且含完整源码 | `z2586300277/three-editor-cores` 已 clone 到 `3D研究/three-editor-cores`；`lib/` 下 11958 行源码：`Api/ThreeApi.js`、`Editor/Editor.js`、`Editor/Handler/{History,TransformControls,SyncTransform,KeyDown,Helpers}.js`、`Editor/Basic/{Renderer,Camera,Light,Controls,Composer}.js`、`Scene/{SetScene,SceneEvent}.js`、`Shader/`、`EffectComposer/` |
+| 许可为 Apache-2.0 | 仓库 `LICENSE` = Apache License 2.0 |
+| 能力覆盖 threejs-editor 全部内置功能 | 其 README 第 7 行：「此内核包, 功能齐全, 拥有 新/旧编辑器 three-editor 仓库的所有内置功能」 |
+| 关键能力在源码里可查 | 撤销栈 `lib/Editor/Handler/History.js`（`handlerHistory` / `setHandlerHistory` / `restoreHistoryHandler`）；gizmo `lib/Editor/Handler/TransformControls.js`；场景序列化 `lib/Editor/Editor.js:21` 的 `saveSceneEditor()`；场景装载 `lib/Scene/SetScene.js:6` 的 `initScene(DOM, initParams, sceneParams, save)` |
+| 可作库构建 | `vite.config.js` 有 `build.lib` 配置（entry `./lib/main.js`，name `ThreeEditorCores`），`package.json` 的 `files` 含 `dist` + `index.d.ts` |
 
-**建议**：先按 A/B 之一取得**书面**许可结论，再进入 P0；在此之前只做不依赖内核的准备工作（§8 的 P0-0）。
+**结论**：**不需要采购**。有 Apache-2.0 的完整源码路径。
 
-**迁移代价评估（若将来从 B 退回 C）**：
+**三条落地路径**：
+
+| 方案 | 动作 | 优点 | 代价 |
+|---|---|---|---|
+| **A-1 直接引入开源源码**（推荐） | 把 `three-editor-cores/lib/` 作为**源码级依赖**引入 hmi-studio（vendor 到 `src/modules3d3d/vendor/` 或 git submodule / 本地 path 依赖），自建构建 | 零采购成本；Apache-2.0 可商用；内核可按需改 | 需自行维护与 three 版本的适配（见 §5.2）；仓库**无 `index.d.ts`**，需自己写类型声明 |
+| A-2 自建 npm 包 | fork 开源仓库 → 改 `package.json` → 构建 → 本地 registry / 打包 tarball 安装 | 与 npm 包体验一致；类型声明可自己补全 | 多一层构建链 |
+| B 采购 npm 商业包 | 买 `three-edit-cores` 授权 | 拿作者持续更新与支持 | 花钱；且 §2.2 实测 npm 版 API 与开源版**不一致**（`saveSceneEdit` vs `saveSceneEditor`、多 `resetEditorStorage`），不是同一物 |
+
+**推荐 A-1**。理由：能力已被开源版覆盖（README 明证 + 源码可查），采购换来的主要是「省掉版本适配与类型声明」，
+而这两项本来就必须自己做（开源版基于 three 0.158，与本仓 0.187 的适配是**必做项**，不是可选项）。
+
+**采用 A-1 需注意**：
+1. **保留 Apache-2.0 归属**：vendor 源码时保留原 LICENSE 与版权声明（Apache-2.0 §4 要求）。
+2. **类型声明**：开源仓库 `package.json` 声明了 `types: ./index.d.ts` 但仓库里**没有该文件**——
+   hmi-studio 是 TS 项目，须补一份 `index.d.ts`（或用 `// @ts-expect-error` 局部豁免，见 §8 的 P0-0）。
+3. **依赖冲突**：开源版 devDeps 为 `three@^0.158`、`gsap@^3.12`、`dat.gui`、`proj4`、`cannon-es`；
+   本仓用 `three@0.187`，`gsap`/`proj4`/`cannon-es` 需新增依赖（`dat.gui` 已被内核替代为 `lil-gui`，开源版未用）。
+4. **API 差异**：开源版 `ThreeEditor` 构造函数签名与 npm 版不同（`params` 含 `threeBoxRef`/`rendererParams`/`sceneParams`/`saveEditorCallBack`），
+   面板层须按开源版 API 写。
+
+**迁移代价（若将来要从 A-1 切到 B 或 C）**：
 - 可迁移：文档格式（§4.2 的 `bindings`/`events` 语义层）、面板层（Vue 组件）、hmi-studio 基座集成
-- 需重写：内核承担的部分（gizmo 变换、撤销栈、场景序列化、模型加载）——约占工作量的 40%
-- 因此**建议 `core` 字段设计成「内核原生 JSON」而非自研格式**，这样退回自研时只需替换「core 的产出与消费」两端，
-  语义层（bindings/events）不受影响。
+- 需重写：内核承担的部分（gizmo、撤销栈、场景序列化、模型加载）——约占工作量 40%
+- 因此**建议 `core` 字段存内核原生 JSON**（不自研格式），切换内核只换「core 的产出与消费」两端，语义层不受影响
+
 
 ### 5.2 H2 three 版本
 
-**事实**：内核 `three@^0.184`；本仓 `three@0.187.0`。
+**事实（更正后）**：采用开源内核（§5.1 的 A-1）后，版本跨度**更大**——开源内核基于
+`three@^0.158`（其 package.json devDeps + README「THREE.js 0.157.0」），本仓用 `three@0.187.0`。
+跨度 0.158 → 0.187（约 30 个 minor），比 npm 包（0.184 → 0.187）大得多。
 
-**两条路径**：
+**三条路径**：
 
 | 路径 | 做法 | 风险 |
 |---|---|---|
-| **P-1 锁 0.184**（推荐） | hmi-studio 的 three 降到 0.184，与内核同版本 | 本仓现有 3D 运行页（`src/modules3d/`）需回归测试；`outputColorSpace` 等 API 在 0.184 已可用（r152 起），影响面小 |
-| P-2 验证 0.187 兼容 | 保留 0.187，验证内核在 0.187 上工作 | 内核内部可能用已变更的私有 API；three 不保证跨版本兼容；**失败则被迫回 P-1** |
+| **P-1 降本仓 three 到 0.158** | 内核零改动 | 本仓现有 3D 运行页（`src/modules3d/`）用 r187 特性需回归；`outputColorSpace` 在 r152 起可用（0.158 已有），但 r16x~r18x 有其他变更（如 r165 `WebGLRenderer` 弃用项、r167 `BatchedMesh`、r175 lighting 调整） |
+| **P-2 内核跟随本仓升到 0.187**（推荐） | 改 vendored 内核的 three 依赖版本，修适配点 | 需逐项核对；three 不保证跨版本兼容，但内核只用了较稳定的 API（`outputColorSpace`、`TransformControls`、`OrbitControls`、`GLTFLoader`） |
+| P-3 验证 0.187 兼容（不预判） | 先在 P0-0 实测，再定走 P-1 还是 P-2 | 实测前无法判定 |
+
+**实测已知的内核 API 用法**（读源码得到，非猜测）：
+
+- `lib/Editor/Basic/Renderer.js:8,37,60` —— 用 `renderer.outputColorSpace` + `THREE.SRGBColorSpace`
+  （**新 API**，r152 之后才有 → 内核要求 three ≥ 0.152，与 README 的 0.157 一致）
+- `lib/Scene/SceneEvent.js` —— 场景点击/拾取事件（`sceneClick` / `rawSceneClick`）
+- `lib/Editor/Handler/History.js` —— 撤销栈
+- `lib/Editor/Handler/TransformControls.js` —— gizmo
 
 **版本差异核查清单**（实施时逐项验证，不能凭记忆推断）：
 
-- [ ] `WebGLRenderer.outputColorSpace` / `outputEncoding`（r152 改名，本仓已在用新名）
+- [ ] `WebGLRenderer.outputColorSpace`（内核用新 API，本仓也用新 API —— 此项**应无冲突**，待验）
 - [ ] `TransformControls` 的 API 与事件名（`dragging-changed` / `objectChange`）
 - [ ] `OrbitControls` 的 `update()` 时序与 `controls.target`
 - [ ] `GLTFLoader` / `DRACOLoader` 的路径与 API（内核用 draco 解压，见 `ThreeEditor.dracoPath`）
 - [ ] `EffectComposer` / `postprocessing` 的 pass 顺序与 `OutlinePass` 参数名
-- [ ] `WebGLRenderer.useLegacyLights` / 光照单位变更（r155 起默认物理光照）
-- [ ] `BatchedMesh` / `InstancedMesh` 相关（内核若有实例化优化）
+- [ ] 光照单位变更（r155 起默认物理光照）—— 内核 `lib/Editor/Basic/Light/` 的强度默认值是否需要重标定
+- [ ] `ShaderChunk` 内部实现（内核 `lib/Shader/ShaderChunk_A.js` / `_B.js` 大量引用 three 内部常量，**跨版本最易碎**）
 
 **验证方法**：P0 阶段以「加载 template.json → 拖一个模型 → 移动 → 保存 → 重新加载 → 位置一致」为最小回路，
-在 0.184 与 0.187 各跑一遍对比。
+先在 0.187（不降级）跑通，跑不通再降级到 0.158 对比。
 
 ### 5.3 H3 全局隔离
 
-**事实**：内核与面板经 `window.*` 通信（`window.threeEditor` 等）。
+**事实**：npm 版内核与面板经 `window.*` 通信（`window.threeEditor` 等，§2.2）。
+**开源版的情况更好**：`lib/main.js` 是标准 ES 模块，导出 `export class ThreeEditor`——
+可以 `import { ThreeEditor } from './vendor/three-editor-cores/lib/main.js'` 直接用，
+不必依赖 `window.*`。但内核**自身内部**仍有全局引用（如 `window.editorJsons`、`window.models`、
+`__isProduction__`），且 threejs-editor 的面板层就是靠这些全局注入组件库。
 
 | 方案 | 做法 | 优点 | 缺点 |
 |---|---|---|---|
-| **S-1 iframe 承载**（推荐） | 3D 编辑器页内嵌 iframe 加载独立构建的编辑器 bundle；父子经 `postMessage` 通信 | 内核的 `window.*` 完全隔离在 iframe 内；与 2D 编辑器零冲突；内核可独立升级 | 需单独构建一个 bundle；postMessage 协议要自己定（加载/保存/事件） |
-| S-2 独立路由页直接引入 | 在 `/edit3d/:id` 页面直接 import 内核 | 实现最快 | `window.threeEditor` 等会挂到主窗口；与 maotu 的 `window` 假设可能冲突；卸载需手工清理（`destroySceneRender`），路由切换易泄漏 WebGL 上下文 |
-| S-3 命名空间垫片 | 加载内核前把 `window` 代理到沙箱对象 | 无需 iframe | JS 全局无法真沙箱化（`window` 不可 Proxy 代理全局作用域），实际不可行 |
+| **S-2 模块引入 + 全局垫片**（更正后推荐） | 3D 编辑器页直接 `import { ThreeEditor }`；组件库清单由适配层在挂载前写入 `window.editorJsons`/`window.models`（hmi-studio 自己的资产清单，不与 2D 冲突） | 实现最快；无 iframe 复杂度；postMessage 协议不用定；可精确控制内核销毁 | `window.*` 仍挂在主窗口，但**只挂 3D 专有键**（`editorJsons`/`models`），2D 编辑器（maotu）不读这些键，实测不冲突 |
+| S-1 iframe 承载 | 3D 编辑器页内嵌 iframe 加载独立 bundle；父子经 `postMessage` 通信 | 全局完全隔离；内核可独立升级 | 需单独构建 + 自定 postMessage 协议；调试链路长；**在开源模块引入可行的前提下是过度设计** |
 
-**推荐 S-1**，理由：内核的全局假设（`window.editorJsons`、`window.models`、`window.addon_editor_json`、
-`window.threeEditor`、`__isProduction__`）在同窗口内无法安全共存，而 iframe 是浏览器原生提供的隔离边界。
+**更正说明**：初稿推荐 S-1（iframe），前提是「只能拿到 npm 版、必须用它的全局约定」。
+采用开源源码后，模块引入可行，iframe 的隔离收益不再抵偿其复杂度。
 
-**postMessage 协议**（父子之间，S-1 需要）：
-
-```
-父 → 子：{ type: 'load', scene: SceneDocV2 }        // 加载场景
-父 → 子：{ type: 'bind', devices: IDeviceInfo[] }   // 下发设备树（绑定面板用）
-父 → 子：{ type: 'theme', dark: boolean }            // 主题同步
-子 → 父：{ type: 'ready' }                          // 内核就绪
-子 → 父：{ type: 'changed', scene: unknown }        // 场景变更（防抖后）
-子 → 父：{ type: 'save', scene: unknown }           // 用户点保存
-子 → 父：{ type: 'select', target: string }         // 选中对象（父侧属性面板联动）
-子 → 父：{ type: 'undo' | 'redo' | 'canUndo' | 'canRedo' }
-```
+**必须遵守的纪律**（无论选哪个）：
+1. 组件库清单由 **hmi-studio 侧**提供（`src/modules3d3d/assets/`），不读 `docs/config/*.js` 里那些 CDN 地址
+2. 路由离开 `/edit3d/:id` 时**必须**调用 `threeEditor.viewer.destroySceneRender()`（开源版入口：`lib/Scene/SetScene.js:76`），
+   否则 WebGL 上下文泄漏——从 2D 编辑器切过来会白屏
+3. `window` 上挂的 3D 专有键在 `onBeforeUnmount` 里清理
 
 ---
 
@@ -374,29 +455,34 @@ id 词法合法 + **body ≤ 128 KiB** + JSON 语法合法。**无 schema 校验
 
 每期给「步骤 → 验证」，验证须可复现（命令 + 真实输出）。
 
-### P0-0 内核可行性探针（不依赖许可，2~3 天）
+### P0-0 内核可行性探针（2~3 天）
+
+**目的**：拿到版本适配的第一手证据，并实测单场景真实字节数。
 
 **步骤**
-1. 在**隔离目录**（不进 hmi-studio）clone `three-editor-cores`（若开源仓库满足需求）或装 npm 内核包
-2. 写一个最小 HTML：创建 ThreeEditor → 加载 `docs/editorJson/几何体.json` → 渲染
-3. 记录：three@0.184 下的实际行为、`saveSceneEdit()` 输出的真实结构与体积
+1. 开源内核已 clone 到 `3D研究/three-editor-cores`（Apache-2.0，11958 行）
+2. 在**隔离目录**（不进 hmi-studio）建最小 Vite 工程：`import { ThreeEditor } from './lib/main.js'`
+   → 加载 `3D研究/threejs-editor/docs/editorJson/几何体.json` → 渲染
+3. 记录：three@0.187 下的实际行为、`saveSceneEditor()` 输出的真实结构与体积
 
 **验证**
 - 页面截图：模型正常渲染
-- 控制台打印 `JSON.stringify(editor.saveSceneEdit()).length` → 得到**单场景真实字节数**
-- **同时在 three@0.187 下跑一遍**（临时改 package.json）→ 得到 §5.2 版本差异的第一手证据
+- 控制台打印 `JSON.stringify(editor.saveSceneEditor()).length` → 得到**单场景真实字节数**
+- 若 0.187 跑不通：改 package.json 的 three 到 0.158 再跑 → 得出 P-1/P-2 的选择依据
+- 记录内核实际用到的 three API（对照 §5.2 核查清单逐项打勾）
 - 输出：一份探针报告（真实字节数 + 版本兼容矩阵 + 全局依赖清单）
 
 ### P0 内核 PoC（依赖 P0-0 结论，3~5 天）
 
-**步骤**：hmi-studio 加 `src/modules3d3d/core.ts`；`/edit3d/:id` 路由；iframe 承载（S-1）；
-postMessage 协议打通「加载 → 变换 → 保存」。
+**步骤**：hmi-studio 加 `src/modules3d3d/core.ts`（vendor 开源内核 + 自写 `index.d.ts`）；
+`/edit3d/:id` 路由；模块引入（S-2）；打通「加载 → 变换 → 保存」。
 
 **验证**
-- 打开 `/edit3d/iot-plant-3d` → 场景在 iframe 内渲染
+- 打开 `/edit3d/iot-plant-3d` → 场景渲染
 - 拖动一个实例 → 保存 → `GET /api/v1/screens/iot-plant-3d` 返回的 doc 含新坐标
 - 刷新页面 → 坐标保持（往返一致）
 - 字节数打印：确认文档体积与 128 KiB 的距离
+- **从 `/edit3d/:id` 切到 `/edit/:id`（2D 编辑器）→ 无 WebGL 上下文泄漏、无白屏**
 
 ### P1 属性面板 + 场景树（5~8 天）
 
@@ -416,7 +502,7 @@ postMessage 协议打通「加载 → 变换 → 保存」。
 
 **验证**：版本列表/回滚可用；预览页与编辑器所见一致；50 实例场景编辑态 ≥ 30 fps。
 
-**总计**：约 18~29 天工程量（不含许可谈判与 P0-0）。
+**总计**：约 18~29 天工程量（含 P0-0；**不含许可谈判**——已确认无需采购，见 §5.1）。
 
 ---
 
@@ -424,16 +510,17 @@ postMessage 协议打通「加载 → 变换 → 保存」。
 
 | # | 风险 | 等级 | 应对 |
 |---|---|---|---|
-| R1 | 内核 npm 包 Proprietary，无法采购 | **高** | P0-0 优先查开源仓库；先做不依赖内核的准备工作；文档格式设计成可平滑迁移（§5.1） |
-| R2 | three 0.184 vs 0.187 不兼容 | 中 | P0-0 实测验证；优先锁 0.184（§5.2） |
+| R1 | ~~内核 npm 包 Proprietary，无法采购~~ | **已消除** | **2026-11-26 实测更正**：开源仓库 `three-editor-cores` 含 11958 行完整源码、Apache-2.0、能力覆盖 README 明证 → 无需采购（§5.1） |
+| R2 | three 版本跨度大（内核 0.158 vs 本仓 0.187） | **高** | P0-0 实测；备选 P-1 降级本仓到 0.158（§5.2）；内核 `lib/Shader/ShaderChunk_*.js` 引用 three 内部常量，**最易碎**，需重点回归 |
 | R3 | 场景 JSON 超 128 KiB | 中 | 模型外置；保存前字节数校验与 UI 报错（§6.2） |
-| R4 | 内核 `window.*` 污染 2D 编辑器 | 中 | iframe 隔离（S-1）+ postMessage 协议（§5.3） |
-| R5 | 内核 API 不公开/不稳定（0.0.x 版本） | 中 | 适配层收敛所有内核调用到 `src/modules3d3d/core.ts` 一个文件；锁精确版本；升级需回归 |
+| R4 | 内核 `window.*` 与 2D 编辑器冲突 | **低**（更正） | 开源版可模块引入；只挂 3D 专有全局键；不采用 iframe（§5.3） |
+| R5 | 开源内核**无 `index.d.ts`**（package.json 声明了但文件不在） | 中 | 适配层自写类型声明；或局部 `@ts-expect-error`（P0-0 评估工作量） |
 | R6 | WebGL 上下文耗尽 | 中 | 列表页不挂 WebGL（已落地）；编辑器页单上下文；路由切换务必 `destroySceneRender()` |
-| R7 | 内核黑盒，出问题难定位 | 中 | 适配层加事件日志；P0-0 保留探针目录便于对照 |
+| R7 | vendor 内核的维护与升级 | 中 | 锁 commit；改动集中在 `src/modules3d3d/`；Apache-2.0 要求保留版权声明 |
 | R8 | 设备语义与内核通用实例模型冲突 | 中 | §7.3 的两层方案；`geometry.ts` 改造是 P1 主要工作量 |
 | R9 | GLB 模型文件无处托管 | 低 | 复用 gateway 的静态目录机制（`hmi_widgets_dir` 同款） |
-| R10 | 内核的 draco 解压路径依赖 CDN | 低 | 自托管 draco 解码器到 rs-iot 静态目录 |
+| R10 | 内核的 draco 解压路径依赖 CDN | 低 | 自托管 draco 解码器到 rs-iot 静态目录（开源仓库自带 `public/draco/`） |
+| R11 | 内核新增依赖（`gsap`/`proj4`/`cannon-es`/`dat.gui`）与本仓冲突 | 低 | 均为独立库，无冲突；记录进依赖清单（新增依赖需按 GATE 说明理由与许可） |
 
 ---
 
@@ -467,10 +554,11 @@ postMessage 协议打通「加载 → 变换 → 保存」。
 
 ## 11. 待决事项
 
-| # | 待决 | 需要谁 | 阻塞什么 |
-|---|---|---|---|
-| Q1 | 内核许可路径：A（开源仓库）/ B（采购）/ C（自研） | 用户 + 作者 | 阻塞 P0 及以后全部 |
-| Q2 | three 版本路径：锁 0.184 还是验证 0.187 | 技术 | 阻塞 P0 |
-| Q3 | 3D 组件库移植清单（§7.1 三档划分需确认） | 用户 | 阻塞 P1 |
-| Q4 | scene3d/2 是否要覆盖 scene3d/1（还是并存两版渲染器） | 用户 | 阻塞 P1 |
-| Q5 | GLB 模型托管位置（rs-iot 静态目录 vs 独立服务） | 架构 | 阻塞 P2 |
+| # | 待决 | 需要谁 | 阻塞什么 | 状态 |
+|---|---|---|---|---|
+| ~~Q1~~ | ~~内核许可路径~~ | — | — | **已解决**（2026-11-26）：选 **A-1 开源源码引入**，Apache-2.0，无需采购（§5.1） |
+| Q2 | three 版本路径：内核升到 0.187 还是本仓降到 0.158 | 技术（P0-0 实测后定） | 阻塞 P0 | 待 P0-0 实测 |
+| Q3 | 3D 组件库移植清单（§7.1 三档划分需确认） | 用户 | 阻塞 P1 | 待确认 |
+| Q4 | scene3d/2 是否要覆盖 scene3d/1（还是并存两版渲染器） | 用户 | 阻塞 P1 | 待确认 |
+| Q5 | GLB 模型托管位置（rs-iot 静态目录 vs 独立服务） | 架构 | 阻塞 P2 | 待确认 |
+| Q6 | 开源内核 vendored 的方式：源码拷贝进仓 vs git submodule vs 本地 path 依赖 | 技术 | 阻塞 P0 | 待 P0-0 一并定（建议：源码拷贝进仓并锁 commit，Apache-2.0 需保留 LICENSE 归属） |
