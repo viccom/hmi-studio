@@ -21,6 +21,10 @@ const alarmCount = ref(0)
 const fps = ref(0)
 const labels = ref<Array<{ id: string; text: string; value: string; x: number; y: number; prio: number }>>([])
 const selected = ref('')
+let navigating = false // 整页导航中：跳过 WebGL dispose，避免阻塞卸载
+/** 顶部设备下拉：3D 场景 → 2D faceplate 的稳定导航入口（不依赖 WebGL 拾取/浮层点击） */
+const deviceNav = computed(() => doc.nodes.filter((n) => n.devId).map((n) => ({ id: n.id, label: n.label ?? n.id })))
+function onPickDevice(id: string): void { if (id) openDevice(id) }
 
 // ---- 主题令牌（hmi-style-guide §2：灰阶底 + 异常饱和色） ----
 const C = {
@@ -38,6 +42,7 @@ let camera: THREE.PerspectiveCamera | null = null
 let controls: OrbitControls | null = null
 let stream: { close(): void } | null = null
 let raf = 0, ro: ResizeObserver | null = null
+let stageEl: HTMLElement | null = null
 let last = 0, frames = 0, fpsT = 0, lastAnim = 0
 const devices = new Map<string, THREE.Group>()
 const spinners: Array<{ mesh: THREE.Object3D; speed: number }> = []
@@ -314,7 +319,10 @@ function applyPoint(p: RtPoint): void {
     if (level) { const hh = Math.max(0.1, Math.min(1.8, v / 100 * 1.8)); level.scale.y = hh; level.position.y = 0.6 + hh / 2 }
     spinners.forEach((s) => { if (d.getObjectById(s.mesh.id) && s.speed < 0.3) s.speed = 0.08 + Math.min(v, 50) / 200 })
   }
-  if (renderer && scene && camera) renderer.render(scene, camera)
+  if (renderer && scene && camera) {
+    renderer.render(scene, camera)
+    if (still.value) updateLabels() // 静态模式没有动画循环，数据到了要主动刷新标签
+  }
 }
 
 function connect(): void {
@@ -337,8 +345,11 @@ function openDevice(devid: string): void {
   const n = doc.nodes.find((x) => x.id === devid)
   selected.value = devid
   for (const [id, g] of devices) { const s = g.userData.sel as THREE.Mesh | undefined; if (s) s.visible = id === devid }
-  const target = `/view/${kindToFaceplate(n?.kind ?? '')}?dev=${devid}`
-  void router.push(target)
+  const target = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/view/${kindToFaceplate(n?.kind ?? '')}?dev=${devid}`
+  console.log('[3d] open device', devid, '→', target)
+  // 整页导航：WebGL 上下文释放期间 SPA 软导航会被阻塞，location.href 保证必达
+  navigating = true
+  window.location.href = target
 }
 function pick(ev: PointerEvent): void {
   if (!down || !renderer || !camera) return
@@ -371,7 +382,8 @@ onMounted(async () => {
   renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY } })
   renderer.domElement.addEventListener('pointerup', pick)
   renderer.domElement.addEventListener('webglcontextlost', (e) => { e.preventDefault(); status.value = 'WebGL 上下文丢失' })
-  host.value.appendChild(renderer.domElement)
+  stageEl = host.value
+  stageEl.appendChild(renderer.domElement)
 
   scene = new THREE.Scene()
   scene.background = new THREE.Color(C.bg)
@@ -408,7 +420,9 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(raf); ro?.disconnect(); stream?.close(); controls?.dispose()
-  if (renderer) {
+  // 整页导航（window.location.href）时不做 WebGL dispose：软件渲染下 forceContextLoss
+  // 会卡住卸载流程导致导航失败；浏览器会在页面卸载时自行回收上下文。
+  if (!navigating && renderer) {
     scene?.traverse((o) => {
       if (o instanceof THREE.Mesh || o instanceof THREE.LineSegments) {
         o.geometry.dispose()
@@ -430,15 +444,18 @@ onBeforeUnmount(() => {
         <span class="badge">{{ status }}</span>
         <span class="badge">设备 {{ alarmCount }}</span>
         <span class="badge">{{ fps }} fps</span>
+        <select class="dev-picker" :value="selected" @change="onPickDevice(($event.target as HTMLSelectElement).value)">
+          <option value="">打开设备面板…</option>
+          <option v-for="n in deviceNav" :key="n.id" :value="n.id">{{ n.label }}</option>
+        </select>
       </div>
     </header>
     <div ref="host" class="stage">
-      <button
+      <div
         v-for="l in labels" :key="l.id"
         class="dev-label" :class="['prio-' + l.prio, { selected: selected === l.id }]"
         :style="{ left: l.x + 'px', top: l.y + 'px' }"
-        @click="openDevice(l.id)"
-      ><span class="tag">{{ l.text }}</span><span class="val">{{ l.value }}</span></button>
+      ><span class="tag">{{ l.text }}</span><span class="val">{{ l.value }}</span></div>
     </div>
     <div class="hint">
       <b>左键拖动</b> 旋转 · <b>右键拖动</b> 平移 · <b>滚轮</b> 缩放 · <b>单击设备/标签</b> 进入 2D 面板
@@ -455,11 +472,13 @@ onBeforeUnmount(() => {
 .badge { font-size: 12px; color: #5b6570; background: #eef1f4; border-radius: 4px; padding: 4px 8px; }
 .stage { flex: 1; min-height: 0; position: relative; overflow: hidden; }
 .stage :deep(canvas) { display: block; width: 100%; height: 100%; }
+.dev-picker { font-size: 12px; padding: 5px 8px; border: 1px solid #b9c2ca; border-radius: 4px; background: #fff; color: #3d4752; cursor: pointer; }
 .dev-label {
   position: absolute; transform: translate(-50%, -50%); display: flex; align-items: center; gap: 6px;
   white-space: nowrap; font-size: 11px; padding: 4px 7px; border: 1px solid #aab4be;
-  background: rgba(255,255,255,.94); color: #1f2328; border-radius: 4px; cursor: pointer;
+  background: rgba(255,255,255,.94); color: #1f2328; border-radius: 4px;
   box-shadow: 0 2px 6px rgba(40,55,70,.12); font-variant-numeric: tabular-nums;
+  pointer-events: none; /* 浮层只显示；导航靠 canvas 拾取或顶部下拉，避免点空 */
 }
 .dev-label .tag { font-weight: 600; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .dev-label .val { color: #1f4e79; }
