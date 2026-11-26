@@ -256,6 +256,7 @@ onMounted(async () => {
   viewer = new Viewer(host.value)
   // 2) 场景装配 + 拾取对象登记（setRaycasterObjects）
   rt = buildScene(viewer, doc)
+  // content 只作保活引用（对齐 threejs-demo 的 addAnimate 契约），动画时间基准在 animateRuntime 内部取
   viewer.addAnimate({ fun: animateRuntime(rt) as (...a: never[]) => void, content: viewer })
 
   // 3) mitt 事件总线：拾取与业务解耦（threejs-demo 同款）

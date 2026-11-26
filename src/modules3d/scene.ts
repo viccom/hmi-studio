@@ -85,10 +85,19 @@ export function buildScene(viewer: Viewer, doc: SceneDoc): SceneRuntime {
   return { devices, handle, devOfField, anim, spinners: anim.spinners, pulses: anim.pulses }
 }
 
-/** 动画回调工厂（交给 viewer.addAnimate，每帧统一执行） */
-export function animateRuntime(rt: SceneRuntime): (now: number) => void {
+/**
+ * 动画回调工厂（交给 viewer.addAnimate，每帧统一执行）。
+ *
+ * 时间基准用内部 performance.now()，**不依赖传入参数**——Viewer.addAnimate 的契约
+ * （对齐 threejs-demo）是 fun(content)，content 是业务对象（原版传 statsControls、
+ * 本页传 viewer），不是 rAF 时间戳。若在这里写 `(now: number) => now - lastAnim`，
+ * now 就是 viewer 对象 → NaN → 指针 rotation.y 变 NaN → matrixWorld NaN →
+ * raycast distance NaN 排到最前 → 点击任何设备都命中第一台（dev_wm1）。
+ */
+export function animateRuntime(rt: SceneRuntime): () => void {
   let lastAnim = 0
-  return (now: number) => {
+  return () => {
+    const now = performance.now()
     if (now - lastAnim < 50) return // 限速 ~20fps，省电
     const adt = Math.min((now - (lastAnim || now)) / 1000, 0.1)
     lastAnim = now
