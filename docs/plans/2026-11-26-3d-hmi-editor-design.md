@@ -1,6 +1,9 @@
 # 3D HMI 组态编辑器技术方案（threejs-editor 内核引入 hmi-studio）
 
-> 日期：2026-11-26 · 状态：**待评审**（本轮只出方案，不实现）
+> 日期：2026-11-26 · 状态：**已被取代**——选型与实施方案见 `2026-11-26-3d-editor-meteor-implementation-plan.md`
+> 本文保留作调研记录：§2（threejs-editor 调研）、§5.1（开源内核厘清）、§12（Meteor3DEditor 实测评估）仍是有效证据；
+> 但 §0 结论、§3~§11（基于 three-editor-cores 的架构/分期/风险）与 §12.5/§12.6（推荐与分期）**以新方案为准**。
+> 另：§12.3 的 D6 记录有误（见新方案 §8.3 更正）。
 > 关联：`docs/plans/2026-11-26-3d-hmi-design.md`（3D 空间层总设计）、`docs/hmi-style-guide.md` §0/§2（三类画面）
 > 调研对象：`3D研究/threejs-editor`（`z2586300277/threejs-editor`）、`3D研究/three-editor-cores`（`z2586300277/three-editor-cores`）
 
@@ -612,7 +615,7 @@ id 词法合法 + **body ≤ 128 KiB** + JSON 语法合法。**无 schema 校验
 | D3 | `saveScene`/`saveInitialView` 的 `findOneAndUpdate` **未包 `$set`** → 整文档替换，保存视角吞掉 lightingConfig/gisConfig | 功能（隐蔽：修好的配置被下次保存吞掉） | **已修**（两处补 `$set`） |
 | D4 | **10s 自动保存无并发保护** → 多标签互相静默覆盖（实测覆盖掉服务端修复） | 协作 | 无代码修法；记入评分（对比 hmi-studio `if_version` 乐观锁+409） |
 | D5 | load API 无 `Cache-Control` → 浏览器缓存陈旧场景响应 | 排障干扰 | **已修**（`no-store`） |
-| D6 | nodeGraph/nodeBindings 对**同一 GLTF 多实例**恢复链路有缺陷：骨骼被错误重挂/放大（实测四肢 world 飞至 150m） | 功能 | **已绕过**（`saveScene({stripBindings:true})` 剥离 nodeGraph/nodeBindings，加载端整段跳过；不使用跨模型重挂的场景无损失） |
+| D6 | ~~nodeGraph/nodeBindings 对同一 GLTF 多实例恢复链路有缺陷（四肢飞 150m）~~ | — | **误判，已更正（见新方案 §8.3）**：真因是 DEMO 构建 时 scale 设错（84m 巨物），恢复链路复测正常。不保存 nodeGraph 的真实理由是**体积**（仅 3 台 GLTF 即 nodeGraph 105 KiB + nodeBindings 84 KiB） |
 | D7 | 资产管线 meshopt 压缩把模型**缩小 ~24 倍**且无尺寸提示（实测 4.5m→0.19m） | 易错 | 已按压缩后 bounds 校正 scale；建议上游出 bounds 时带单位提示 |
 
 另：纯 JS 无 `index.d.ts`（hmi-studio 需补类型）；`window.editor` 全局（编辑器页内部自洽，影响小）。
