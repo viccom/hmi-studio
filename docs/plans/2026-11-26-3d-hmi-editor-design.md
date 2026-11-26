@@ -562,3 +562,114 @@ id 词法合法 + **body ≤ 128 KiB** + JSON 语法合法。**无 schema 校验
 | Q4 | scene3d/2 是否要覆盖 scene3d/1（还是并存两版渲染器） | 用户 | 阻塞 P1 | 待确认 |
 | Q5 | GLB 模型托管位置（rs-iot 静态目录 vs 独立服务） | 架构 | 阻塞 P2 | 待确认 |
 | Q6 | 开源内核 vendored 的方式：源码拷贝进仓 vs git submodule vs 本地 path 依赖 | 技术 | 阻塞 P0 | 待 P0-0 一并定（建议：源码拷贝进仓并锁 commit，Apache-2.0 需保留 LICENSE 归属） |
+
+---
+
+## 12. 候选深评更新（2026-11-26 晚）：实测 Meteor3DEditor 后推荐切换内核
+
+> 触发：用户指定深评 `nikonikoCW/Meteor3DEditor`。已 clone 到 `3D研究/Meteor3DEditor`，
+> 完成 pnpm install + 修复两处上游问题后**实际跑通**（本地 5173 + 后端 3002 + MongoDB 容器），
+> 并在其上构建了两个功能丰富的 DEMO 场景（172 对象工业车间 / 3 台骨骼动画机器人展厅），
+> 全部经真实浏览器验证。
+
+### 12.1 实测基本信息（与 §2.1b 三资产对照同框架）
+
+| 项 | 事实 |
+|---|---|
+| 许可 | **MIT**（2025 Meteor3D Team）——比 Apache-2.0 更宽松 |
+| 技术栈 | Vue 3.5 + **Pinia** + vue-router + three `^0.184` + Vite 7（与 hmi-studio 同栈） |
+| 结构 | pnpm monorepo：`packages/core`（SDK 7625 行）+ `packages/scene-editor`（编辑器面板 6637 行）+ `packages/asset-manager` + `meteor3d-server`（Express+MongoDB） |
+| 活跃度 | 最后提交 2026-11-11；单人项目（commit 显示从私有仓库同步） |
+| 商业成分 | README「商业许可」徽章仅指**未开源的应用编辑器**；仓库内三个包全 MIT |
+| 质量 | core 自带 11 个单元测试（node --test），实测全过 |
+
+### 12.2 能力面（实测——全部源码定位到行号/实际操作验证）
+
+**编辑器交互层（three-editor-cores 完全没有的部分）**：
+- 场景树 `SceneTree.vue`+`TreeNode.vue`：选中/删除/**reparent 重挂**
+- 属性面板 `PropertiesPanel.vue`（transform/名称/可见性/地理坐标）+ 材质面板 + 动画面板 + GIS/天气/相机面板
+- 撤销重做：`CommandFactory.js`（Add/Delete/Transform/**Reparent**/Composite 命令类）+ `HistoryManager.js`——完整命令模式
+- 物料库 `LibraryPanel.vue`：通用几何（盒/球/锥/柱/面）拖放 + 模型资产 + 可视化特效（护盾/扫描/标签/火焰，运行时预览不持久化）
+- 工具栏：选择/平移/旋转/缩放 gizmo 三模式 + 撤销/重做 + 批量导入 + 保存
+
+**运行时 SDK（`loadScene`）**：`Meteor3D.loadScene({sceneId, serverUrl, container})`——**运行页可完全脱离编辑器**加载场景渲染（返回实例 API：enableStats/三角统计）。编辑器产出 → 运行页消费的所见即所得架构成立。
+
+**运行时 manager（设备绑定告警的底层能力全齐）**：
+- `HighlightManager`（按对象/BID 高亮）、`OutlineManager`（轮廓光）、`LabelManager`（CSS2D 浮动标签，支持经纬度）、`RaycastManager`（**BVH 加速拾取**）、`AnimationManager`（per-bid controller，14 clips 切换/调速/暂停）
+
+**序列化体积（128KiB 实测）**：节点图只存 `bid+parentBid+order+transform`，GLTF 按 `url+assetId` 外置引用——实测 1 立方体全文档 **1556 B**，50 对象约 40~60 KB，**远优于 three-editor-cores 的全参数内嵌**（§6.2 的 128KiB 风险在此候选下基本消除）。
+
+**资产管线**：GLTF/GLB 上传 → 格式转换/清洗 → **KTX2 纹理压缩 + Meshopt 几何压缩** → 缩略图 → 边界盒/三角统计（实测 RobotExpressive 3237 面压缩+处理全通过）。
+
+**GIS（three-editor-cores 无此面板）**：`GeoCoordinateSystem` + `TileMapManager` 瓦片底图 + leaflet 地图选择器（904 行）。
+
+### 12.3 实测暴露的上游缺陷（7 项——评分输入，4 项已本地修）
+
+| # | 缺陷 | 影响 | 本地处置 |
+|---|---|---|---|
+| D1 | 新建场景默认灯光**全零**（`DEFAULT_LIGHTING` enabled:false+全 0）→ 首次打开必黑场 | 体验 | 脚本写灯；用户可右栏「设置」面板手动开 |
+| D2 | `SceneObject` Mongoose schema material 缺 `emissive/emissiveIntensity/opacity/alphaTest/wireframe/flatShading` → strict 剥除，**自发光保存即丢** | 功能 | **已修**（补 schema 字段） |
+| D3 | `saveScene`/`saveInitialView` 的 `findOneAndUpdate` **未包 `$set`** → 整文档替换，保存视角吞掉 lightingConfig/gisConfig | 功能（隐蔽：修好的配置被下次保存吞掉） | **已修**（两处补 `$set`） |
+| D4 | **10s 自动保存无并发保护** → 多标签互相静默覆盖（实测覆盖掉服务端修复） | 协作 | 无代码修法；记入评分（对比 hmi-studio `if_version` 乐观锁+409） |
+| D5 | load API 无 `Cache-Control` → 浏览器缓存陈旧场景响应 | 排障干扰 | **已修**（`no-store`） |
+| D6 | nodeGraph/nodeBindings 对**同一 GLTF 多实例**恢复链路有缺陷：骨骼被错误重挂/放大（实测四肢 world 飞至 150m） | 功能 | **已绕过**（`saveScene({stripBindings:true})` 剥离 nodeGraph/nodeBindings，加载端整段跳过；不使用跨模型重挂的场景无损失） |
+| D7 | 资产管线 meshopt 压缩把模型**缩小 ~24 倍**且无尺寸提示（实测 4.5m→0.19m） | 易错 | 已按压缩后 bounds 校正 scale；建议上游出 bounds 时带单位提示 |
+
+另：纯 JS 无 `index.d.ts`（hmi-studio 需补类型）；`window.editor` 全局（编辑器页内部自洽，影响小）。
+
+### 12.4 与 2D 组态编辑器的低代码体验差距表（本轮评估核心问题）
+
+| 2D（maotu）能力 | 3D（Meteor3D）现状 | 缺口工作 |
+|---|---|---|
+| 拖拽图元上画布 | 拖几何体/模型上视口 ✓ | 无 |
+| 属性面板所见即所得 | Properties/Material 面板 ✓ | 无 |
+| 撤销重做 | 命令模式 + HistoryManager ✓ | 无 |
+| 物料库 | 通用几何+GLTF 资产+特效 | **工业语义图元库**（水表/泵/罐/管线→GLB 或几何组合，移植 `modules3d/geometry.ts`） |
+| **数据绑定（rs-iot 点位）** | **无任何绑定概念** | **自研 bindings 层**：bid→field 映射 + 绑定面板（复用 BindPanel 语义）+ device-tree |
+| **运行时数据驱动** | loadScene 只加载静态场景 | **自研运行页**：loadScene SDK + `createRtdataStream` SSE → 材质色/标签值/动画速度驱动（`HighlightManager`/`LabelManager` 现成） |
+| 事件/联动 | SceneEvent 点击拾取基础 | 自研 events（点击设备→跳 2D faceplate 等） |
+| 版本/乐观锁 | MongoDB 版本（无 if_version） | 换 rs-iot screens API → 乐观锁+版本面板**直接获得** |
+| 保存链路 | DBManager 两方法 | **适配层约 30 行**：`saveScene/getSceneData` 换 `screensApi.putScene/getScene`（DBManager 是唯一后端耦合点） |
+
+**结论**：交互壳（物料/属性/材质/动画/撤销/场景树/视角管理）已达到甚至超过 2D 体验的下限；**「类似 2D 的低代码体验」的缺口集中在数据面**——绑定、运行驱动、事件三块，这三块无论选哪个候选都必须自研（3D 组态的固有工作量），Meteor3D 不欠账更多。
+
+### 12.5 两候选终评对比（更新 §5.1/§9）
+
+| 维度 | three-editor-cores（§5.1 原推荐） | **Meteor3DEditor（新推荐）** |
+|---|---|---|
+| 许可 | Apache-2.0 | **MIT** |
+| three 版本差 | 0.158 → 0.187（**29 minor，§9 R2 高风险**） | 0.184 → 0.187（**3 minor，低**） |
+| 编辑器面板层 | 无（threejs-editor 壳绑专有 npm 包） | **自带全套 Vue3 面板** |
+| 撤销重做 | 简单 History | 命令模式+复合命令 |
+| 场景树 | 无 | 有（含 reparent） |
+| 序列化体积 | 全参数内嵌（128KiB 高危） | 节点图+URL 引用（实测 1.5KB/对象） |
+| 运行页 SDK | 无 | `loadScene` 独立入口 ✓ |
+| GIS/资产管线 | 无 | 有（leaflet 底图 + KTX2/Meshopt 管线） |
+| 测试/类型 | 无测试无 d.ts | 11 测试 ✓ / 无 d.ts |
+| 已知缺陷 | 多 GLTF 实例链路未验 | 7 项实测缺陷（4 项已本地修） |
+| 维护 | 单人（28 commits） | 单人（活跃至 2026-11-11） |
+
+**推荐**：**首选内核切换为 Meteor3DEditor**，three-editor-cores 降为备选。核心理由：①three 版本贴（头号风险 R2 从高降低）；②交互壳现成（省 P1 主要工作量）；③序列化体积健康（R3 消除）；④MIT + 运行页 SDK 使「编辑器→运行页」架构一步到位。
+
+### 12.6 更新后的分期路线（替换 §8）
+
+| 期 | 内容 | 验证 |
+|---|---|---|
+| P0 vendor + 存储适配（3~5 天） | `src/modules3d3d/` vendor Meteor core（锁 commit+保留 MIT 声明）；DBManager 适配 rs-iot（`putScene/getScene` + if_version）；`index.d.ts` 补类型；路由 `/edit3d/:id` | 打开 `/edit3d/:id` 加载/编辑/保存/刷新一致；从 `/edit/:id` 切换无 WebGL 泄漏 |
+| P1 运行页 + SSE 驱动（5~8 天） | `/view3d/:id` 改用 loadScene SDK 渲染 scene3d/2；SSE `createRtdataStream` 接入；高亮/标签驱动 | 场景对象随实时值变化；编辑保存 → 运行页所见一致 |
+| P2 绑定层（5~8 天） | `bindings`（bid→field）+ 绑定面板（复用 BindPanel 语义/device-tree）+ 告警→Highlight/Label 映射 | 绑定 `dev_wm1.flow_rate` → 运行页对象数值/高亮随 SSE 变化 |
+| P3 事件 + 工业图元首批（5~8 天） | 点击设备→跳 2D faceplate；`modules3d/geometry.ts` 改造输出 Meteor 兼容 GLTF/组合件（泵/罐/管线首批） | 全链路：3D 点击→2D 面板→返回；首批工业图元可拖放 |
+
+总计约 18~29 天（与 §8 量级一致，但 P0/P1 风险显著更低——交互壳与运行 SDK 现成）。
+
+### 12.7 待决事项更新（替换 §11）
+
+| # | 待决 | 状态 |
+|---|---|---|
+| Q1 内核许可 | ~~已解决~~ → **随候选切换重开：MIT，无采购问题** | 已闭 |
+| Q2 three 版本 | Meteor 用 0.184：**P0 实测 core 在 0.187 下运行**（3 minor 差距，大概率兼容）或锁 0.184 | 待 P0 实测 |
+| Q3 组件库移植 | Meteor 自带通用几何+模型资产；工业图元仍需移植 `geometry.ts` | 待确认首批清单 |
+| Q4 scene3d/2 契约 | 按 §4.2 结构，`core` 字段存 Meteor `saveScene` 原生 JSON | 待 P0 定稿 |
+| Q5 GLB 托管 | 建议 rs-iot 静态目录（复用 gateway 静态机制） | 待架构确认 |
+| Q7 **新增**：autoSave 与 if_version 乐观锁的交互（D4）——引入后自动保存需走乐观锁，冲突时 UI 提示 | 设计 | P0 需出方案 |
+| Q8 **新增**：Meteor3D 编辑器 UI 与 hmi-studio 风格统一（工业深色主题/HP-HMI 色板）程度 | 设计 | P1 |
