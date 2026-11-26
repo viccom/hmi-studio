@@ -4,7 +4,7 @@
  * 结果态收敛（ok/exists/failed），ElMessage 提示留在视图层。
  */
 import { ApiError } from './api'
-import { blankScreen, screensApi, wrapDoc, type ScreenMeta } from './screens'
+import { blankScreen, blankScene3D, screensApi, wrapDoc, type ScreenMeta } from './screens'
 
 /** slug 规则：小写字母/数字开头，仅含小写字母、数字、中划线（与两处对话框校验一致） */
 export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]*$/
@@ -27,6 +27,33 @@ export async function createScreen(
   }
   try {
     await client.put(id, wrapDoc(blankScreen(id), meta))
+    return 'ok'
+  } catch {
+    return 'failed'
+  }
+}
+
+/**
+ * 新建 3D 场景（2026-11-26）：与 createScreen 同语义（探测防覆盖 + 全量 upsert），
+ * 只是落库的空白文档是 SceneDoc（$schema=agent-hmi.scene3d/1）而非 maotu done_json。
+ * name/group 落在 3D 文档的 meta 内（SceneDoc 契约），故不走 wrapDoc。
+ */
+export async function createScene3D(
+  client: ScreensClient = screensApi(),
+  id: string,
+  meta: ScreenMeta,
+): Promise<CreateResult> {
+  try {
+    await client.get(id)
+    return 'exists'
+  } catch (e) {
+    if (!(e instanceof ApiError) || e.status !== 404) return 'failed'
+  }
+  const doc = blankScene3D(id)
+  if (meta.name !== undefined) doc.meta.name = meta.name
+  if (meta.group !== undefined) doc.meta.group = meta.group
+  try {
+    await client.putScene(id, doc)
     return 'ok'
   } catch {
     return 'failed'

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { ApiError } from './api'
-import { blankScreen, wrapDoc, screensApi } from './screens'
-import { batched, loadScreenCards, groupSections } from './screen-list'
+import { blankScreen, blankScene3D, wrapDoc, screensApi } from './screens'
+import { batched, loadScreenCards, loadScreenCardsByKind, groupSections } from './screen-list'
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -92,6 +92,46 @@ describe('loadScreenCards', () => {
     }
     await expect(loadScreenCards(fake as unknown as ReturnType<typeof screensApi>, 6))
       .rejects.toBeInstanceOf(ApiError)
+  })
+})
+
+// 2D/3D 分流：两个列表页各自只显示自己那一类（导航分开后互不含对方卡片）
+describe('loadScreenCardsByKind', () => {
+  const mixed = {
+    list: async () => ['a2d', 'b3d', 'c2d'],
+    get: async (id: string) => {
+      if (id === 'b3d') {
+        const doc = blankScene3D(id)
+        doc.meta.name = '3D 场景名'
+        doc.meta.group = '空间层'
+        return { id, doc }
+      }
+      const doc = wrapDoc(blankScreen(id), { name: `2D-${id}`, group: 'g1' })
+      return { id, doc }
+    },
+    put: async () => undefined,
+    del: async () => undefined,
+  }
+
+  it('kind=2d → 只返回 2D 卡片；kind=3d → 只返回 3D 卡片', async () => {
+    const two = await loadScreenCardsByKind('2d', mixed as unknown as ReturnType<typeof screensApi>)
+    expect(two.map(c => c.id)).toEqual(['a2d', 'c2d'])
+    expect(two.every(c => !c.is3d)).toBe(true)
+
+    const three = await loadScreenCardsByKind('3d', mixed as unknown as ReturnType<typeof screensApi>)
+    expect(three.map(c => c.id)).toEqual(['b3d'])
+    expect(three[0].is3d).toBe(true)
+  })
+
+  it('3D 卡片的 name/group 取自文档 meta（不是顶层——顶层恒 undefined）', async () => {
+    const three = await loadScreenCardsByKind('3d', mixed as unknown as ReturnType<typeof screensApi>)
+    expect(three[0].name).toBe('3D 场景名')
+    expect(three[0].group).toBe('空间层')
+  })
+
+  it('2D 卡片不带 is3d 标记（页面据此分流，避免两页各自判法漂移）', async () => {
+    const two = await loadScreenCardsByKind('2d', mixed as unknown as ReturnType<typeof screensApi>)
+    expect(two.every(c => c.is3d === undefined)).toBe(true)
   })
 })
 

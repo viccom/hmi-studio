@@ -4,7 +4,9 @@ import { tokenStore } from './lib/api'
 // /dev/* 是研究资产（spike/probe），不进导航不进守卫
 const routes = [
   { path: '/login', component: () => import('./views/LoginView.vue') },
+  // 画面管理页按类型分列：/ = 2D 画面（maotu done_json），/screens3d = 3D 场景（$schema 判别）
   { path: '/', component: () => import('./views/ScreenListView.vue') },
+  { path: '/screens3d', component: () => import('./views/ScreenList3DView.vue') },
   { path: '/view/:id', component: () => import('./views/ViewView.vue') },
   { path: '/view3d/:id', component: () => import('./views3d/Scene3DView.vue') },
   { path: '/edit/:id', component: () => import('./views/EditView.vue') },

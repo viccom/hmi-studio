@@ -9,7 +9,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { screensApi } from '../lib/screens'
-import { loadScreenCards, groupSections, type ScreenCard } from '../lib/screen-list'
+import { loadScreenCardsByKind, groupSections, type ScreenCard } from '../lib/screen-list'
 import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
 import { updateScreenMeta, renameGroup, disbandGroup } from '../lib/screen-group'
 import { registerSymbols } from '../symbols'
@@ -33,7 +33,7 @@ const appearDelay = (sIdx: number, i: number) =>
 async function refresh() {
   loading.value = true
   try {
-    cards.value = await loadScreenCards(sApi)
+    cards.value = await loadScreenCardsByKind('2d', sApi)
   } catch {
     ElMessage.error('画面列表加载失败')
   } finally {
@@ -86,12 +86,6 @@ function openEdit(c: ScreenCard) {
 // 浏览模式新标签页打开：/view 无返回管理页入口，避免占走当前标签页。
 function openView(id: string) {
   const href = router.resolve({ path: `/view/${id}` }).href
-  window.open(href, '_blank', 'noopener')
-}
-
-/** 3D 场景在新标签页打开（与 2D 浏览同语义，但走 /view3d/ 路由） */
-function openView3d(id: string) {
-  const href = router.resolve({ path: `/view3d/${id}` }).href
   window.open(href, '_blank', 'noopener')
 }
 
@@ -180,7 +174,8 @@ async function doDisbandGroup(g: string) {
         </span>
         <span class="topbar-sep" aria-hidden="true"></span>
         <nav class="topnav" aria-label="站点导航">
-          <span class="topnav-item active">画面</span>
+          <span class="topnav-item active">2D 画面</span>
+          <router-link class="topnav-item" to="/screens3d">3D 画面</router-link>
           <a class="topnav-item back-console" href="/">控制台 ↗</a>
         </nav>
       </div>
@@ -236,32 +231,22 @@ async function doDisbandGroup(g: string) {
               class="screen-card card-in"
               :style="{ animationDelay: `${appearDelay(sIdx, i)}ms` }"
               :data-screen-id="c.id"
-              @click="c.is3d ? router.push(`/view3d/${c.id}`) : router.push(`/edit/${c.id}`)"
+              @click="router.push(`/edit/${c.id}`)"
             >
               <div class="card-thumb-box">
-                <div v-if="c.is3d" class="scene3d-thumb">
-                  <svg viewBox="0 0 200 120" width="100%" height="100%" aria-hidden="true">
-                    <path d="M20 95 L100 45 L180 95 Z" fill="#e8edf2" stroke="#8d99a6" stroke-width="1.5" />
-                    <path d="M100 45 L100 95 M20 95 L180 95" stroke="#b9c2ca" stroke-width="1" />
-                    <rect x="55" y="62" width="12" height="18" fill="#5b6570" />
-                    <rect x="90" y="55" width="12" height="18" fill="#5b6570" />
-                    <rect x="125" y="66" width="12" height="18" fill="#5b6570" />
-                  </svg>
-                  <span class="scene3d-thumb-tag">3D 场景</span>
-                </div>
-                <ScreenThumb v-else :done="c.done" />
+                <ScreenThumb :done="c.done" />
               </div>
               <div class="card-meta">
                 <div class="card-row">
                   <span class="card-no" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
                   <span class="card-name" :title="c.name ?? c.id">{{ c.name ?? c.id }}</span>
                   <span class="card-ops" @click.stop>
-                    <button class="icon-btn" :title="c.is3d ? '打开 3D 场景' : '编辑信息（名称/分组）'" @click="c.is3d ? router.push(`/view3d/${c.id}`) : openEdit(c)">
+                    <button class="icon-btn" title="编辑信息（名称/分组）" @click="openEdit(c)">
                       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                       </svg>
                     </button>
-                    <button class="icon-btn" title="在新标签页打开浏览器" @click="c.is3d ? openView3d(c.id) : openView(c.id)">
+                    <button class="icon-btn" title="在新标签页打开浏览器" @click="openView(c.id)">
                       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 3h7v7M21 3l-9 9M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6" />
                       </svg>
@@ -320,168 +305,7 @@ async function doDisbandGroup(g: string) {
 </template>
 
 <style scoped>
-/* ---------- 顶部导航 ---------- */
-.topbar {
-  position: sticky; top: 0; z-index: 20;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  height: 56px; padding: 0 24px;
-  background: color-mix(in srgb, var(--el-bg-color) 82%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-.topbar-left, .topbar-right { display: inline-flex; align-items: center; gap: 16px; min-width: 0; }
-.brand {
-  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
-}
-.brand-mark {
-  width: 14px; height: 14px; border-radius: 3px;
-  background: linear-gradient(135deg, var(--el-color-primary), color-mix(in srgb, var(--el-color-primary) 55%, #000));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
-}
-.brand-name { font-weight: 800; font-size: 14px; letter-spacing: 0.08em; }
-.brand-app {
-  font-family: ui-monospace, Consolas, monospace; font-size: 11px; font-weight: 600;
-  color: var(--el-color-primary); border: 1px solid color-mix(in srgb, var(--el-color-primary) 45%, transparent);
-  border-radius: 4px; padding: 1px 5px; letter-spacing: 0.1em;
-}
-.topbar-sep { width: 1px; height: 20px; background: var(--el-border-color); }
-.topnav { display: inline-flex; align-items: center; gap: 4px; }
-.topnav-item {
-  position: relative; padding: 6px 12px; border-radius: 6px;
-  font-size: 13px; color: var(--el-text-color-regular); text-decoration: none; cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-.topnav-item:hover { color: var(--el-color-primary); background: var(--el-fill-color-light); }
-.topnav-item.active {
-  color: var(--el-color-primary); font-weight: 600;
-}
-.topnav-item.active::after {
-  content: ""; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px;
-  background: var(--el-color-primary); border-radius: 2px 2px 0 0;
-}
-.topbar-stats {
-  font-size: 12px; color: var(--el-text-color-secondary); white-space: nowrap;
-}
-.topbar-stats strong {
-  font-family: ui-monospace, Consolas, monospace; font-size: 13px;
-  color: var(--el-text-color-primary);
-}
-.new-btn { display: inline-flex; align-items: center; gap: 6px; }
-
-/* ---------- 主体 ---------- */
-.list-body { max-width: 1480px; margin: 0 auto; padding: 26px 32px 72px; }
-
-/* 空态 */
-.empty {
-  margin-top: 8vh; padding: 64px 24px; text-align: center;
-  border: 1.5px dashed var(--el-border-color); border-radius: 14px;
-  background: var(--el-bg-color);
-}
-.empty-plus {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 52px; height: 52px; border-radius: 14px; margin-bottom: 14px;
-  font-size: 30px; font-weight: 300; color: var(--el-color-primary);
-  background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
-}
-.empty-title { margin: 0 0 6px; font-size: 16px; font-weight: 600; color: var(--el-text-color-primary); }
-.empty-sub { margin: 0 0 20px; font-size: 13px; color: var(--el-text-color-secondary); }
-
-/* 分组 section */
-.group-block { margin-bottom: 34px; }
-.group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.group-no {
-  font-family: ui-monospace, Consolas, monospace; font-size: 11px; font-weight: 700;
-  color: var(--el-color-primary);
-  border: 1px solid color-mix(in srgb, var(--el-color-primary) 40%, transparent);
-  background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
-  border-radius: 5px; padding: 2px 6px; letter-spacing: 0.08em;
-}
-.group-name { font-weight: 700; font-size: 15px; color: var(--el-text-color-primary); }
-.group-head-el { display: inline-flex; }
-/* 组管理操作：hover 组头渐显（常驻显挤，操作低频） */
-.group-ops { display: inline-flex; gap: 2px; opacity: 0; transition: opacity 0.15s ease; }
-.group-head:hover .group-ops { opacity: 1; }
-.group-rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--el-border-color-lighter), transparent); }
-.group-select { width: 100%; }
-
-/* 卡片网格 */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-  gap: 18px;
-}
-
-.screen-card {
-  border: 1px solid var(--el-border-color-lighter); border-radius: 10px;
-  background: var(--el-bg-color); overflow: hidden; cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-.screen-card:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--el-color-primary) 50%, var(--el-border-color));
-  box-shadow: 0 10px 28px -12px color-mix(in srgb, var(--el-color-primary) 35%, rgba(0, 0, 0, 0.35));
-}
-
-/* 缩略框：统一 16:9 视窗，深底衬托组态画面（画面本身多为深色底） */
-.card-thumb-box {
-  aspect-ratio: 16 / 9; overflow: hidden;
-  background: var(--el-fill-color-darker);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-.card-thumb-box :deep(.thumb) { border: none; border-radius: 0; margin-bottom: 0; background: transparent; }
-/* 3D 场景缩略图：静态 SVG 海报（不挂 WebGL，避免列表页耗尽上下文） */
-.scene3d-thumb { width: 100%; height: 100%; position: relative; background: #eef1f4; display: flex; align-items: center; }
-.scene3d-thumb-tag { position: absolute; left: 8px; top: 8px; font-size: 10px; padding: 2px 6px; border-radius: 3px; background: #1f4e79; color: #fff; }
-
-.card-meta { padding: 11px 14px 13px; }
-.card-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.card-no {
-  font-family: ui-monospace, Consolas, monospace; font-size: 11px;
-  color: var(--el-text-color-secondary); flex-shrink: 0;
-}
-.card-name {
-  flex: 1; min-width: 0; font-weight: 600; font-size: 14px;
-  color: var(--el-text-color-primary);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.card-ops { display: inline-flex; gap: 2px; flex-shrink: 0; }
-.card-slug {
-  margin-top: 4px; padding-left: 21px;
-  color: var(--el-text-color-secondary); font-size: 11px;
-  font-family: ui-monospace, Consolas, monospace; letter-spacing: 0.02em;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.icon-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; padding: 0; border: none; border-radius: 6px;
-  background: transparent; color: var(--el-text-color-secondary); cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-.icon-btn:hover { background: var(--el-fill-color); color: var(--el-color-primary); }
-.icon-btn.danger:hover { color: var(--el-color-danger); }
-
-/* 网格尾新建卡 */
-.new-card {
-  min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  border: 1.5px dashed var(--el-border-color); border-radius: 10px;
-  background: transparent; cursor: pointer;
-  font-size: 13px; color: var(--el-text-color-secondary);
-  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
-}
-.new-card:hover {
-  border-color: var(--el-color-primary); border-style: solid;
-  color: var(--el-color-primary); background: color-mix(in srgb, var(--el-color-primary) 5%, transparent);
-}
-.new-card-plus { font-size: 26px; font-weight: 300; line-height: 1; }
-
-/* 入场 staggered（prefers-reduced-motion 尊重系统设置） */
-.card-in { animation: card-in 0.4s cubic-bezier(0.22, 0.8, 0.36, 1) both; }
-@keyframes card-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .card-in { animation: none; }
-  .screen-card, .new-card { transition: none; }
-}
+/* 共享样式（顶栏/卡片墙/分组/新建卡）见 src/styles/screen-list.css —— 2D/3D 两页共用，
+   避免两份 scoped 样式漂移。本页特有样式在下方。 */
+:deep(.card-thumb-box .thumb) { border: none; border-radius: 0; margin-bottom: 0; background: transparent; }
 </style>

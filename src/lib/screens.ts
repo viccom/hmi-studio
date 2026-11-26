@@ -5,11 +5,13 @@
  */
 import type { IExportJson } from 'maotu'
 import { api } from './api'
+import type { SceneDoc } from './scene3d'
 
 /** 设备参数化画面的设备清单（W11）：faceplate 的选择器/按钮清单同源；
  * 首项 = 运行页默认激活设备（传统 HMI：进入即有上下文，无需先选） */
 export interface DevOpt { id: string; label?: string }
 export interface ScreenMeta { name?: string; group?: string; devs?: DevOpt[] }
+/** 2D 画面文档（maotu done_json + meta 同体） */
 export type ScreenDoc = IExportJson & ScreenMeta
 
 /** 版本元数据行（GET /:id/versions，seq 降序）；expired = 正文已过 TTL（取回将 410） */
@@ -63,6 +65,23 @@ export function blankScreen(slug: string): ScreenDoc {
   }
 }
 
+/**
+ * 空白 3D 场景（$schema=agent-hmi.scene3d/1，空节点空连线）。
+ *
+ * 与 blankScreen 的分工：2D 画面的 done_json 走 maotu 的 IExportJson（canvasCfg/json…），
+ * 3D 场景是独立文档契约（src/lib/scene3d.ts 的 SceneDoc），两者靠 $schema 判别——
+ * 后端 PUT 只校验 id 词法 / ≤128 KiB / JSON 合法，不看 schema，故可同存 screen:* 键族。
+ * name/group 放在 3D 文档的 meta 内（与 SceneDoc 契约一致）。
+ */
+export function blankScene3D(slug: string): SceneDoc {
+  return {
+    $schema: 'agent-hmi.scene3d/1',
+    meta: { name: slug, group: '', unit_m: 1, home: { pos: [15, 11, 17], target: [-2, 1, -1] } },
+    nodes: [],
+    links: [],
+  }
+}
+
 /** CRUD 薄封装：只管 URL 拼接与方法，错误统一走 api client（ApiError/401 回调）。
  *  put 的 ifVersion 可选（P0 乐观锁）：缺省 = 无条件写，签名向后兼容（e2e fixtures 同用此封装）。 */
 export function screensApi(client: ApiClient = api()) {
@@ -72,6 +91,25 @@ export function screensApi(client: ApiClient = api()) {
     get: (id: string): Promise<{ id: string; doc: ScreenDoc; version: number }> =>
       client.get(`/api/v1/screens/${id}`) as Promise<{ id: string; doc: ScreenDoc; version: number }>,
     put: (id: string, doc: ScreenDoc, ifVersion?: number): Promise<PutResult> =>
+      client.put(
+        ifVersion !== undefined ? `/api/v1/screens/${id}?if_version=${ifVersion}` : `/api/v1/screens/${id}`,
+        doc,
+      ) as Promise<PutResult>,
+    /**
+     * 取 3D 场景文档（$schema=agent-hmi.scene3d/1）。
+     *
+     * 与 get 的关系：同一 URL、同一返回，只是类型收窄到 SceneDoc——3D 文档的
+     * name/group 在 meta 内（SceneDoc 契约），不是 2D 的顶层字段，故单列方法，
+     * 不把联合类型泄进 2D 调用方（screen-group / EditView / ViewView 仍是 ScreenDoc）。
+     */
+    getScene: async (id: string): Promise<{ id: string; doc: SceneDoc; version: number }> => {
+      const r = await client.get(`/api/v1/screens/${id}`) as { id: string; doc: unknown; version: number }
+      const doc = r.doc as SceneDoc
+      if (doc?.$schema !== 'agent-hmi.scene3d/1') throw new Error(`getScene: ${id} 不是 3D 场景文档`)
+      return { id: r.id, doc, version: r.version }
+    },
+    /** 写 3D 场景文档（SceneDoc 直传，不经 wrapDoc——避免把 meta 摊平到顶层） */
+    putScene: (id: string, doc: SceneDoc, ifVersion?: number): Promise<PutResult> =>
       client.put(
         ifVersion !== undefined ? `/api/v1/screens/${id}?if_version=${ifVersion}` : `/api/v1/screens/${id}`,
         doc,
