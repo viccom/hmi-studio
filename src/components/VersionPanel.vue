@@ -7,10 +7,17 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { ApiError } from '../lib/api'
 import { screensApi, type ScreenVersionDoc, type ScreenVersionMeta } from '../lib/screens'
 
-const props = defineProps<{ slug: string }>()
+/** 版本面板依赖的最小 client 面（screensApi 与 3D 的 sceneStore 都满足） */
+export interface VersionClient {
+  versions(id: string): Promise<ScreenVersionMeta[]>
+  versionDoc(id: string, seq: number): Promise<ScreenVersionDoc>
+  rollback(id: string, toVersion: number): Promise<unknown>
+}
+
+const props = defineProps<{ slug: string; client?: VersionClient }>()
 const emit = defineEmits<{ (e: 'rollback-done'): void }>()
 
-const sApi = screensApi()
+const sApi = (props.client ?? screensApi()) as unknown as VersionClient
 const versions = ref<ScreenVersionMeta[]>([])
 const loading = ref(false)
 const preview = ref<ScreenVersionDoc>()

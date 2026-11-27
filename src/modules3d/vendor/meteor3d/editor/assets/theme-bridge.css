@@ -1,0 +1,86 @@
+/**
+ * vendor 面板主题桥（P3，Q8 档②的收尾）。
+ *
+ * 上游面板有 ~190 处硬编码色（`#222`/`#2a2a2a`/`#333` 深灰系 + `#2687e8` 蓝）。
+ * 逐处改源码会破坏 vendor 可升级性（升级时要重放 190 处），所以这里**不改 vendor**，
+ * 而是在面板作用域内用 `--hmi3d-*` 变量 + 选择器覆盖，把颜色接到 hmi-studio 的
+ * `--el-*` 主题变量上：深色主题自动跟随，浅色主题下也不至于突兀。
+ *
+ * 纪律：只覆盖"面"与"字"（背景/边框/文字），不动语义色（状态灯的红/绿/黄是设备语义）。
+ */
+
+/* 面板容器：统一底色与文字 */
+:where(.scene-tree-panel, .properties-panel, .material-panel, .animation-panel,
+  .scene-settings-panel, .library-panel, .tree-item) {
+  background-color: var(--el-bg-color) !important;
+  color: var(--el-text-color-primary) !important;
+  border-color: var(--el-border-color-lighter) !important;
+}
+
+/* 分区标题/小标题 */
+:where(.scene-tree-panel, .properties-panel, .material-panel, .animation-panel,
+  .scene-settings-panel, .library-panel) :where(h3, h4) {
+  color: var(--el-text-color-primary) !important;
+  border-color: var(--el-border-color-lighter) !important;
+}
+
+/* 表单控件：上游是原生 input/select，接到 element-plus 的色板 */
+:where(.properties-panel, .material-panel, .animation-panel, .scene-settings-panel,
+  .library-panel) :where(input, select, textarea) {
+  background-color: var(--el-fill-color-blank) !important;
+  color: var(--el-text-color-primary) !important;
+  border-color: var(--el-border-color) !important;
+  border-radius: var(--el-border-radius-base);
+}
+:where(.properties-panel, .material-panel, .animation-panel, .scene-settings-panel)
+  :where(input, select, textarea):focus {
+  border-color: var(--el-color-primary) !important;
+  outline: none;
+}
+
+/* 标签文字（"常规/位置/旋转"这类） */
+:where(.properties-panel, .material-panel, .animation-panel, .scene-settings-panel)
+  :where(label, .prop-row > label, .cfg-label, .bind-label) {
+  color: var(--el-text-color-secondary) !important;
+}
+
+/* 只读值 / 提示文字 */
+:where(.properties-panel, .material-panel, .animation-panel, .scene-settings-panel)
+  :where(.readonly-val, .hint, small) {
+  color: var(--el-text-color-secondary) !important;
+}
+
+/* 场景树选中态：用主题主色（上游是固定蓝 #2687e8） */
+:where(.tree-item).selected {
+  background-color: color-mix(in srgb, var(--el-color-primary) 18%, transparent) !important;
+  border-color: var(--el-color-primary) !important;
+  color: var(--el-text-color-primary) !important;
+}
+:where(.tree-item):hover {
+  background-color: var(--el-fill-color-light) !important;
+}
+
+/* 物料库条目 */
+:where(.library-panel) :where(.item) {
+  background-color: var(--el-fill-color-light) !important;
+  color: var(--el-text-color-primary) !important;
+  border-color: var(--el-border-color-lighter) !important;
+  border-radius: var(--el-border-radius-base);
+}
+:where(.library-panel) :where(.item):hover {
+  border-color: var(--el-color-primary) !important;
+  color: var(--el-color-primary) !important;
+}
+
+/* 上游底部工具条（幽灵模式/移动/旋转…）：接主题 */
+:where(.toolbar, .edit3d-toolbar) :where(button) {
+  background-color: var(--el-fill-color-light) !important;
+  color: var(--el-text-color-primary) !important;
+  border-color: var(--el-border-color-lighter) !important;
+  border-radius: var(--el-border-radius-base);
+}
+:where(.toolbar, .edit3d-toolbar) :where(button.active, button.is-active) {
+  background-color: var(--el-color-primary) !important;
+  color: #fff !important;
+  border-color: var(--el-color-primary) !important;
+}

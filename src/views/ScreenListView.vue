@@ -10,6 +10,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { screensApi } from '../lib/screens'
 import { loadScreenCards, groupSections, type ScreenCard } from '../lib/screen-list'
+import { optionalNav } from '../modules/registry'
 import { createScreen, SLUG_PATTERN } from '../lib/screen-create'
 import { updateScreenMeta, renameGroup, disbandGroup } from '../lib/screen-group'
 import { registerSymbols } from '../symbols'
@@ -174,7 +175,9 @@ async function doDisbandGroup(g: string) {
         </span>
         <span class="topbar-sep" aria-hidden="true"></span>
         <nav class="topnav" aria-label="站点导航">
-          <span class="topnav-item active">画面</span>
+          <span class="topnav-item active">2D 画面</span>
+          <!-- 可选模块（3D 组态等）贡献的导航项；模块目录删除后此处自动为空 -->
+          <router-link v-for="n in optionalNav" :key="n.to" class="topnav-item" :to="n.to">{{ n.label }}</router-link>
           <a class="topnav-item back-console" href="/">控制台 ↗</a>
         </nav>
       </div>
@@ -304,165 +307,7 @@ async function doDisbandGroup(g: string) {
 </template>
 
 <style scoped>
-/* ---------- 顶部导航 ---------- */
-.topbar {
-  position: sticky; top: 0; z-index: 20;
-  display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  height: 56px; padding: 0 24px;
-  background: color-mix(in srgb, var(--el-bg-color) 82%, transparent);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-.topbar-left, .topbar-right { display: inline-flex; align-items: center; gap: 16px; min-width: 0; }
-.brand {
-  display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
-}
-.brand-mark {
-  width: 14px; height: 14px; border-radius: 3px;
-  background: linear-gradient(135deg, var(--el-color-primary), color-mix(in srgb, var(--el-color-primary) 55%, #000));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--el-color-primary) 18%, transparent);
-}
-.brand-name { font-weight: 800; font-size: 14px; letter-spacing: 0.08em; }
-.brand-app {
-  font-family: ui-monospace, Consolas, monospace; font-size: 11px; font-weight: 600;
-  color: var(--el-color-primary); border: 1px solid color-mix(in srgb, var(--el-color-primary) 45%, transparent);
-  border-radius: 4px; padding: 1px 5px; letter-spacing: 0.1em;
-}
-.topbar-sep { width: 1px; height: 20px; background: var(--el-border-color); }
-.topnav { display: inline-flex; align-items: center; gap: 4px; }
-.topnav-item {
-  position: relative; padding: 6px 12px; border-radius: 6px;
-  font-size: 13px; color: var(--el-text-color-regular); text-decoration: none; cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-.topnav-item:hover { color: var(--el-color-primary); background: var(--el-fill-color-light); }
-.topnav-item.active {
-  color: var(--el-color-primary); font-weight: 600;
-}
-.topnav-item.active::after {
-  content: ""; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px;
-  background: var(--el-color-primary); border-radius: 2px 2px 0 0;
-}
-.topbar-stats {
-  font-size: 12px; color: var(--el-text-color-secondary); white-space: nowrap;
-}
-.topbar-stats strong {
-  font-family: ui-monospace, Consolas, monospace; font-size: 13px;
-  color: var(--el-text-color-primary);
-}
-.new-btn { display: inline-flex; align-items: center; gap: 6px; }
-
-/* ---------- 主体 ---------- */
-.list-body { max-width: 1480px; margin: 0 auto; padding: 26px 32px 72px; }
-
-/* 空态 */
-.empty {
-  margin-top: 8vh; padding: 64px 24px; text-align: center;
-  border: 1.5px dashed var(--el-border-color); border-radius: 14px;
-  background: var(--el-bg-color);
-}
-.empty-plus {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 52px; height: 52px; border-radius: 14px; margin-bottom: 14px;
-  font-size: 30px; font-weight: 300; color: var(--el-color-primary);
-  background: color-mix(in srgb, var(--el-color-primary) 10%, transparent);
-}
-.empty-title { margin: 0 0 6px; font-size: 16px; font-weight: 600; color: var(--el-text-color-primary); }
-.empty-sub { margin: 0 0 20px; font-size: 13px; color: var(--el-text-color-secondary); }
-
-/* 分组 section */
-.group-block { margin-bottom: 34px; }
-.group-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.group-no {
-  font-family: ui-monospace, Consolas, monospace; font-size: 11px; font-weight: 700;
-  color: var(--el-color-primary);
-  border: 1px solid color-mix(in srgb, var(--el-color-primary) 40%, transparent);
-  background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
-  border-radius: 5px; padding: 2px 6px; letter-spacing: 0.08em;
-}
-.group-name { font-weight: 700; font-size: 15px; color: var(--el-text-color-primary); }
-.group-head-el { display: inline-flex; }
-/* 组管理操作：hover 组头渐显（常驻显挤，操作低频） */
-.group-ops { display: inline-flex; gap: 2px; opacity: 0; transition: opacity 0.15s ease; }
-.group-head:hover .group-ops { opacity: 1; }
-.group-rule { flex: 1; height: 1px; background: linear-gradient(90deg, var(--el-border-color-lighter), transparent); }
-.group-select { width: 100%; }
-
-/* 卡片网格 */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
-  gap: 18px;
-}
-
-.screen-card {
-  border: 1px solid var(--el-border-color-lighter); border-radius: 10px;
-  background: var(--el-bg-color); overflow: hidden; cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-.screen-card:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--el-color-primary) 50%, var(--el-border-color));
-  box-shadow: 0 10px 28px -12px color-mix(in srgb, var(--el-color-primary) 35%, rgba(0, 0, 0, 0.35));
-}
-
-/* 缩略框：统一 16:9 视窗，深底衬托组态画面（画面本身多为深色底） */
-.card-thumb-box {
-  aspect-ratio: 16 / 9; overflow: hidden;
-  background: var(--el-fill-color-darker);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-.card-thumb-box :deep(.thumb) { border: none; border-radius: 0; margin-bottom: 0; background: transparent; }
-
-.card-meta { padding: 11px 14px 13px; }
-.card-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.card-no {
-  font-family: ui-monospace, Consolas, monospace; font-size: 11px;
-  color: var(--el-text-color-secondary); flex-shrink: 0;
-}
-.card-name {
-  flex: 1; min-width: 0; font-weight: 600; font-size: 14px;
-  color: var(--el-text-color-primary);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.card-ops { display: inline-flex; gap: 2px; flex-shrink: 0; }
-.card-slug {
-  margin-top: 4px; padding-left: 21px;
-  color: var(--el-text-color-secondary); font-size: 11px;
-  font-family: ui-monospace, Consolas, monospace; letter-spacing: 0.02em;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.icon-btn {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; padding: 0; border: none; border-radius: 6px;
-  background: transparent; color: var(--el-text-color-secondary); cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
-}
-.icon-btn:hover { background: var(--el-fill-color); color: var(--el-color-primary); }
-.icon-btn.danger:hover { color: var(--el-color-danger); }
-
-/* 网格尾新建卡 */
-.new-card {
-  min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-  border: 1.5px dashed var(--el-border-color); border-radius: 10px;
-  background: transparent; cursor: pointer;
-  font-size: 13px; color: var(--el-text-color-secondary);
-  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
-}
-.new-card:hover {
-  border-color: var(--el-color-primary); border-style: solid;
-  color: var(--el-color-primary); background: color-mix(in srgb, var(--el-color-primary) 5%, transparent);
-}
-.new-card-plus { font-size: 26px; font-weight: 300; line-height: 1; }
-
-/* 入场 staggered（prefers-reduced-motion 尊重系统设置） */
-.card-in { animation: card-in 0.4s cubic-bezier(0.22, 0.8, 0.36, 1) both; }
-@keyframes card-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: none; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .card-in { animation: none; }
-  .screen-card, .new-card { transition: none; }
-}
+/* 共享样式（顶栏/卡片墙/分组/新建卡）见 src/styles/screen-list.css —— 2D/3D 两页共用，
+   避免两份 scoped 样式漂移。本页特有样式在下方。 */
+:deep(.card-thumb-box .thumb) { border: none; border-radius: 0; margin-bottom: 0; background: transparent; }
 </style>

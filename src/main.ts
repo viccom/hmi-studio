@@ -12,6 +12,8 @@ import 'element-plus/dist/index.css'
 // element-plus 深色变量（html.dark 挂载生效；T16 工业深色默认）
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import 'maotu/dist/style.css'
+// 画面列表页共享样式（2D / 3D 两页共用：顶栏/卡片墙/分组/新建卡）
+import './styles/screen-list.css'
 // 主题桥（最后加载保证覆盖优先级）：--el-* 色板对齐控制台 main.css——两前端视觉单点统一
 import './styles/theme-bridge.css'
 

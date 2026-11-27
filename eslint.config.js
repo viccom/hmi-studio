@@ -1,12 +1,14 @@
 // ESLint 门禁（docs/standards.md §0）：非格式化规则——只拦误用模式与悬空代码，
 // 格式风格遵循仓库既有事实约定（review 把关），不引入 Prettier 重刷全仓。
 // src/dev 为研究资产（不维护），排除。
+// src/modules3d/vendor 为上游第三方源码的锁定副本（PATCHES.md：vendor 不追 HEAD，
+// 我方改动以补丁形式单独记录），不做风格整改——排除，否则门禁会长期红着拦部署。
 import eslint from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import pluginVue from 'eslint-plugin-vue'
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**', 'src/dev/**', 'mcp/dist/**'] },
+  { ignores: ['dist/**', 'node_modules/**', 'src/dev/**', 'mcp/dist/**', 'src/modules3d/vendor/**'] },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/essential'],

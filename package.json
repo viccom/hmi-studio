@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "modules:verify": "node scripts/verify-module-removal.mjs",
+    "modules:verify:full": "node scripts/verify-module-removal.mjs --full"
   },
   "dependencies": {
     "@incremark/theme": "^1.0.2",
@@ -18,15 +20,23 @@
     "dompurify": "^3.4.17",
     "echarts": "^6.1.0",
     "element-plus": "^2.14.7",
+    "lodash-es": "^4.18.1",
     "maotu": "0.6.5",
+    "mitt": "^3.0.1",
     "pinia": "^4.1.0",
+    "three": "0.187.0",
     "vue": "^3.5.44",
-    "vue-router": "^5.4.0"
+    "vue-router": "^5.4.0",
+    "three-mesh-bvh": "^0.9.10",
+    "@tweenjs/tween.js": "^25.0.0",
+    "3d-tiles-renderer": "^0.4.24"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
+    "@types/lodash-es": "^4.17.12",
     "@types/node": "^26.6.5",
+    "@types/three": "0.187.0",
     "@vitejs/plugin-vue": "^6.0.10",
     "eslint": "^10.13.0",
     "eslint-plugin-vue": "^10.11.1",

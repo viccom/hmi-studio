@@ -10,6 +10,7 @@ import { api } from './api'
  * 首项 = 运行页默认激活设备（传统 HMI：进入即有上下文，无需先选） */
 export interface DevOpt { id: string; label?: string }
 export interface ScreenMeta { name?: string; group?: string; devs?: DevOpt[] }
+/** 2D 画面文档（maotu done_json + meta 同体） */
 export type ScreenDoc = IExportJson & ScreenMeta
 
 /** 版本元数据行（GET /:id/versions，seq 降序）；expired = 正文已过 TTL（取回将 410） */

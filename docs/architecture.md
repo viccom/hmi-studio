@@ -26,8 +26,21 @@ L3 components    AlarmBanner/Drawer, BindPanel, Thumb…  ──▶ lib
 L2 symbols 图元  27 图元 ts + Ah*.vue + kit/registry    ──▶ maotu 类型（+ bi-contract 单点白名单↓）
 L1 lib 基础层    api/auth/sse/binds/command/alarms/nav… ──▶ maotu 类型
 L1.5 assets 画面资产  screen-assets/*（预组态画面生成器）──▶ lib, symbols
+L3.5 modules 可选模块注册表  modules/registry.ts（中性，glob 动态发现）──▶ lib, modules
+L3.6 module3d 3D 组态模块  modules3d/*（views/ 运行页与列表页、契约、存储、vendor 内核与适配层）──▶ lib, components, symbols, assets
 L0 外部边界      maotu npm 包 / endpoints.ts（env 单源）/ 浏览器 API
 ```
+
+**可选模块可剔除性（2026-11-26，用户要求）**：3D 组态/浏览是独立模块，
+`src/modules3d/` 可整体删除而 2D 功能不受影响。机制：
+1. **没有任何非模块代码静态 import `src/modules3d/**`**——路由与导航由 `src/modules/registry.ts`
+   用 `import.meta.glob('../modules*/index.ts')` 在构建期发现；目录不存在时结果为空，应用照常启动。
+2. `check-layers` 的 ALLOWED 表里 **module3d 不在任何其它层的允许集内**（含 app），
+   结构性禁止反向依赖；`modules` 层只允许依赖 `lib`。
+3. 3D 所需的存储/创建/列表能力已从 2D 核心文件（`lib/screens.ts`、`lib/screen-create.ts`、
+   `lib/screen-list.ts`）迁入模块内；2D 列表按自己的契约（`canvasCfg` + `json[]`）判定形态，不认识 3D。
+4. 硬证据：`pnpm modules:verify`（`scripts/verify-module-removal.mjs`）复制工作副本、物理删除
+   `src/modules3d/` 并移除 three 依赖，再跑 typecheck（`--full` 加 build）；失败即证明可剔除性被破坏。
 
 ### 依赖方向规则（check-layers 强制）
 
@@ -41,6 +54,7 @@ L0 外部边界      maotu npm 包 / endpoints.ts（env 单源）/ 浏览器 API
 | views 互不依赖 | view 文件之间禁止互相 import（共用逻辑下沉 lib/components） | 同上 |
 | dev 隔离 | 正式代码（非 src/dev）禁止 import `src/dev/**`；dev 不进导航不进守卫 | 同上 |
 | 测试同层 | `*.test.ts` 只 import 被测层及更低层 | 同上 |
+| 模块封闭 | 任何非模块代码禁止 import `src/modules3d/**`（唯一入口是 `modules/registry.ts` 的 glob） | 同上 |
 
 ## 3. 模块清单（src/lib 一词一文件）
 

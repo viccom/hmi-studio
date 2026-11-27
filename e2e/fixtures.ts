@@ -1,4 +1,4 @@
-import { rsiotPutScreen } from './helpers'
+import { rsiotPutScreen, rsiotPutScene } from './helpers'
 import { buildDemoScreen, buildCatalogScreen, DEMO_CATALOG } from '../src/screen-assets/demo-screen'
 import { buildHomeScreens, HOME_E, HOME_W, HOME_G } from '../src/screen-assets/home-screens'
 import { buildHomeTabScreens, HOME_E_TABS, HOME_W_TABS, HOME_G_TABS } from '../src/screen-assets/home-tab-screens'
@@ -245,4 +245,66 @@ export async function seedNavScreens(slugA: string, slugB: string): Promise<void
  */
 export async function seedBiStationScreen(): Promise<void> {
   await rsiotPutScreen(BI_STATION, buildBiStationScreen())
+}
+
+/**
+ * 3D 场景基准集（P0.5，2026-11-26）：纳入回归的 v2 场景（`scenes` 资源族）。
+ *
+ * 为什么用**纯函数构造**而不是搬真实的 172 对象工厂场景：e2e 要的是"结构与契约稳定"，
+ * 不是"内容大"——大场景让每次播种都传 200KB，且内容一改就要更新基线。
+ * 这里构造的是**最小可断言形态**：2 个 primitive + 1 条绑定 + 1 条事件 + 灯光/初始视角，
+ * 覆盖 v2 契约的全部关键字段（objects/scene/bindings/events）。
+ * 真实大场景（iot-workshop-3d / iot-robot-hall-3d）由运维迁移，不在 e2e 里重建。
+ */
+export function buildScene3DFixture(): Record<string, unknown> {
+  return {
+    $schema: 'agent-hmi.scene3d/1',
+    meta: { name: 'E2E 3D 基准', group: '空间层', unit_m: 1, home: { pos: [12, 9, 12], target: [0, 1, 0] } },
+    nodes: [], links: [],
+    objects: [
+      {
+        id: 'bid_e2e_box', bid: 'bid_e2e_box', type: 'BoxGeometry', name: 'E2E 基准设备/箱体',
+        visible: true,
+        position: { x: 0, y: 0.5, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 },
+        geometry: { type: 'BoxGeometry', parameters: { width: 1, height: 1, depth: 1 } },
+        material: { color: 0x27ae60, roughness: 0.6, metalness: 0.1 },
+      },
+      {
+        id: 'bid_e2e_lamp', bid: 'bid_e2e_lamp', type: 'SphereGeometry', name: 'E2E 基准设备/状态灯',
+        visible: true,
+        position: { x: 1.5, y: 1, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 },
+        geometry: { type: 'SphereGeometry', parameters: { radius: 0.2, widthSegments: 16, heightSegments: 12 } },
+        material: { color: 0x27c93f, emissive: 0x27c93f, emissiveIntensity: 1.2, roughness: 0.3, metalness: 0.1 },
+      },
+    ],
+    scene: {
+      lightingConfig: { enabled: true, ambient: 0.85, hemisphere: 1.8, key: 3, fill: 2, head: 1.5, azimuth: 45, elevation: 55, exposure: 1.25 },
+      initialView: { position: { x: 6, y: 4, z: 6 }, target: { x: 0, y: 0.5, z: 0 } },
+    },
+    bindings: [{
+      id: 'bind_e2e_lamp', targetBid: 'bid_e2e_lamp', field: 'dev_wm1.flow_rate',
+      devId: 'dev_wm1', kind: 'emissive', config: { color: 0x27c93f, scale: 0.1 },
+    }],
+    events: [{
+      id: 'evt_e2e_box', on: { type: 'click', targetBid: 'bid_e2e_box' },
+      do: { type: 'focus', targetBid: 'bid_e2e_box' },
+    }],
+  }
+}
+
+/**
+ * e2e 专用 3D 场景 slug（**不得复用真实长期资产**）。
+ *
+ * 踩坑记录（2026-11-26）：初版直接用 `IOT_WORKSHOP_3D`/`IOT_ROBOT_HALL_3D` 播种最小 fixture
+ * ——那是 PUT 全量覆盖，会把 172 对象的工厂场景和机器人展厅**直接覆盖成 2 个立方体**。
+ * e2e 播种只允许写自己的命名空间；真实场景由运维迁移，测试不得触碰。
+ */
+export const E2E_SCENE_A = 'e2e-scene-3d-a'
+export const E2E_SCENE_B = 'e2e-scene-3d-b'
+
+/** 3D 基准场景播种（PUT 幂等；只写 e2e 命名空间） */
+export async function seed3DScenes(): Promise<void> {
+  const doc = buildScene3DFixture()
+  await rsiotPutScene(E2E_SCENE_A, doc)
+  await rsiotPutScene(E2E_SCENE_B, doc)
 }

@@ -147,3 +147,48 @@ describe('validateScreenDoc BI 契约', () => {
     expect(r.warnings.filter((w) => w.code.startsWith('bi_'))).toEqual([])
   })
 })
+
+/**
+ * 3D 场景文档必须被**识别并转交**，不能用 2D 规则误判（P0.5，2026-11-26）。
+ *
+ * 实测问题：3D 文档没有 `doc.json` 数组，`validateScreenDoc` 会报
+ * `no_json_array` 误导性 warning（"maotu done_json 缺画布元素列表？"），
+ * 且 128 KiB 上限对它不适用（scenes 族是 1 MiB）。
+ * AI 若据此判断"文档有问题"会做无意义的修补。
+ */
+describe('validateScreenDoc 对 3D 场景的处理', () => {
+  const sceneDoc = JSON.stringify({
+    $schema: 'agent-hmi.scene3d/1',
+    meta: { name: '3D 场景', group: '空间层', unit_m: 1, home: { pos: [0, 0, 0], target: [0, 0, 0] } },
+    nodes: [], links: [],
+    objects: [{ bid: 'b1', type: 'BoxGeometry', name: 'box' }],
+    scene: { lightingConfig: { enabled: true } },
+    bindings: [], events: [],
+  })
+
+  it('识别 $schema 并给出"这是 3D 场景、请用 scenes 族工具"的明确提示', () => {
+    const r = validateScreenDoc(OK_ID, sceneDoc)
+    expect(r.ok).toBe(true) // 不是 2D 错误，不能报 error
+    const codes = r.warnings.map((w) => w.code)
+    expect(codes).toContain('is_3d_scene')
+    // 不得出现误导性的 no_json_array
+    expect(codes).not.toContain('no_json_array')
+  })
+
+  it('3D 文档按 1 MiB 判尺寸（不是 128 KiB）', () => {
+    // 构造 ~200 KiB 的 3D 文档：对 2D 超限，对 3D 合法
+    const big = JSON.stringify({
+      $schema: 'agent-hmi.scene3d/1',
+      meta: { name: 'big', group: '', unit_m: 1, home: { pos: [0, 0, 0], target: [0, 0, 0] } },
+      nodes: [], links: [], objects: [], scene: {}, bindings: [], events: [],
+      pad: 'x'.repeat(200 * 1024),
+    })
+    const r = validateScreenDoc(OK_ID, big)
+    expect(r.errors.map((e) => e.code)).not.toContain('too_large')
+  })
+
+  it('2D 文档行为不变（不误报 is_3d_scene）', () => {
+    const r = validateScreenDoc(OK_ID, JSON.stringify(baseDoc()))
+    expect(r.warnings.map((w) => w.code)).not.toContain('is_3d_scene')
+  })
+})

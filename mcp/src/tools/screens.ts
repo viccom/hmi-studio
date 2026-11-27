@@ -22,6 +22,10 @@ import type { ToolRegistrar } from '../registrar'
 
 const ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/
 export const MAX_DOC_BYTES = 131_072
+/** 3D 场景族（scenes）上限：1 MiB——与 screens 分开（rs-iot MAX_SCENE_DOC_BYTES） */
+export const MAX_SCENE_DOC_BYTES = 1_048_576
+/** 3D 场景文档判别（与 src/lib/scene3d.ts 的 isScene3D 同口径） */
+const SCENE3D_SCHEMA = 'agent-hmi.scene3d/1'
 
 export interface ValidationIssue {
   /** 'error' = PUT 会被后端拒；'warning' = 可发布但质量/渲染风险 */
@@ -51,15 +55,36 @@ export function validateScreenDoc(id: string, docText: string): ValidationResult
   if (!ID_RE.test(id)) {
     errors.push({ level: 'error', code: 'invalid_id', message: `画面 id 不合词法（首字符小写字母/数字，其余小写字母/数字/连字符，≤64）：${JSON.stringify(id)}` })
   }
-  if (Buffer.byteLength(docText, 'utf8') > MAX_DOC_BYTES) {
-    errors.push({ level: 'error', code: 'too_large', message: `文档 ${Buffer.byteLength(docText, 'utf8')} 字节超过 128KiB 上限（PUT 将 413）` })
-  }
   let doc: unknown
   try {
     doc = JSON.parse(docText) as unknown
   } catch (e) {
     errors.push({ level: 'error', code: 'invalid_json', message: `JSON 语法非法：${e instanceof Error ? e.message : String(e)}` })
     return { ok: false, errors, warnings }
+  }
+
+  // 3D 场景（`scenes` 资源族）与 2D 画面是两套契约，**必须分流**：
+  // 用 2D 规则验 3D 会报误导性的 no_json_array，且 128 KiB 上限对它不适用（族上限 1 MiB）。
+  const isScene3D = (doc as Record<string, unknown>)?.$schema === SCENE3D_SCHEMA
+  const bytes = Buffer.byteLength(docText, 'utf8')
+  if (isScene3D) {
+    const cap = MAX_SCENE_DOC_BYTES
+    if (bytes > cap) {
+      errors.push({ level: 'error', code: 'too_large', message: `3D 场景文档 ${bytes} 字节超过 1MiB 上限（scenes 族 PUT 将 413）` })
+    }
+    const d = doc as Record<string, unknown>
+    if (!Array.isArray(d.objects)) {
+      errors.push({ level: 'error', code: 'scene_no_objects', message: '3D 场景缺 objects 数组（编辑器产出的节点图）' })
+    }
+    warnings.push({
+      level: 'warning',
+      code: 'is_3d_scene',
+      message: '这是 3D 场景（agent-hmi.scene3d/1），不属于 screens 族：请用 scenes 族端点（/api/v1/scenes）与 3D 专用工具；本次校验已按 1MiB 与 objects 契约执行',
+    })
+    return { ok: errors.length === 0, errors, warnings }
+  }
+  if (bytes > MAX_DOC_BYTES) {
+    errors.push({ level: 'error', code: 'too_large', message: `文档 ${bytes} 字节超过 128KiB 上限（PUT 将 413）` })
   }
 
   const knownTags = registryTagIds()
