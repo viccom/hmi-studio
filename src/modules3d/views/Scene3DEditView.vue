@@ -14,6 +14,9 @@
  * P0 未带的功能（有意识裁剪，见 vendor/meteor3d/PATCHES.md）：
  *   - 资产库/模型拖入（依赖 Meteor 自带 `/api/assets`，P3 换成我们的图元库）
  *   - 自动保存（PATCH-03 已置 0；P2 改「脏标记 + 409 即停」）
+ *
+ * 预览（2026-11-27）：顶栏眼睛图标 → **先保存当前编辑态**，再在新标签打开
+ * `/view3d/:id` 运行态（与 2D 预览的差异见 openPreview 注释）。
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -61,6 +64,8 @@ const hasAnimation = computed(() => {
 
 /** 脏标记：绑定/事件改动后置脏（自动保存只保存脏场景；上游定时器已由 PATCH-03 关闭） */
 const dirty = ref(false)
+/** 预览进行中（预览会先保存再开窗，按钮置 loading 防重复点击） */
+const previewing = ref(false)
 const verDrawer = ref(false)
 /** 自动保存定时器（脏才保存；409 后停） */
 let autoTimer = 0
@@ -139,7 +144,7 @@ onMounted(async () => {
   autoTimer = window.setInterval(() => {
     if (!dirty.value || !doc.value) return
     if (db?.hasConflict()) { dirty.value = false; return } // 已冲突：不再尝试，等用户处置
-    void saveNow(true)
+    void saveSceneNow(true)
   }, AUTO_SAVE_MS)
 
   // 乐观锁冲突全局提示（适配器抛 ConflictError）
@@ -164,18 +169,95 @@ onMounted(async () => {
 // 切场景 = 重挂 Viewport（上游按 route.params 初始化，不重挂会沿用旧 sceneId）
 watch(sceneId, () => { /* 路由变化时由 router-view :key 重挂（见模板） */ })
 
-/** 手动/自动保存：把最新语义层交给适配器，再触发上游保存 */
-async function saveNow(silent = false): Promise<void> {
-  if (!doc.value) return
-  // 1) 语义层先入适配器（bindings/events 上游不认识，必须由我们合并）
+/**
+ * 上游 vendor 的保存面（Viewport 挂在 `window.editor` 上）。
+ * 序列化 objects/scene 由上游负责；我们只负责「语义层合并 + 落库」。
+ */
+type UpstreamPersistence = {
+  saveScene(opts?: { allowIncomplete?: boolean }): Promise<void>
+}
+
+function upstreamPersistence(): UpstreamPersistence | null {
+  const ed = (window as unknown as { editor?: { persistenceManager?: UpstreamPersistence } }).editor
+  return ed?.persistenceManager ?? null
+}
+
+/**
+ * 保存当前编辑态并**等待真正落库**（成功返回 true）。
+ *
+ * 为什么不再用 DOM 点击 hack（2026-11-27 改）：原实现用
+ * `document.querySelector('.edit3d-toolbar button…')` 去点 vendor Toolbar 的 💾，
+ * 拿不到「存好了没有」的信号（提示无条件报「已保存」），选择器也会随 vendor 模板漂移。
+ * 现在直接调上游 `persistenceManager.saveScene`——**与 vendor Toolbar 的 💾 同一条链路**
+ * （上游序列化 objects/scene → 注入的适配器合并语义层并 PUT），但可 await：
+ * 预览必须确认落库后才敢打开运行页，否则预览到的是旧版。
+ */
+async function saveSceneNow(silent = false): Promise<boolean> {
+  if (!doc.value) {
+    if (!silent) ElMessage.error('场景未加载完成，无法保存')
+    return false
+  }
+  const pm = upstreamPersistence()
+  if (!pm) {
+    if (!silent) ElMessage.error('编辑器尚未就绪，无法保存')
+    return false
+  }
+  // 语义层先入适配器（bindings/events 上游不认识，必须由我们合并）
   db.setSemantic(doc.value)
-  // 2) 触发上游 Toolbar 的保存（它负责序列化 objects/scene → 调适配器 saveScene）
-  //    注意：不能用"找含保存字样的按钮"——会命中壳层自己这个按钮（死循环）。
-  const toolbarBtn = document.querySelector('.edit3d-toolbar button[class*=save], .edit3d-toolbar .el-button--primary') as HTMLElement | null
-  const anyBtn = toolbarBtn ?? [...document.querySelectorAll('.edit3d-toolbar button')].find((b) => b.textContent?.includes('保存')) as HTMLElement | undefined
-  anyBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  try {
+    await pm.saveScene({ allowIncomplete: editorStore.allowPartialSave })
+  } catch (e) {
+    if (e instanceof ConflictError) {
+      // 冲突是「必须人工处置」的一类：与全局 unhandledrejection 提示同文案（此处自己抛出，不再走全局兜底）
+      ElMessage({
+        type: 'error',
+        duration: 0,
+        showClose: true,
+        message: `${e.message}。自动保存已停止——请刷新页面加载他人修改，或另存为新场景。`,
+      })
+      return false
+    }
+    if (!silent) {
+      if ((e as { code?: string }).code === 'SCENE_NOT_FOUND') ElMessage.error('场景已被删除，保存已停止')
+      else ElMessage.error(`保存失败：${(e as Error).message ?? String(e)}`)
+    }
+    return false
+  }
   dirty.value = false
-  if (!silent) ElMessage.success('已保存')
+  return true
+}
+
+/** 「保存」按钮：成功才提示（此前无论成败都报「已保存」） */
+async function onSave(): Promise<void> {
+  if (await saveSceneNow()) ElMessage.success('已保存')
+}
+
+/**
+ * 预览：在新标签打开 3D 运行态（`/view3d/:id`）。
+ *
+ * 与 2D 预览的差异（3D ≠ 2D 的关键点）：2D 预览直接开运行页，看到的是**已保存版本**；
+ * 3D 的改动（视口里摆/移图元、绑定与事件）保存前只在编辑器内存里，直接开运行页会
+ * **预览到旧版**。故这里先保存当前编辑态再打开——「预览 = 所见」；保存失败（409 冲突 /
+ * 场景已删 / 未完整加载）则**中止并提示**，绝不打开旧版冒充当前态。
+ */
+async function openPreview(): Promise<void> {
+  if (previewing.value) return
+  previewing.value = true
+  const href = router.resolve({ path: `/view3d/${sceneId.value}` }).href
+  // ① 同步开窗：必须在用户手势内 window.open，await 之后再开会被弹窗拦截
+  const win = window.open('about:blank', '_blank')
+  try {
+    // ② 先落库（运行页读的是库里已保存的文档）
+    const ok = await saveSceneNow()
+    if (!ok) {
+      win?.close()
+      return
+    }
+    if (win) win.location.href = href
+    else ElMessage.warning('新标签被浏览器拦截，请允许本站弹出窗口后重试')
+  } finally {
+    previewing.value = false
+  }
 }
 
 /** 面板改动写回本地 doc 并置脏（不立即保存——由手动保存/自动保存决定时机） */
@@ -205,7 +287,19 @@ function doLogout(): void {
       <el-tag v-if="meta.group" size="small" type="info">{{ meta.group }}</el-tag>
       <span class="topbar-right">
         <el-tag v-if="dirty" size="small" type="warning" effect="plain">未保存</el-tag>
-        <el-button size="small" type="primary" data-testid="save3d-btn" @click="saveNow()">保存</el-button>
+        <el-button
+          size="small"
+          data-testid="preview3d-btn"
+          title="预览（先保存当前编辑态，再在新标签打开运行态）"
+          :loading="previewing"
+          @click="openPreview"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        </el-button>
+        <el-button size="small" type="primary" data-testid="save3d-btn" @click="onSave">保存</el-button>
         <el-button size="small" text data-testid="version-btn" @click="verDrawer = true">版本</el-button>
         <span v-if="user" class="topbar-user">{{ user.user_id }}</span>
         <el-button size="small" text @click="doLogout">退出</el-button>

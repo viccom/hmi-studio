@@ -92,4 +92,33 @@ test.describe('3D 场景（v2）', () => {
     // 当前标签仍停在列表页（未被运行页占走）
     await expect(page).toHaveURL(/\/screens3d$/)
   })
+
+  /**
+   * 编辑器预览（2026-11-27）：顶栏眼睛图标 → **先保存当前编辑态**，再在新标签打开
+   * `/view3d/:id` 运行态（3D 与 2D 预览的关键差异：预览必须等于所见）。
+   *
+   * 顺带覆盖了此前 e2e 缺失的「编辑器保存往返」路径——预览必然先落库一次。
+   */
+  test('编辑器预览：先保存，再在新标签打开运行态', async ({ page, context }) => {
+    await loginAsAdmin(page)
+    await page.goto(`/edit3d/${E2E_SCENE_A}`, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.edit3d-topbar')).toBeVisible({ timeout: 30_000 })
+    await page.waitForSelector('canvas', { timeout: 40_000 })
+
+    const [popup] = await Promise.all([
+      context.waitForEvent('page'),
+      page.locator('[data-testid="preview3d-btn"]').click(),
+    ])
+    await popup.waitForURL(new RegExp(`/view3d/${E2E_SCENE_A}$`), { timeout: 30_000 })
+    await popup.waitForSelector('canvas', { timeout: 40_000 })
+    await expect(popup.locator('.run3d-bar')).toBeVisible({ timeout: 30_000 })
+    await expect(popup.locator('.run3d-error')).toHaveCount(0)
+    // 原标签仍停在编辑器（预览不占走编辑页）
+    await expect(page).toHaveURL(new RegExp(`/edit3d/${E2E_SCENE_A}$`))
+    // 预览前的保存已落库，且**语义层没被保存清空**（上游 saveScene 不带 bindings/events，
+    // 靠适配器合并——这里断言服务端文档里绑定与事件仍在）
+    const after = (await rsiotGetScene(E2E_SCENE_A)).doc as Record<string, unknown>
+    expect((after.bindings as unknown[]).length).toBeGreaterThan(0)
+    expect((after.events as unknown[]).length).toBeGreaterThan(0)
+  })
 })
