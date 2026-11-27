@@ -591,3 +591,37 @@ hmi-mcp 的 2D 校验器误判 3D 文档（`hmi_validate_screen`）。
 
 **对 P0 的约束**：vendor 内核与适配层**必须**都在 `src/modules3d/` 内（`vendor/` + `adapter/`），
 不得新建第二个模块目录；新增依赖只被模块引用，剔除时随之移除。
+
+## 附录 A. 厂区 DEMO 迁移：v1 → v2（2026-11-27）
+
+`iot-plant-3d` 是 3D 组态编辑器落地**之前**的 DEMO，文档形态是 v1（`nodes`/`links`
+语义节点 + 程序化几何渲染）。新编辑器与新运行页消费 v2 形态（上游 `objects` 节点图 +
+语义层 `bindings`/`events`），于是该场景在新编辑器里是空的、在新运行页里也走不到 v2
+渲染路径（`Scene3DHost` 按是否存在 `objects` 分派）。**已重做**：
+
+| 项 | v1（原 DEMO） | v2（现在） |
+|---|---|---|
+| 文档形态 | `nodes:15` + `links:5` | `objects:101` + `bindings:25` + `events:20` |
+| 设备几何 | `geometry.ts` 的 three Group 工厂（程序化，存不进文档） | 工业图元库 `adapter/industrial-parts.ts` 的规格，逐子件独立对象（独立 bid） |
+| 区域 | `makeArea` 底板+立柱（代码生成） | 4 个区域底板 + 16 根立柱（落进 `objects`，可编辑） |
+| 管线 | `makeLink` 管道+法兰（代码生成） | 5 条管线/电缆 + 法兰（落进 `objects`，可编辑） |
+| 点位 | 节点上的 `points.value/status`（v1 运行页自消费） | `bindings`：每台设备「发光 + 数值标签」、每条管线「流量发光」 |
+| 交互 | 点设备 → 详情面板 → 「进入 2D 设备面板」 | `events`：点设备（主体件与主要可点子件）→ 直接跳对应 2D 设备面板 |
+| 尺寸 | 设备 2× 缩放（DEMO 观感） | **1× 原生尺寸**（与编辑器物料库一致，拖入新图元不违和），间距收紧到 ~3 m |
+
+**代码位置**：生成器 `src/modules3d/adapter/plant-scene.ts`（纯逻辑，单测
+`plant-scene.test.ts` 钉住 bid 唯一 / 绑定与事件不悬空 / 单位与 `iot-catalog` 一致）；
+迁移执行器 `scripts/migrate-plant-scene.ts`（先备份 v1 → `<target>-v1`，再写 v2 → 回读校验）。
+
+```bash
+RSIOT_BASE=http://127.0.0.1:20000 \
+  pnpm exec vite build --ssr scripts/migrate-plant-scene.ts --outDir .tmp-migrate \
+  && node .tmp-migrate/migrate-plant-scene.js            # 加 --dry-run 只看摘要
+```
+
+**v1 留存**：原文档原样备份在 `iot-plant-3d-v1`（v1 运行页仍可打开：
+`/hmi/view3d/iot-plant-3d-v1`），新场景的版本历史也保留了 v1 各版本。
+
+**实测（2026-11-27，浏览器实证）**：编辑器加载 101 对象无失败遮罩；运行页「实时 · 101 对象」
+且浮出实时值标签；编辑器点「保存」后回读 `objects/bindings/events/initialView` **均未变**
+（`nodeGraph` 由上游在保存时按对象补齐，属正常）；点设备跳 `iot-faceplate-em1?dev=dev_em1` 成功。
