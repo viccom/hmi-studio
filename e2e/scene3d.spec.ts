@@ -59,4 +59,37 @@ test.describe('3D 场景（v2）', () => {
     // 上游面板挂载成功（场景树/属性面板）
     await expect(page.locator('.edit3d-tabs')).toBeVisible()
   })
+
+  /**
+   * 列表页交互与 2D 同构（2026-11-27 修正）：
+   *   - 点缩略图/卡片 → 当前标签页进**组态编辑** /edit3d/:id（此前直接开运行态，编辑器无入口）
+   *   - 卡片「外部链接」小图标 → **新标签页**打开运行态 /view3d/:id
+   */
+  test('列表页：点缩略图进组态编辑（当前标签）', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto('/screens3d', { waitUntil: 'domcontentloaded' })
+    const card = page.locator(`[data-screen-id="${E2E_SCENE_A}"]`)
+    await expect(card).toBeVisible({ timeout: 30_000 })
+    await card.locator('.scene3d-thumb').click()
+    await expect(page).toHaveURL(new RegExp(`/edit3d/${E2E_SCENE_A}$`))
+    await expect(page.locator('.edit3d-topbar')).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('.edit3d-tabs')).toBeVisible()
+  })
+
+  test('列表页：外部链接图标在新标签打开运行态', async ({ page, context }) => {
+    await loginAsAdmin(page)
+    await page.goto('/screens3d', { waitUntil: 'domcontentloaded' })
+    const card = page.locator(`[data-screen-id="${E2E_SCENE_A}"]`)
+    await expect(card).toBeVisible({ timeout: 30_000 })
+    const [popup] = await Promise.all([
+      context.waitForEvent('page'),
+      card.locator('button[title="在新标签页打开运行页"]').click(),
+    ])
+    await popup.waitForURL(new RegExp(`/view3d/${E2E_SCENE_A}$`), { timeout: 30_000 })
+    // 运行页渲染出 3D 画布（v2 分派）
+    await popup.waitForSelector('canvas', { timeout: 40_000 })
+    await expect(popup.locator('.run3d-bar')).toBeVisible({ timeout: 30_000 })
+    // 当前标签仍停在列表页（未被运行页占走）
+    await expect(page).toHaveURL(/\/screens3d$/)
+  })
 })

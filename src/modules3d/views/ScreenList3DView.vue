@@ -10,10 +10,15 @@
  *
  * 缩略图：静态 SVG 海报，**不挂 WebGL**——列表页同时渲染多张卡，挂 WebGL 会耗尽上下文
  * （浏览器同源 WebGL context 上限约 8~16，2D 缩略图 MtPreview 已占位）。
+ *
+ * 卡片交互与 2D 列表页同构（2026-11-27 修正）：
+ *   - 点缩略图/卡片 → **当前标签页进组态编辑** `/edit3d/:id`
+ *   - 卡片右下「外部链接」小图标 → **新标签页打开运行态** `/view3d/:id`
+ *   （此前整卡点击直接开运行态，3D 编辑器没有入口，与 2D 行为不一致）
  */
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { groupSections } from '../../lib/screen-list'
 import { loadSceneCards } from '../list'
@@ -117,6 +122,11 @@ async function saveMeta() {
   }
 }
 
+// 组态编辑：当前标签页打开 /edit3d/:id（与 2D 列表页「点缩略图进编辑器」同构）
+function openEditor(id: string) {
+  router.push(`/edit3d/${id}`)
+}
+
 // 浏览：新标签页打开运行页 /view3d/:id（运行页无返回管理页入口，避免占走当前标签页）
 function openView(id: string) {
   const href = router.resolve({ path: `/view3d/${id}` }).href
@@ -180,7 +190,7 @@ function openView(id: string) {
               class="screen-card card-in"
               :style="{ animationDelay: `${appearDelay(sIdx, i)}ms` }"
               :data-screen-id="c.id"
-              @click="openView(c.id)"
+              @click="openEditor(c.id)"
             >
               <div class="card-thumb-box">
                 <!-- 静态 SVG 海报：不挂 WebGL（列表页多卡并存会耗尽上下文） -->
