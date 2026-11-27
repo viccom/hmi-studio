@@ -121,7 +121,13 @@ export function applyBinding(sm: RuntimeSceneManager, b: SceneBinding, value: nu
           id: labelId,
           position: pos,
           content: text,
-          style: { color: '#1de0ff', fontSize: '12px', background: 'rgba(8,18,28,.86)', padding: '2px 6px', borderRadius: '3px' },
+          // pointerEvents:'none'：标签是**只读覆盖层**，不能吃掉设备的点击
+          // （vendor LabelManager 默认给标签元素 pointerEvents:'auto'，标签正好浮在
+          //  设备上方 → 点设备会点到标签，点不动设备——2026-11-27 实测踩到）
+          style: {
+            color: '#1de0ff', fontSize: '12px', background: 'rgba(8,18,28,.86)', padding: '2px 6px', borderRadius: '3px',
+            pointerEvents: 'none',
+          },
         })
         sm.labelManager.updateLabel(labelId, { content: text })
       }

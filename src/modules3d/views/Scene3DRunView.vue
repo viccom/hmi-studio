@@ -23,7 +23,10 @@ import { SceneManager, PersistenceManager } from '../vendor/meteor3d/core/index.
 import { sceneStore } from '../store'
 import { docToUpstream } from '../adapter/store-adapter'
 import { applyAlarms, applyPointToBindings, boundDevsOf, prioToColor } from '../adapter/bindings'
-import { resolveEventAction, parseNavTargetSafe } from '../adapter/events'
+import { resolvePanelDevice, type PanelDevice } from '../adapter/device-panel'
+import DevicePanel from '../components/DevicePanel.vue'
+import { DEVICE_BY_ID } from '../../screen-assets/iot-catalog'
+import { resolveEventAction } from '../adapter/events'
 import type { SceneDoc } from '../scene3d'
 import { createRtdataStream } from '../../lib/sse'
 import { AlarmStore, createAlarmStream } from '../../lib/alarms'
@@ -40,6 +43,12 @@ const status = ref('加载中…')
 const quality = ref(0)
 const objectCount = ref(0)
 const hoverName = ref('')
+/** 详情面板：点中的对象 bid（v1 契约——点设备出同页详情，不跳页） */
+const selectedBid = ref('')
+/** 实时值缓存（field → 最新值）——面板要显示实时值，不能只把值涂到材质上 */
+const values = new Map<string, number>()
+/** 设备报警优先级（devId → prio）——面板按设备显示状态徽标 */
+const prioByDev = ref(new Map<string, number>())
 const loadError = ref('')
 
 // 上游实例（类型放宽：vendor 是 JS）
@@ -87,6 +96,7 @@ function connectData(): void {
       if (!doc || !sm) return
       const v = typeof p.value === 'number' ? p.value : Number(p.value)
       if (!Number.isFinite(v)) return
+      values.set(p.field, v) // 面板的实时值（同时驱动材质）
       applyPointToBindings(sm, doc, p.field, v)
     },
     onState: (s) => { status.value = s === 'online' ? '实时' : s === 'offline' ? '离线' : '重连中…' },
@@ -109,11 +119,52 @@ function connectData(): void {
 function applyAlarmState(): void {
   if (!sm || !doc) return
   const agg = aggregateAlarms(alarmStore.active())
-  const prioByDev = new Map<string, number>()
-  for (const [devid, a] of agg.byDev) prioByDev.set(devid, a.prio)
-  applyAlarms(sm, doc, prioByDev)
+  const prioBy = new Map<string, number>()
+  for (const [devid, a] of agg.byDev) prioBy.set(devid, a.prio)
+  prioByDev.value = prioBy
+  applyAlarms(sm, doc, prioBy)
   prio.value = agg.prio
 }
+
+/**
+ * 面板设备（纯逻辑反查：命中子件 → 设备身份/测点/2D 目标）。
+ *
+ * 注意 `selectedBid.value` **必须第一个读**：computed 只把它读到的响应式依赖记进
+ * 依赖表，若前面的守卫（`!doc || !sm`）先短路返回，首次求值就没登记这个依赖——
+ * 之后点击再改 `selectedBid` 也不会让本 computed 重算（2026-11-27 实测踩到：
+ * 点设备没反应，探针显示 computed 从未重新求值）。
+ */
+const panelDevice = computed<PanelDevice | null>(() => {
+  const bid = selectedBid.value
+  if (!bid || !doc || !sm) return null
+  const objects = (sm.objects as Array<{ userData?: { bid?: string }; name?: string }>).map((o) => ({
+    bid: o.userData?.bid ?? '',
+    name: o.name ?? '',
+  }))
+  return resolvePanelDevice(bid, objects, doc.bindings ?? [], doc.events ?? [])
+})
+
+/** 区域中文名（与 2D L1 区域卡一致） */
+const AREA_TEXT: Record<string, string> = { water: '供水', gas: '燃气', power: '配电', env: '环境' }
+
+/** 面板视图数据：设备元信息取自 iot-catalog（唯一事实源），实时值取自 SSE 缓存 */
+const panelView = computed(() => {
+  const d = panelDevice.value
+  if (!d) return null
+  const meta = DEVICE_BY_ID[d.devId]
+  const raw = values.get(d.field)
+  return {
+    devId: d.devId,
+    tag: meta?.pos ?? d.devId,
+    title: meta?.title ?? d.devId,
+    area: AREA_TEXT[meta?.area ?? 'env'],
+    value: raw !== undefined && Number.isFinite(raw) ? raw : null,
+    unit: d.unit,
+    precision: d.precision,
+    field: d.field,
+    prio: prioByDev.value.get(d.devId) ?? 0,
+  }
+})
 
 /** ④ 事件：点击对象 → 求值 → 执行 */
 function onSceneClick(payload: unknown): void {
@@ -122,18 +173,17 @@ function onSceneClick(payload: unknown): void {
   const bid = hit?.userData?.bid
   hoverName.value = hit?.name ?? ''
   if (!bid) return
+  // **同页详情，不跳页**（v1 DEMO 的契约）：点设备 → 右上角出设备详情面板；
+  // 「进入 2D 设备面板」是面板里的按钮动作，不是点击本身的动作。
+  selectedBid.value = bid
   const action = resolveEventAction(doc.events, bid)
-  if (!action) {
-    // 无规则：默认聚焦该对象（比"点了没反应"更有用）
-    sm.focusObject(bid, { duration: 800 })
-    return
-  }
+  // 无规则 = 只出详情，不动镜头（v1 行为：点设备看详情，不把相机怼到设备跟前——
+  // focusObject 会把设备顶满屏，总览视角就没了）
+  if (!action) return
   switch (action.type) {
-    case 'navigate': {
-      const { slug, dev } = parseNavTargetSafe(action.dev ? `${action.slug}?dev=${action.dev}` : action.slug)
-      if (slug) void router.push(`/view/${slug}${dev ? `?dev=${dev}` : ''}`)
+    case 'navigate':
+      // 不在此处跳转——目标交给面板按钮（场景规则仍作为面板的目标来源）
       break
-    }
     case 'focus':
       sm.focusObject(action.targetBid, { duration: 800 })
       break
@@ -148,6 +198,22 @@ function onSceneClick(payload: unknown): void {
       break
     }
   }
+}
+
+/** 面板按钮：进入 2D 设备面板（目标来自场景的 navigate 规则，无则回退 2D 目录 faceplate） */
+function enterFaceplate(): void {
+  const d = panelDevice.value
+  if (!d) return
+  void router.push(`/view/${d.target.slug}?dev=${d.target.dev ?? d.devId}`)
+}
+
+function closePanel(): void {
+  selectedBid.value = ''
+}
+
+/** Esc 关闭详情面板（v1 的面板有 × 按钮，这里补上键盘路径） */
+function onKeyDown(e: KeyboardEvent): void {
+  if (e.key === 'Escape') closePanel()
 }
 
 onMounted(async () => {
@@ -199,9 +265,11 @@ onMounted(async () => {
   ;(window as unknown as { __run3d?: unknown }).__run3d = { sm, doc }
 
   connectData()
+  window.addEventListener('keydown', onKeyDown)
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeyDown)
   stream?.close(); stream = null
   alarmStream?.close(); alarmStream = null
   bridge?.uninstall(); bridge = null
@@ -234,10 +302,25 @@ const prioColor = computed(() => `#${prioToColor(prio.value).toString(16).padSta
 
     <div ref="host" class="run3d-stage">
       <div v-if="loadError" class="run3d-error">场景加载失败：{{ loadError }}</div>
+      <!-- 设备详情面板（点设备出同页详情，不跳页；跳 2D 由面板按钮触发） -->
+      <DevicePanel
+        v-if="panelView"
+        :tag="panelView.tag"
+        :title="panelView.title"
+        :area="panelView.area"
+        :value="panelView.value"
+        :unit="panelView.unit"
+        :precision="panelView.precision"
+        :field="panelView.field"
+        :dev-id="panelView.devId"
+        :prio="panelView.prio"
+        @close="closePanel"
+        @enter="enterFaceplate"
+      />
     </div>
 
     <footer class="run3d-hint">
-      <b>左键拖动</b> 旋转 · <b>右键拖动</b> 平移 · <b>滚轮</b> 缩放 · <b>单击设备</b> 聚焦/跳转
+      <b>左键拖动</b> 旋转 · <b>右键拖动</b> 平移 · <b>滚轮</b> 缩放 · <b>单击设备</b> 查看详情（不跳页）
       <span v-if="hoverName" class="run3d-hover">· {{ hoverName }}</span>
     </footer>
   </div>

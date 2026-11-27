@@ -263,14 +263,14 @@ export function buildScene3DFixture(): Record<string, unknown> {
     nodes: [], links: [],
     objects: [
       {
-        id: 'bid_e2e_box', bid: 'bid_e2e_box', type: 'BoxGeometry', name: 'E2E-箱体',
+        id: 'bid_e2e_box', bid: 'bid_e2e_box', type: 'BoxGeometry', name: 'E2E 基准设备/箱体',
         visible: true,
         position: { x: 0, y: 0.5, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 },
         geometry: { type: 'BoxGeometry', parameters: { width: 1, height: 1, depth: 1 } },
         material: { color: 0x27ae60, roughness: 0.6, metalness: 0.1 },
       },
       {
-        id: 'bid_e2e_lamp', bid: 'bid_e2e_lamp', type: 'SphereGeometry', name: 'E2E-状态灯',
+        id: 'bid_e2e_lamp', bid: 'bid_e2e_lamp', type: 'SphereGeometry', name: 'E2E 基准设备/状态灯',
         visible: true,
         position: { x: 1.5, y: 1, z: 0 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 },
         geometry: { type: 'SphereGeometry', parameters: { radius: 0.2, widthSegments: 16, heightSegments: 12 } },

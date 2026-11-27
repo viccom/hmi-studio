@@ -94,6 +94,43 @@ test.describe('3D 场景（v2）', () => {
   })
 
   /**
+   * 运行页的设备详情面板（2026-11-27 补）：点设备 → **右上角出同页详情，不跳页**
+   * （v1 DEMO 的契约；迁移时误做成「点击直接跳 2D」）。面板里的「进入 2D 设备面板」
+   * 按钮才跳 2D。
+   *
+   * 点击坐标由对象投影算出（运行页暴露 `window.__run3d.sm`）——不靠屏幕坐标猜，
+   * 否则换个相机就点空了。
+   */
+  test('运行页：点设备出同页详情面板（不跳页），面板按钮跳 2D 设备面板', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto(`/view3d/${E2E_SCENE_A}`, { waitUntil: 'domcontentloaded' })
+    await page.waitForSelector('canvas', { timeout: 40_000 })
+    await page.waitForSelector('.run3d-bar', { timeout: 30_000 })
+    await page.waitForTimeout(3000)
+
+    const pt = await page.evaluate(() => {
+      const sm = (window as unknown as { __run3d?: { sm?: any } }).__run3d?.sm
+      const obj = sm?.findObjectByBid('bid_e2e_box')
+      if (!obj) return null
+      const v = obj.position.clone().project(sm.camera)
+      const r = sm.renderer.domElement.getBoundingClientRect()
+      return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height }
+    })
+    expect(pt, '运行页应暴露 __run3d.sm 以便定位对象').toBeTruthy()
+    await page.mouse.click(pt!.x, pt!.y)
+
+    const panel = page.locator('[aria-label="设备详情"]')
+    await expect(panel).toBeVisible({ timeout: 10_000 })
+    // 点的是**无绑定的子件**（箱体），仍要能反查回设备（按设备名分组）
+    await expect(panel.locator('.dp-tag')).toHaveText('WM-101')
+    // 不跳页：URL 仍在运行页
+    await expect(page).toHaveURL(new RegExp(`/view3d/${E2E_SCENE_A}$`))
+    // 面板按钮 → 2D 设备面板
+    await panel.locator('.dp-enter').click()
+    await expect(page).toHaveURL(/\/view\/iot-faceplate-wm1\?dev=dev_wm1/)
+  })
+
+  /**
    * 编辑器预览（2026-11-27）：顶栏眼睛图标 → **先保存当前编辑态**，再在新标签打开
    * `/view3d/:id` 运行态（3D 与 2D 预览的关键差异：预览必须等于所见）。
    *
