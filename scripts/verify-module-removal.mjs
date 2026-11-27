@@ -60,7 +60,7 @@ try {
   }
 
   console.log(`\n✓ 可剔除性验证通过：删除 src/modules3d 后，剩余代码${full ? ' typecheck + build' : ' typecheck'} 通过`)
-} catch (e) {
+} catch {
   console.error('\n✗ 可剔除性验证失败：2D 代码仍依赖 3D 模块，或删除后编译不过')
   console.error('  排查：grep -rn "modules3d" src/ | grep -v "^src/modules3d"')
   process.exitCode = 1
