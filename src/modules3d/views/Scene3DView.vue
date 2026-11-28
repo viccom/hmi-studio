@@ -16,9 +16,9 @@ import Viewer from '../Viewer'
 import Events from '../Viewer/Events'
 import { buildScene, animateRuntime, type SceneRuntime } from '../scene'
 import { C, PRIO_COLOR } from '../geometry'
-import { api } from '../../lib/api'
 import { createRtdataStream, type RtPoint } from '../../lib/sse'
 import { buildDemoScene, devsOf, isScene3D, type SceneDoc, type SceneNode } from '../scene3d'
+import { sceneStore } from '../store'
 import { DEVICE_BY_ID, faceplateSlug } from '../../screen-assets/iot-catalog'
 
 const route = useRoute()
@@ -44,6 +44,8 @@ const values = reactive(new Map<string, number>())
 const prios = reactive(new Map<string, number>())
 
 let doc: SceneDoc = buildDemoScene()
+/** 加载失败（v1 页只服务迁移前的场景；读不到就**报错**，不再回退内置 demo 冒充真数据） */
+const loadError = ref('')
 const slug = computed(() => String(route.params.id ?? 'iot-plant-3d'))
 const still = computed(() => String(route.query.still ?? '') === '1')
 
@@ -244,11 +246,18 @@ function fpsLoop(): void {
 }
 
 onMounted(async () => {
+  // **数据源必须是 scenes 族**（2026-11-28 修）：v1 文档迁移后写在 `scenes` 族，
+  // 而本页原读 `screens` 族 → 永远读不到 → 回退内置 demo。于是「v1 备份打不开」，
+  // 且**任何未知 id 都会静默显示假场景**（用户以为在看真数据）。
   try {
-    const r = await api().get(`/api/v1/screens/${slug.value}`) as { doc?: unknown } | undefined
-    const c = r?.doc ?? r
-    if (c && isScene3D(c)) doc = c as SceneDoc
-  } catch { /* 回退内置 demo */ }
+    const { doc: d } = await sceneStore().get(slug.value)
+    if (isScene3D(d) && !(d as unknown as { objects?: unknown[] }).objects) doc = d as SceneDoc
+    else loadError.value = '该场景已是 v2 形态，请用 3D 运行页打开'
+  } catch (e) {
+    loadError.value = `场景加载失败：${(e as Error).message}`
+    status.value = '加载失败'
+    return // 不装配场景——不拿内置 demo 冒充真实数据
+  }
   alarmCount.value = doc.nodes.filter((n) => n.devId).length
   if (!host.value) return
 
@@ -310,18 +319,20 @@ function onKey(e: KeyboardEvent): void {
   <div class="scene3d-page">
     <header class="bar">
       <button class="back" @click="router.push('/')">← 画面管理</button>
-      <h1 class="title">{{ doc.meta.name }}</h1>
+      <h1 class="title">{{ loadError ? '场景加载失败' : doc.meta.name }}</h1>
       <div class="badges">
         <span class="badge">{{ status }}</span>
         <span class="badge">设备 {{ alarmCount }}</span>
         <span class="badge">{{ fps }} fps</span>
-        <select class="dev-picker" :value="selected" @change="onPickDevice(($event.target as HTMLSelectElement).value)">
+        <select v-if="!loadError" class="dev-picker" :value="selected" @change="onPickDevice(($event.target as HTMLSelectElement).value)">
           <option value="">选择设备查看…</option>
           <option v-for="n in deviceNav" :key="n.id" :value="n.id">{{ n.label }}</option>
         </select>
       </div>
     </header>
     <div ref="host" class="stage">
+      <!-- 加载失败：明确报错，不拿内置 demo 冒充真实场景（2026-11-28 修静默兜底） -->
+      <div v-if="loadError" class="load-error">{{ loadError }}</div>
       <div
         v-for="l in labels" :key="l.id"
         class="dev-label" :class="['prio-' + l.prio, { selected: selected === l.id }]"
@@ -372,6 +383,10 @@ function onKey(e: KeyboardEvent): void {
 .bar { height: 52px; flex: 0 0 52px; display: flex; align-items: center; gap: 18px; padding: 0 20px; background: #0a1420; border-bottom: 1px solid #1e3448; }
 .back { border: 1px solid #2a455e; background: #0f1f30; border-radius: 6px; padding: 7px 12px; cursor: pointer; font-size: 13px; color: #b8d6e8; }
 .back:hover { border-color: #1de0ff; color: #1de0ff; }
+.load-error {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 24px; text-align: center; font-size: 14px; color: #ff8f9c; background: #0b1420;
+}
 .back:focus-visible, .dev-picker:focus-visible, .detail-close:focus-visible, .detail-enter:focus-visible { outline: 2px solid #1de0ff; outline-offset: 2px; }
 .title { margin: 0; font-size: 18px; font-weight: 600; color: #eaf6ff; }
 .badges { margin-left: auto; display: flex; gap: 8px; align-items: center; }

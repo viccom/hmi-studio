@@ -25,6 +25,7 @@ import { loadSceneCards } from '../list'
 import { createScene3D, SLUG_PATTERN } from '../create'
 import { sceneStore } from '../store'
 import { updateScene3DMeta } from '../meta'
+import { isProtectedSceneSlug } from '../../screen-assets/protected'
 import ThemeToggle from '../../components/ThemeToggle.vue'
 
 /** 卡片类型由加载函数推导（单一事实源，避免与 list.ts 的导出做双向维护） */
@@ -55,6 +56,12 @@ async function refresh() {
 onMounted(() => { void refresh() })
 
 async function remove(id: string) {
+  // 长期资产保护闸（2026-11-28 补）：`isProtectedSceneSlug` 此前**零调用方**——
+  // 保护清单登记了 iot-plant-3d 等长期资产，删除却无拦截。
+  if (isProtectedSceneSlug(id)) {
+    ElMessage.warning(`场景「${id}」是长期资产，禁止删除`)
+    return
+  }
   try {
     await sApi.del(id)
     await refresh()

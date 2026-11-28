@@ -25,7 +25,12 @@ export const MAX_DOC_BYTES = 131_072
 /** 3D 场景族（scenes）上限：1 MiB——与 screens 分开（rs-iot MAX_SCENE_DOC_BYTES） */
 export const MAX_SCENE_DOC_BYTES = 1_048_576
 /** 3D 场景文档判别（与 src/lib/scene3d.ts 的 isScene3D 同口径） */
-const SCENE3D_SCHEMA = 'agent-hmi.scene3d/1'
+export const SCENE3D_SCHEMA = 'agent-hmi.scene3d/1'
+
+/** 是否 3D 场景文档（写闸用：3D 属 scenes 族，写工具必须显式拒写） */
+export function isScene3DDoc(doc: unknown): boolean {
+  return !!doc && typeof doc === 'object' && (doc as Record<string, unknown>).$schema === SCENE3D_SCHEMA
+}
 
 export interface ValidationIssue {
   /** 'error' = PUT 会被后端拒；'warning' = 可发布但质量/渲染风险 */

@@ -6,8 +6,8 @@ vendor 范围（相对上游）：
 - `core/` = 上游 `packages/core/src/` **全量**（37 个 .js）。core 与 GIS/tiles 是静态 import
   耦合（`SceneManager.js` 顶层 import `GeoCoordinateSystem`/`TileMapManager`；
   `PersistenceManager.js` 顶层 import `3d-tiles-renderer`），删文件会破坏 core，故整体带入。
-- `editor/` = 上游 `packages/scene-editor/src/` 的**子集**：components 9 个（Viewport/Toolbar/
-  SceneTree/TreeNode/PropertiesPanel/MaterialPanel/AnimationPanel/SceneSettingsPanel/LibraryPanel）、
+- `editor/` = 上游 `packages/scene-editor/src/` 的**子集**：components 10 个（Viewport/Toolbar/
+  SceneTree/TreeNode/PropertiesPanel/MaterialPanel/AnimationPanel/SceneSettingsPanel/LibraryPanel/BatchLoaderDialog）、
   core 7 个（CommandFactory/HistoryManager/InputManager/TransformManager/PersistenceManager/
   SceneManager/VisualPreviewManager）、stores/editorStore.js、assets/sidebar-controls.css。
 - **不带入**：GIS/地图/天气/相机速度面板、MapSelectorDialog、views/、services/、utils/onboarding
@@ -30,7 +30,10 @@ vendor 范围（相对上游）：
 |---|---|---|
 | `editor/utils/message.js` | `scene-editor/src/utils/message.js` | 上游自绘 reactive toast（需 MessageContainer 渲染）；改用 element-plus `ElMessage`，与 2D 编辑器同款（Q8 档②壳层统一） |
 | `editor/config.js` | `scene-editor/src/config.js` | 上游指向 Meteor 自带后端 `localhost:3001/api`；本项目走 rs-iot（网关 `/api/rsiot`） |
-| `editor/services/sceneService.js` | `scene-editor/src/services/sceneService.js` | 上游打 `/api/scene/*`（Express+MongoDB）；此处只实现面板用到的 `saveInitialView`（读写 `scenes` 族的 `doc.scene.initialView`）与 `uploadSceneThumbnail`（P0 不支持，返回 null） |
+| `editor/services/sceneService.js` | `scene-editor/src/services/sceneService.js` | 上游打 `/api/scene/*`（Express+MongoDB）；此处只实现面板用到的 `saveInitialView`（**委派**给壳层 `window.__hmi3d.saveInitialView`，走唯一保存链路）与 `uploadSceneThumbnail`（rs-iot 无缩略图端点，**显式抛错**，不谎报「已保存」） |
+| `editor/services/assetService.js` | `scene-editor/src/services/assetService.js` | 上游打 Meteor 自带资产后端；本项目**整份替换为空桩**（`getAssets()` 返回 `[]`）→ 物料库的「模型/环境贴图/3D Tiles/高斯泼溅」四个分区恒空，资产上传直接抛错。**真实 GLB 资产托管待决（Q3）** |
+| `stubs/spark.js` | （上游 `three/examples` 高斯泼溅渲染器） | 未引入该渲染器（Apache/MIT 体量大且无场景需求），`vite.config.ts` 的 alias 指向本桩；构造即抛错，避免误引入整包 |
+| `editor/assets/theme-bridge.css` | （上游无） | 本仓新增：把 vendor 面板的硬编码色**桥接**到 `--el-*` 主题变量（作用域限定在面板容器内），实现 P3「主题对齐」而**不改上游组件源码**（保住 vendor 可升级性）。随 `Scene3DEditView.vue` 引入 |
 
 ## import 重写（机械改动，无行为变化）
 
@@ -41,7 +44,10 @@ vendor 范围（相对上游）：
 ## 升级流程（P0 出口演练，方案 §13.4 T3）
 
 1. 取上游新 commit，比对本清单 3 处 PATCH 的上下文是否仍在
-2. 重新拷贝 core/ 与新子集 editor/（覆盖），重放 PATCH-01~03 与两处本地替换
+2. 重新拷贝 core/ 与新子集 editor/（覆盖），重放 **PATCH-01~03、PATCH-05、PATCH-06**
+   与**全部本地替换**（utils/message、config、services/sceneService、services/assetService、
+   stubs/spark、assets/theme-bridge.css）；PATCH-04 是「撤销上游开关」的动作，
+   升级时确认上游未重新引入该开关即可
 3. `pnpm typecheck` + core 单测 + 两个 DEMO 场景回归（加载/编辑/保存/刷新一致）
 4. 通过则更新本文件的 commit 号；不通过则停在旧 commit（vendor 是锁定的，不追 HEAD）
 

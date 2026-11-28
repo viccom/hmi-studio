@@ -76,10 +76,20 @@ const AUTO_SAVE_MS = 15_000
  * spec 列表 → three Mesh 数组。**每个子件是独立 Mesh**（不包 Group）——
  * 上游序列化按对象存，Group 会把子件的 bid/几何吞掉。
  */
+/**
+ * 同类图元的实例序号——拖入第 2 台水表不能与第 1 台**同名**。
+ *
+ * 设备反查（`adapter/device-panel.ts`）靠对象名「`<设备标签>/<子件名>`」的前缀分组；
+ * 若两台同名，分组会把它们并成一台 → 面板显示的设备身份错配（2026-11-28 修）。
+ */
+const partInstanceSeq = new Map<string, number>()
+
 function buildIndustrialPart(partId: string, origin: { x: number; y: number; z: number }): THREE.Mesh[] {
   const part = partById(partId)
   if (!part) return []
-  const prefix = part.name
+  const seq = (partInstanceSeq.get(partId) ?? 0) + 1
+  partInstanceSeq.set(partId, seq)
+  const prefix = `${part.name} ${seq}`
   const recs = buildPartSpecs(part, { origin, namePrefix: prefix })
   return recs.map((r) => {
     const geo = makeGeometry(r.geometry)
@@ -122,6 +132,21 @@ function installModuleBridge(): ScenesDbManager {
     createDbManager: () => db,
     autoSaveMs: 0, // 自动保存由壳层接管（脏标记 + 409 即停，见 P2）
     buildIndustrialPart, // PATCH-05：工业图元工厂
+    /**
+     * 「保存视角」的唯一写路径（2026-11-28 收口）。
+     *
+     * 原实现由 vendor 本地替换件 `sceneService.saveInitialView` 自己 GET+PUT，
+     * **绕开适配器**：① 服务器版本已 +1 而适配器缓存的 version 变旧 → 下一次保存必撞 409；
+     * ② 适配器合并用旧 `lastDoc.scene` 打底 → 刚存的视角被回退。
+     * 现在把视角写进当前文档 → 走**唯一保存链路**（适配器 + 乐观锁 + 语义层合并）。
+     */
+    saveInitialView: async (view: { position: { x: number; y: number; z: number }; target: { x: number; y: number; z: number } }) => {
+      if (!doc.value) throw new Error('场景未加载完成，无法保存视角')
+      doc.value = { ...doc.value, scene: { ...(doc.value.scene ?? {}), initialView: view } }
+      const ok = await saveSceneNow(true)
+      if (!ok) throw new Error('视角保存失败')
+      return view
+    },
   }
   return db
 }
@@ -168,6 +193,16 @@ onMounted(async () => {
 
 // 切场景 = 重挂 Viewport（上游按 route.params 初始化，不重挂会沿用旧 sceneId）
 watch(sceneId, () => { /* 路由变化时由 router-view :key 重挂（见模板） */ })
+
+/**
+ * 语义层实时同步（2026-11-28 修**静默丢数据**）。
+ *
+ * 适配器合并时取 `sem?.bindings ?? lastDoc.bindings ?? next.bindings`——语义层若只在
+ * 壳层「保存」前刷新，**vendor 工具栏的「💾 保存」**（直连 persistenceManager.saveScene，
+ * 不经过 setSemantic）就会拿旧语义层覆盖新绑定，并照样弹「场景已保存」。
+ * 让语义层跟着文档实时走 → 任何保存路径都带上最新的 bindings/events/meta。
+ */
+watch(doc, (d) => { if (d) db.setSemantic(d) }, { deep: true })
 
 /**
  * 上游 vendor 的保存面（Viewport 挂在 `window.editor` 上）。

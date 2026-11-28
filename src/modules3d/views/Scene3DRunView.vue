@@ -16,7 +16,7 @@
  * 性能纪律（本仓踩过的坑）：不在 per-point 回调里强制 render——上游 SceneManager
  * 自带 rAF 循环；本页只在数据变化后标记脏，由循环驱动。
  */
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { SceneManager, PersistenceManager } from '../vendor/meteor3d/core/index.js'
@@ -45,8 +45,14 @@ const objectCount = ref(0)
 const hoverName = ref('')
 /** 详情面板：点中的对象 bid（v1 契约——点设备出同页详情，不跳页） */
 const selectedBid = ref('')
-/** 实时值缓存（field → 最新值）——面板要显示实时值，不能只把值涂到材质上 */
-const values = new Map<string, number>()
+/**
+ * 实时值缓存（field → 最新值）——面板要显示实时值，不能只把值涂到材质上。
+ *
+ * 必须是 **reactive(Map)**：普通 Map 的 get 不被 computed 追踪，SSE 推新值时
+ * 面板不会重算 → 实时值冻结在打开瞬间的那一个（v1 页 `Scene3DView.vue:42`
+ * 有同款注记，v2 曾重犯过一次，2026-11-28 修）。
+ */
+const values = reactive(new Map<string, number>())
 /** 设备报警优先级（devId → prio）——面板按设备显示状态徽标 */
 const prioByDev = ref(new Map<string, number>())
 const loadError = ref('')

@@ -23,7 +23,7 @@ import { sanitizeBiProps } from '../../../src/lib/bi-sanitize'
 import { HmiBackend, HmiApiError } from '../backend'
 import { writeAnnotations } from '../risk'
 import type { ToolRegistrar } from '../registrar'
-import { validateScreenDoc } from './screens'
+import { validateScreenDoc, isScene3DDoc } from './screens'
 
 const execFileAsync = promisify(execFile)
 
@@ -85,6 +85,26 @@ function gateDoc(id: string, doc: string | Record<string, unknown>):
     parsed = typeof doc === 'string' ? JSON.parse(doc) : doc
   } catch {
     return { ok: false, content: textResult({ ok: false, code: 'validation_failed', message: 'doc 非法 JSON' }) }
+  }
+  // 3D 场景（scenes 族）**写工具显式拒写**（2026-11-28 修静默写坏）：
+  // 此前 validateScreenDoc 对 3D 文档只产 warning（is_3d_scene）→ 闸判 ok → 文档被
+  // PUT 进 **screens 族**（2D 族）→ 3D 侧看不到，2D 族里躺一份孤儿文档。
+  // 按 Q10「3D 写暂缓」，这里明确报错而不是默默写错族。
+  if (isScene3DDoc(parsed)) {
+    return {
+      ok: false,
+      content: textResult({
+        ok: false,
+        code: 'scene_write_unsupported',
+        errors: [{
+          level: 'error',
+          code: 'is_3d_scene',
+          message: '这是 3D 场景文档（agent-hmi.scene3d/1），属于 scenes 族（/api/v1/scenes），'
+            + '2D 画面写工具不支持写入——已拒绝，避免把 3D 文档写进 screens 族变成孤儿。',
+        }],
+        warnings: v.warnings,
+      }),
+    }
   }
   return { ok: true, body: sanitizeBiProps(parsed) as Record<string, unknown>, warnings: v.warnings }
 }

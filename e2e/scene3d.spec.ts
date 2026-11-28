@@ -131,6 +131,77 @@ test.describe('3D 场景（v2）', () => {
   })
 
   /**
+   * 3D 列表页删除闸（2026-11-28 补）：长期资产（`PROTECTED_SCENE_SLUGS`）不可删除。
+   *
+   * 回归成因：`isProtectedSceneSlug` 此前**零调用方**——清单登记了 iot-plant-3d 等长期
+   * 资产，UI 删除却无拦截。本用例盯住「点删除 → 被拒 → 场景仍在」。
+   */
+  test('3D 列表页：长期资产删除被保护闸拦住', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto('/screens3d', { waitUntil: 'domcontentloaded' })
+    const card = page.locator('[data-screen-id="iot-plant-3d"]')
+    await expect(card).toBeVisible({ timeout: 30_000 })
+    await card.locator('button.danger').click()
+    await page.locator('.el-popconfirm button', { hasText: '删除' }).click()
+    await expect(page.locator('.el-message--warning')).toContainText('长期资产', { timeout: 10_000 })
+    // 场景仍在（未被删）
+    await expect(page.locator('[data-screen-id="iot-plant-3d"]')).toBeVisible()
+  })
+
+  /**
+   * 详情面板的实时值必须**持续更新**（2026-11-28 修冻结回归）。
+   *
+   * 回归成因：面板的值来自 `values`（field → 最新值），若它是普通 Map，Vue 的 computed
+   * 读 `values.get()` 时不建立依赖 → SSE 推新值不触发重算 → 面板定格在打开瞬间那一个
+   * （v1 页有同款注记，v2 曾重犯）。本用例盯住「值会变」这一可观察行为。
+   */
+  test('运行页：详情面板的实时值持续更新（不是冻结在打开瞬间）', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto(`/view3d/${E2E_SCENE_A}`, { waitUntil: 'domcontentloaded' })
+    await page.waitForSelector('canvas', { timeout: 40_000 })
+    await page.waitForSelector('.run3d-bar', { timeout: 30_000 })
+    await page.waitForTimeout(3000)
+
+    const pt = await page.evaluate(() => {
+      const sm = (window as unknown as { __run3d?: { sm?: any } }).__run3d?.sm
+      const obj = sm?.findObjectByBid('bid_e2e_lamp')
+      if (!obj) return null
+      const v = obj.position.clone().project(sm.camera)
+      const r = sm.renderer.domElement.getBoundingClientRect()
+      return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height }
+    })
+    expect(pt).toBeTruthy()
+    await page.mouse.click(pt!.x, pt!.y)
+
+    const panel = page.locator('[aria-label="设备详情"]')
+    await expect(panel).toBeVisible({ timeout: 10_000 })
+    const value = panel.locator('.dp-value')
+    // 先拿到一个**有数据**的读数（等 SSE 首次推送）
+    await expect.poll(async () => (await value.textContent())?.trim() ?? '', { timeout: 15_000 })
+      .not.toBe('暂无数据')
+    const first = (await value.textContent())?.trim()
+    // 再等它变化（流量点在持续波动；值不变即说明面板没跟着 SSE 重算）
+    await expect
+      .poll(async () => (await value.textContent())?.trim() ?? '', { timeout: 20_000 })
+      .not.toBe(first)
+  })
+
+  /**
+   * v1 运行页：读不到就**报错**，不再回退内置 demo 冒充真实场景（2026-11-28 修静默兜底）。
+   *
+   * 回归成因：v1 页原读 screens 族，而 v1 文档在 scenes 族 → 永远读不到 → 一律回退
+   * 硬编码 demo；于是「v1 备份打不开」，且**任何未知 id 都静默显示假厂区**。
+   */
+  test('v1 运行页：未知场景 id 明确报错，不显示内置 demo', async ({ page }) => {
+    await loginAsAdmin(page)
+    await page.goto('/view3d/e2e-no-such-scene', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.load-error')).toBeVisible({ timeout: 20_000 })
+    await expect(page.locator('.load-error')).toContainText('场景加载失败')
+    // 设备下拉（内置 demo 的设备列表）不应出现
+    await expect(page.locator('.dev-picker')).toHaveCount(0)
+  })
+
+  /**
    * 编辑器预览（2026-11-27）：顶栏眼睛图标 → **先保存当前编辑态**，再在新标签打开
    * `/view3d/:id` 运行态（3D 与 2D 预览的关键差异：预览必须等于所见）。
    *
