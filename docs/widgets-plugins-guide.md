@@ -1,4 +1,4 @@
-# HMI 图元与插件体系——分类与开发指南（v1.1）
+# HMI 图元与插件体系——分类与开发指南（v1.2）
 
 > 定位：**面向 AI Agent 的自包含开发手册**——开发图元/插件/画面只需本文 + maotu 宪法，
 > 不必回读 AGENTS.md。文档分工：
@@ -15,6 +15,9 @@
 > 与 `src/symbols/registry.ts`（扁平全量）——本文表格是导览，漂移以代码为准。
 > v1.1（2026-10-31）：吸收 AGENTS.md 图元域全部细节（hmi-mcp 工具面/运行配置、symbols-api、
 > 保护清单登记纪律），新增 §0 快速上手——AGENTS.md 回归纯地图。
+> v1.2（2026-11-28）：新增 **§1.0 术语（2D 没有"物料库"）+ 与 3D 的对照**、**§8 硬约束速查**
+> （把 §1.3/§3/§5/standards §5 的约束汇总为一张可自查的表，每条带违反后果与"谁在卡"）、
+> **§9 已知限制 11 条**；§8 文档地图顺延为 §10。
 
 ## 0. AI Agent 快速上手（先读这节）
 
@@ -28,6 +31,9 @@
 | 排查「图元变占位框」 | §5.4–5.5 | plugin-loader / plugin-fallback / `BUILTIN_TAGS` 漏枚举 |
 | 查图元目录与绑定惯例 | §2，或运行时问 `hmi_describe_widget_kit` | 权威 = `src/symbols/groups.ts` |
 | AI 改画面 | §6.1–6.2 + §6.4 保护闸 | hmi-mcp 写工具（if_version / 保护 slug 硬拒） |
+| **澄清"2D 物料"这个说法** | **§1.0**（2D 没有物料库，只有四个来源） | — |
+| **自查该不该这么做 / 为什么被门禁拦** | **§8 硬约束速查**（必须/禁止/后果/谁在卡） | 对照 §3 的 11 个 lint 码 |
+| **踩到诡异行为、想确认是不是已知限制** | **§9 已知限制 11 条** | — |
 
 **门禁速查**（e2e 需 rs-iot :8790 存活）：
 
@@ -42,6 +48,35 @@ node scripts/check-layers.mjs                    # 分层方向（图元域常�
 （lib 禁 import symbols——新豁免必须登记 `scripts/check-layers.mjs` 并写明理由）。
 
 ## 1. 体系总览
+
+### 1.0 术语：2D 没有"物料库"，只有四个来源
+
+> 常被问到"2D 的**物料**怎么开发"——**2D 侧没有"物料库"这个概念**。"物料库"是 3D 组态编辑器
+> （vendor Meteor3DEditor 的 `LibraryPanel`）的术语，指那个按 7 个分区聚合的拖拽面板。
+> 2D 侧与之对应的是**四个来源**（下一次表），彼此注册表不同、存储位置不同、开发方式不同——
+> 没有统一的"物料目录"。
+
+| 2D 概念 | 是什么 | 对应 3D 的什么 | 开发方式 |
+|---|---|---|---|
+| 编译期图元 `ah-*` | 本仓源码里的图元（注册项 + 可选 Vue/SVG 组件） | 3D 的「工业设备图元」（几何 spec 列表） | 本文 §3 |
+| maotu 内置图元 | 闭源内核自带（`text-vue`/`group`/`sys-*` 等 5 个） | 3D 的「几何体」分区（Box/Sphere…） | 不可开发，只能用 |
+| 「我的符号」`sym-*` | 站内把一组**带绑定**的图元存成可复用符号 | **3D 无对应**（3D 的 bid 随机，模板复用做不到） | 编辑器内操作（§4.2） |
+| 站点插件 | 跨仓分发的**带代码**图元（`widgets/`，gitignore） | 3D 暂无（3D 图元库是编译期常量） | 本文 §5 |
+
+**与 3D 的本质差异**（决定了两边规范不能互换）：
+
+| 维度 | 2D 图元 | 3D 图元 |
+|---|---|---|
+| 形态 | Vue 组件 / SVG 字符串——**有渲染代码** | 几何参数 spec——**无渲染代码**，行为由绑定层在运行期施加 |
+| 注册 | **四处**登记（registry / groups / index / main），漏一处面板找不到或渲染空白 | **一处**注册（`INDUSTRIAL_PARTS`），物料库自动出现 |
+| 存储 | 源码入库；符号/插件另有资源族 | 场景文档内嵌（每个子件一条 objects 记录） |
+| 单文档上限 | **128 KiB**（screens / symbols / themes 同构） | **1 MiB**（scenes 族） |
+| 复用 | 「我的符号」（带绑定的组合，独立资源族 + 独立版本） | 暂无（bid 随机 → 模板复用做不到） |
+| 站点自建 | 插件（独立工件 + 装载器 + 降级） | 不支持（编译期常量） |
+| 几何/纹理约束 | SVG 任意矢量；Vue 组件任意 DOM/Canvas | 仅 5 种基础几何参数；**无贴图通道** |
+
+> 3D 侧的图元/物料规范见 `docs/3d-parts-and-assets-guide.md`（两文档刻意分立：
+> 技术栈与持久化契约完全不同，合并会互相污染）。
 
 ### 1.1 图元的四个来源
 
@@ -69,7 +104,7 @@ node scripts/check-layers.mjs                    # 分层方向（图元域常�
 ### 1.3 三条不变量（违反 = 通路静默失效）
 
 1. `bind_id = <devid>.<tag>` 是唯一 field 格式（= maotu bind_id = SSE 订阅键）；`@dev.*` /
-   `@meta.*` 前缀保留给参数化/宿主显示通道，`collectBinds` 不把它们放进订阅面（`src/lib/binds.ts:3-5`）。
+   `@meta.*` 前缀保留给参数化/宿主显示通道，`collectBinds` 不把它们放进订阅面（`src/lib/binds.ts:3-7`）。
 2. `bind_attr` 恒为 `props.<name>.val`（BindPanel 与 hmi-mcp 校验同款正则，`mcp/src/tools/screens.ts:101`）。
 3. BI 图元 `props.series` = 组态输入（JSON 串）、`props.data` = 运行态输出、**保存前复位 `'[]'`**
    （`src/lib/bi-sanitize.ts`——否则 maotu 拍平把运行态 JSON PUT 进文档，膨胀 128KiB 配额 + 陈旧首帧）。
@@ -454,7 +489,84 @@ e2e 种子：`global-setup.ts` 全量 PUT 幂等播种；临时画面用 `e2e-t3
 - 新图元/插件的回归位：`e2e/symbols.spec.ts`（陈列室渲染）、`e2e/plugin-dir.spec.ts`（插件三态）、
   `e2e/bi-dashboard.spec.ts`（BI 通道 B）。
 
-## 8. 文档地图
+## 8. 硬约束速查（2D）：必须 / 禁止 / 违反后果
+
+> 本节**不是新规则**——是把散落在 §1.3（三条不变量）、§3（11 个 lint 码）、§5（插件契约）、
+> `docs/standards.md` §5（六条红线）的约束汇总成一张自查表。每条给出「违反后果」与「谁在卡」，
+> 便于 review 时逐行核对。
+
+### 8.1 图元定义（编译期 `ah-*`）
+
+| 必须 / 禁止 | 违反后果 | 谁卡 |
+|---|---|---|
+| id 必须 `ah-<kebab>` 且全局唯一 | 面板项互相覆盖 / E2E 锚失效 | `symbol-lint` `ID_MISSING` + `groups.test.ts` |
+| 插件 id **禁止** `ah-` 前缀 | 与编译期图元撞命名空间 | `plugin-loader` 装载校验 |
+| 必须暴露 `props.fill`（type=color） | 状态变色绑定无从落地 | `FILL_MISSING` |
+| ports 锚位只能是 `leftTop` / `leftBottom` / `rightTop` | 其余位置**静默落画布原点** | `PORT_POSITION` |
+| svg 型必须有 viewBox + xmlns + 数值宽高 | 拖入无初值 / dataURI 解析失败 | `SVG_VIEWBOX` `SVG_XMLNS` |
+| viewBox 宽高必须 = 注册宽高 | 拖入几何错位 | `VIEWBOX_DIMS` |
+| XML 注释体**禁止**出现 `--` | parsererror → **整图元空白** | `SVG_COMMENT`（罐实测） |
+| animation(switch) prop 必须配影子链两半 | 动画静默不转 | `ANIM_CLASS` |
+| 缩略图 `data-ah-id` 必须 = id | E2E 定位锚失效 | `THUMB_ANCHOR` |
+| vue/custom-svg 的 input prop 默认值**禁止**空串 | `''` 被 maotu 换成 `#mt_slot` 占位串直达组件 | `VUE_EMPTY_STR` |
+| props 描述符必须有 title、type ∈ 九种、val ≠ undefined | 右面板静默无控件 | `PROP_SHAPE` |
+
+**四处登记漏一处**（`registry.ts` / `groups.ts` / `index.ts` / `main.ts`）→ 左面板找不到、
+或 custom-svg/vue 型渲染空白（`vueTagFor` 归一链断）。
+
+### 8.2 绑定与数据面
+
+| 必须 / 禁止 | 违反后果 | 依据 |
+|---|---|---|
+| `bind_id` 只能是 `<devid>.<tag>` | 订阅面与写入全部错位 | §1.3 不变量 1；`src/lib/binds.ts:3-7` |
+| `bind_attr` 只能是 `props.<name>.val` | maotu 写入不生效 | §1.3 不变量 2（BindPanel 与 hmi-mcp 同款正则） |
+| `@dev.*` / `@meta.*` 是**保留前缀** | 被当真实点位订阅 → 永远无数据 | `src/lib/binds.ts`（`collectBinds` 排除） |
+| BI 图元 `props.data` 保存前必须复位 `'[]'` | 运行态 JSON 被 PUT 进文档 → 撞 128 KiB + 陈旧首帧 | `src/lib/bi-sanitize.ts`；§1.3 不变量 3 |
+| 图元自身**禁止**发网络请求 | 绕过宿主聚合（BI 通道 B）/ 破坏一致性 | §1.2 |
+| **禁止**把运行态数据写进文档 | 文档膨胀 + 首帧陈旧 | §1.3 不变量 3 |
+
+### 8.3 分层与依赖
+
+| 必须 / 禁止 | 违反后果 | 谁卡 |
+|---|---|---|
+| `lib/` **禁止** import `symbols/` | 分层倒置 | `check-layers`（单点豁免 `src/lib/bi-contract.ts`） |
+| `lib/` **禁止** import `assets/` | 同上 | `check-layers`（单点豁免 `src/screen-assets/protected.ts`） |
+| 插件 loader 必须在 symbols 层 | 同上 | `check-layers` |
+| **禁止** maotu 源码 / 反编译产物入库 | 授权违约 | `docs/LICENSE-NOTES.md` + review |
+| 新豁免必须登记 `scripts/check-layers.mjs` 并写明理由 | 豁免腐化 | review（`docs/standards.md` §5） |
+
+### 8.4 工程与交付
+
+| 必须 / 禁止 | 违反后果 | 谁卡 |
+|---|---|---|
+| 纯逻辑图元**测试先行**（TDD） | review 阻断 | `docs/standards.md` §5 第 1 条 |
+| **禁止**改 maotu 包文件 / 打 patch | 升级即崩 | `docs/standards.md` §5 第 2 条 |
+| 挂载必须成对清理（事件 / 观察器 / 定时器） | 内存与监听泄漏 | `docs/standards.md` §5 第 5 条 |
+| 新图元必须有至少一条 e2e 断言 | review 阻断 | `docs/standards.md` §3.2（E2E 门） |
+| 长期资产画面必须登记 `protected.ts` | 可被误删 / 被 AI 改写 | §6.4 + hmi-mcp 保护闸 |
+| 插件必须**可降级**（未知 tag → 占位框 + 保存还原） | 插件缺席时**丢数据** | §5.5 `plugin-fallback.ts` |
+| 生成器产物中的图元必须已在 `protected.ts` 登记 | 同上 | §6.4 |
+
+## 9. 已知限制（2D 图元体系现状）
+
+> 全部是**现状事实**，不是待办清单。每条给出影响与依据，避免后来者误判能力边界。
+
+| # | 限制 | 影响 | 依据 |
+|---|---|---|---|
+| 1 | **没有统一的"物料目录/资产库"** | 查全量图元要合并三处（`BUILTIN_TAGS` + `groups.ts` + 运行时登记），没有单一 API；AI 只能问 `hmi_describe_widget_kit` | §1.1 |
+| 2 | **maotu 闭源**，不能改渲染管线 | 图元行为只能通过「注册项 + 组件」扩展；底层细节依赖实证文档 | `docs/maotu-*.md` |
+| 3 | 插件是**站点工件**，`widgets/` 被 gitignore | 换机/重装需重新 `install-plugin.mjs`；不在版本库里 | §5.3 |
+| 4 | 插件缺席降级为**占位框** | 不丢数据，但**不渲染**（需装回） | §5.5 |
+| 5 | 「我的符号」与画面是**独立资源族** | 画面回滚**不会**连带回滚符号；两者各自有版本（`sv:screen` / `sv:symbol`） | rs-iot `routes_meta.rs` |
+| 6 | 单文档 **128 KiB** 上限 | 图元极多或 BI 图元多时撞上限；运行态不复位会加速撞线 | §1.3；rs-iot `MAX_DOC_BYTES` |
+| 7 | 参数化画面依赖 `@dev.*` **模板绑定** | 不是任意图元都能参数化，需绑定侧支持模板重写 | §6.3 |
+| 8 | 无 i18n | 图元 title/描述中文硬编码 | 全仓 |
+| 9 | a11y 未系统化 | 仅个别图元有 role/aria | 全仓 |
+| 10 | E2E 锚依赖 id 前缀 | 改 id 要连带改 e2e（`[id^="ah-"]`） | §3 第 5 步 |
+| 11 | 后端**不校验图元语义** | 只校验大小/JSON 语法/id 词法 → 写坏需前端 `symbol-lint` 与 hmi-mcp 拦 | rs-iot `routes_meta.rs`（无 schema 校验） |
+| 12 | 文档内**计数口径不一** | §1.1 写「编译期 47」是旧值；§2 与 `registry.ts` 头注释均为 **56**（过程/操作 27 + BI 20 + 工业功能件 9） | 权威源 = `src/symbols/groups.ts` 的 `SYMBOL_GROUP_DEFS` + `registry.ts` |
+
+## 10. 文档地图
 
 | 要做什么 | 看哪里 |
 |---|---|
