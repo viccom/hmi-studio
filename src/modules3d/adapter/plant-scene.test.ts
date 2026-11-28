@@ -12,7 +12,17 @@ import type { SceneBinding, SceneEventRule } from '../scene3d'
  * 单位与 iot-catalog 一致（同一台设备的单位在 2D 画面与 3D 场景里不能各写一份）。
  */
 const doc = buildPlantScene()
-const objects = doc.objects as Array<{ id: string; bid: string; type: string; name: string; geometry: { type: string } }>
+/** 断言用的宽松对象视图（生成器产出的对象字段比契约里的 unknown[] 更具体） */
+interface ObjT {
+  id: string
+  bid: string
+  type: string
+  name: string
+  position: { x: number; y: number; z: number }
+  geometry: { type: string; parameters: Record<string, unknown> }
+  material: Record<string, unknown>
+}
+const objects = doc.objects as unknown as ObjT[]
 const bindings = doc.bindings as SceneBinding[]
 const events = doc.events as SceneEventRule[]
 const bids = new Set(objects.map((o) => o.bid))
@@ -98,5 +108,49 @@ describe('厂区 DEMO 场景生成器（v2）', () => {
       if (e.do.type !== 'navigate') continue
       expect(e.do.slug).toBe(faceplateSlug(e.do.dev as string))
     }
+  })
+
+  /**
+   * 管线走**架空管廊**且不穿设备（2026-11-28 复核 scada-hmi-builder 后改）。
+   *
+   * 旧版固定在 y=0.55 从设备中心连到中心：水表表体高到 1.0 m、电表柜体高 1.5 m，
+   * 管线正好切过设备几何体。现在按介质分层，且端点收到设备接线端面之外。
+   */
+  it('管线沿设备顶面敷设：水/燃气一档、电缆一档（不穿设备）', () => {
+    const pipes = objects.filter((o) => o.name.startsWith('水管') || o.name.startsWith('燃气管') || o.name.startsWith('电缆'))
+    expect(pipes.length).toBeGreaterThan(0)
+    const byName = (prefix: string) => pipes.filter((o) => o.name.startsWith(prefix))
+    // 水/燃气表顶 1.03 m → 管线 1.09（管底贴住顶面）；配电柜顶 1.505 m → 1.56
+    for (const p of byName('水管')) expect(p.position.y).toBeCloseTo(1.09, 5)
+    for (const p of byName('燃气管')) expect(p.position.y).toBeCloseTo(1.09, 5)
+    for (const p of byName('电缆')) expect(p.position.y).toBeCloseTo(1.56, 5)
+    // 法兰与主管同一高度（否则接缝错位）
+    for (const p of pipes) expect([1.09, 1.56]).toContain(p.position.y)
+  })
+
+  it('管线按介质配色（不再是单一灰蓝），自发光色同介质色相', () => {
+    const water = objects.find((o) => o.name.startsWith('水管'))!
+    const gas = objects.find((o) => o.name.startsWith('燃气管'))!
+    const power = objects.find((o) => o.name.startsWith('电缆'))!
+    const colorOf = (o: { material: unknown }) => Number((o.material as { color?: unknown }).color)
+    const colors = new Set([colorOf(water), colorOf(gas), colorOf(power)])
+    expect(colors.size).toBe(3) // 三种介质三种颜色
+    // 绑定里的发光色也应与管线色区分（不能全部青色，否则介质语义断裂）
+    const glowColors = new Set(
+      bindings.filter((b) => b.kind === 'emissive' && b.field.includes('flow') || b.field.includes('active_power'))
+        .map((b) => Number((b.config as { color?: unknown }).color)),
+    )
+    expect(glowColors.size).toBeGreaterThanOrEqual(2)
+  })
+
+  it('管线端点收到设备接线端面之外（不穿进设备几何体）', () => {
+    // 水表接线端面 x=±0.75：管网 |Δx| 必须短于设备间距（3 m）但长于两端端面之和
+    const roots = objects.filter((o) => /^plant_link_wm1_wm2_(pipe|flange_a|flange_b)$/.test(o.bid))
+    expect(roots.length).toBe(3)
+    const pipe = roots.find((o) => o.bid.endsWith('_pipe'))!
+    // 水表间距 3 m，两端各收回 0.75 → 管长约 1.5 m（CylinderGeometry 的 height）
+    const len = Number((pipe.geometry.parameters as { height?: unknown }).height)
+    expect(len).toBeCloseTo(3 - 0.75 * 2, 1)
+    expect(len).toBeGreaterThan(1)
   })
 })

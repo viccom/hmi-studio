@@ -110,22 +110,33 @@ export function applyBinding(sm: RuntimeSceneManager, b: SceneBinding, value: nu
       return true
     }
     case 'label': {
-      const unit = String((b.config as { unit?: unknown })?.unit ?? '')
-      const precision = Number((b.config as { precision?: unknown })?.precision ?? 1)
+      const cfg = b.config as {
+        unit?: unknown
+        precision?: unknown
+        position?: { x: number; y: number; z: number }
+        offset?: { x: number; y: number }
+        color?: unknown
+      }
+      const unit = String(cfg.unit ?? '')
+      const precision = Number(cfg.precision ?? 1)
       const text = `${value.toFixed(precision)}${unit}`
       const labelId = `lbl_${b.id}`
-      const pos = (b.config as { position?: { x: number; y: number; z: number } })?.position
+      const pos = cfg.position
       if (pos && sm.labelManager) {
         // 首次创建（已存在则 update 由调用方决定；这里幂等：createLabel 对重复 id 会告警并返回原 id）
         sm.labelManager.createLabel({
           id: labelId,
           position: pos,
           content: text,
+          // 屏幕像素偏移（vendor 机制已有，此前没传）：多块牌挂在同一区域时靠它错开，
+          // 避免数值牌互相压住（scada-hmi-builder 的 dx/dy 做法）
+          offset: cfg.offset,
           // pointerEvents:'none'：标签是**只读覆盖层**，不能吃掉设备的点击
           // （vendor LabelManager 默认给标签元素 pointerEvents:'auto'，标签正好浮在
           //  设备上方 → 点设备会点到标签，点不动设备——2026-11-27 实测踩到）
           style: {
-            color: '#1de0ff', fontSize: '12px', background: 'rgba(8,18,28,.86)', padding: '2px 6px', borderRadius: '3px',
+            color: typeof cfg.color === 'string' ? cfg.color : '#1de0ff',
+            fontSize: '12px', background: 'rgba(8,18,28,.86)', padding: '2px 6px', borderRadius: '3px',
             pointerEvents: 'none',
           },
         })

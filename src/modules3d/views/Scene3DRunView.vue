@@ -58,11 +58,14 @@ const prioByDev = ref(new Map<string, number>())
 const loadError = ref('')
 
 // 上游实例（类型放宽：vendor 是 JS）
+type OrbitControlsFace = { minPolarAngle: number; maxPolarAngle: number }
 type AnySM = {
   objects: unknown[]
   camera: unknown
   scene: unknown
   renderer: { domElement: HTMLCanvasElement }
+  /** 相机控制器聚合层（`controls: Map<'orbit'|'ghost', …>`）——用于从外部设极角限位 */
+  controlManager?: { controls?: Map<string, { getOrbitControls?: () => OrbitControlsFace }> }
   findObjectByBid(bid: string): unknown
   on(ev: string, cb: (d: unknown) => void): void
   off(ev: string, cb: (d: unknown) => void): void
@@ -206,6 +209,25 @@ function onSceneClick(payload: unknown): void {
   }
 }
 
+/**
+ * 相机极角限位：禁止镜头钻到地面以下 / 看到地平线以下（改自 scada-hmi-builder 的
+ * 2.5D 相机约束思路——我们保留自由轨道，只限俯仰）。
+ *
+ * 为什么不改 vendor：`SceneManager.controlManager.controls` 是公开 Map，
+ * `OrbitCameraControl.getOrbitControls()` 也是公开方法（`OrbitCameraControl.js:132`），
+ * 外部直接设 OrbitControls 的 min/maxPolarAngle 即可，零 vendor 改动。
+ *
+ * 数值：polar 从 +Y 轴量起（0 = 正俯视，π/2 = 水平）。0.12 rad ≈ 7°，
+ * 1.45 rad ≈ 83°——上限留 7° 余量，避免贴到水平时穿地面。初始视角
+ * (10.5, 6.5, 10.5)→(0, 0.6, 0) 的 polar ≈ 1.19 rad，落在区间内，不会被拉回。
+ */
+function applyCameraLimits(target: AnySM): void {
+  const orbit = target.controlManager?.controls?.get('orbit')?.getOrbitControls?.()
+  if (!orbit) return
+  orbit.minPolarAngle = 0.12
+  orbit.maxPolarAngle = 1.45
+}
+
 /** 面板按钮：进入 2D 设备面板（目标来自场景的 navigate 规则，无则回退 2D 目录 faceplate） */
 function enterFaceplate(): void {
   const d = panelDevice.value
@@ -243,6 +265,7 @@ onMounted(async () => {
   canvas.style.height = '100%'
   host.value.appendChild(canvas)
   sm = new SceneManager(canvas) as unknown as AnySM
+  applyCameraLimits(sm)
 
   // 运行页不传 editorStore / dbManager（上游两者均可选；渲染不依赖它们）
   const PM = PersistenceManager as unknown as new (sm: unknown, store?: unknown, db?: unknown) => unknown

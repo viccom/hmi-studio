@@ -33,7 +33,6 @@ import type { SceneBinding, SceneDoc, SceneEventRule, Vec3 } from '../scene3d'
 const C = {
   floor: 0x101d2e,
   frame: 0x24405a,
-  body: 0x6b8299,
   live: 0x1de0ff,
   area: {
     water: 0x16283a,
@@ -88,14 +87,53 @@ const PART_ANCHOR: Record<string, { main: string; lamp: string; clickable: strin
   'pressure-transmitter': { main: '表头', lamp: '表头', clickable: ['表头', '支杆'] },
 }
 
-/** 管线 / 电缆（沿用 v1 DEMO 的连接关系；flow = 管线上的流量点） */
+/**
+ * 管线/电缆（沿用 v1 DEMO 的连接关系；flow = 管线上的流量点）。
+ *
+ * `medium` 决定**介质配色 + 管廊高度 + 管径**（见 MEDIA）——v1 与旧版生成器只有
+ * 「pipe/cable 两色」，管网是单一灰蓝、且管线在设备中部高度**穿过设备几何体**
+ * （2026-11-28 复核后改）。
+ */
 const LINKS = [
-  { from: 'dev_wm1', to: 'dev_wm2', kind: 'pipe' as const, flow: 'dev_wm1.flow_rate' },
-  { from: 'dev_wm2', to: 'dev_wm3', kind: 'pipe' as const, flow: 'dev_wm2.flow_rate' },
-  { from: 'dev_gm1', to: 'dev_gm2', kind: 'pipe' as const, flow: 'dev_gm1.flow_rate' },
-  { from: 'dev_em1', to: 'dev_em2', kind: 'cable' as const, flow: 'dev_em1.active_power' },
-  { from: 'dev_em2', to: 'dev_em3', kind: 'cable' as const, flow: 'dev_em2.active_power' },
+  { from: 'dev_wm1', to: 'dev_wm2', medium: 'water' as const, flow: 'dev_wm1.flow_rate' },
+  { from: 'dev_wm2', to: 'dev_wm3', medium: 'water' as const, flow: 'dev_wm2.flow_rate' },
+  { from: 'dev_gm1', to: 'dev_gm2', medium: 'gas' as const, flow: 'dev_gm1.flow_rate' },
+  { from: 'dev_em1', to: 'dev_em2', medium: 'power' as const, flow: 'dev_em1.active_power' },
+  { from: 'dev_em2', to: 'dev_em3', medium: 'power' as const, flow: 'dev_em2.active_power' },
 ] as const
+
+/**
+ * 介质规格：配色 / 自发光色 / 管廊高度 / 管径。
+ *
+ * - **配色**压在低饱和区间（HP-HMI：常态灰阶，饱和色只给状态）——介质色用于「区分是什么」，
+ *   不用于「表达好坏」；好坏仍由 emissive 绑定（流量越大越亮）承担。
+ * - **高度沿设备顶面敷设**（设备顶高 + 0.06 m，恰好让管底贴住顶面）：旧版固定在
+ *   0.55 m 正好切过水表/燃气表的表体中段，管线穿进设备几何体。实测设备顶高：
+ *   水表/燃气表 1.03 m、配电柜 1.505 m，故两类设备各用一档高度。
+ * - `glow` 用**同色相**（不是统一的青色）：否则燃气/电缆管线会被涂成"水"的青色，
+ *   介质的视觉语义就断了。
+ */
+const MEDIA = {
+  water: { color: 0x3f7f99, glow: 0x1de0ff, y: 1.09, r: 0.09, label: '水管' },
+  gas: { color: 0x9a8338, glow: 0xd9a83c, y: 1.09, r: 0.07, label: '燃气管' },
+  power: { color: 0x3a6b85, glow: 0x3d9dff, y: 1.56, r: 0.05, label: '电缆' },
+} as const
+
+/**
+ * 各图元的「接线端面」半径（米）——管线在此收住，视觉上接在接管/柜体侧面。
+ *
+ * 数值取自 `industrial-parts.ts` 的子件尺寸：水表接管伸到 x=±0.75（0.5 中心 + 0.5 长），
+ * 燃气表 ±0.77，电表柜体半宽 0.525。这是 scada-hmi-builder 的「设备接口登记」思路
+ * 的**最小实现**：不引入新语义层字段，只在生成器里把接口位置固化成常量。
+ * （真正的"设备挪动时管线跟随"需要新语义层，见复核结论第 1 条，不在本批。）
+ */
+const PART_NOZZLE_R: Record<string, number> = {
+  'water-meter': 0.75,
+  'gas-meter': 0.77,
+  'power-meter': 0.55,
+  'env-sensor': 0.36,
+  'pressure-transmitter': 0.3,
+}
 
 /** 初始视角（米）——与 `meta.home` 一致，编辑器/运行页都按它定相机 */
 const HOME = { pos: [10.5, 6.5, 10.5] as Vec3, target: [0, 0.6, 0] as Vec3 }
@@ -193,15 +231,40 @@ function pipeRotation(from: Vec3, to: Vec3): { x: number; y: number; z: number }
   return { x: e.x, y: e.y, z: e.z }
 }
 
-/** 管线（+ 两端法兰）：从设备中心连到设备中心，抬高 0.55 m */
+/** devid → 图元 id（管线端点收缩量按图元的接线端面查） */
+const PART_OF: Record<string, string> = Object.fromEntries(DEVICES.map((d) => [d.devid, d.part]))
+
+/** 沿 toward 方向把端点推进 dist（把管线端点从设备中心收到接线端面） */
+function insetEnd(p: Vec3, toward: Vec3, dist: number): Vec3 {
+  const dx = toward[0] - p[0]
+  const dz = toward[2] - p[2]
+  const len = Math.hypot(dx, dz)
+  if (len <= dist) return p
+  const k = dist / len
+  return [p[0] + dx * k, p[1], p[2] + dz * k]
+}
+
+/**
+ * 管线（+ 两端法兰）：从设备的**接线端面**连到端面，走架空管廊高度。
+ *
+ * 与旧版（2026-11-27）的三处差异，均由复核 scada-hmi-builder 后确认：
+ *   ① 高度取 `MEDIA[medium].y`——旧版固定 0.55 m 正好切过水表/燃气表的表体中段，
+ *      管线**穿进设备几何体**；现在走设备顶面上方 0.1~0.15 m 的架空管廊。
+ *   ② 端点按 `PART_NOZZLE_R` 收到设备外缘——旧版从设备中心连到设备中心。
+ *   ③ 材质按介质配色（`MEDIA`）而非统一灰蓝；自发光色同介质色相。
+ */
 function linkObjects(link: (typeof LINKS)[number], byDev: Map<string, Vec3>): PlantObject[] {
   const a = byDev.get(link.from)
   const b = byDev.get(link.to)
   if (!a || !b) throw new Error(`plant-scene: 管线端点缺失 ${link.from}→${link.to}`)
-  const p1: Vec3 = [a[0], 0.55, a[2]]
-  const p2: Vec3 = [b[0], 0.55, b[2]]
+  const m = MEDIA[link.medium]
+  const y = m.y
+  const rawFrom: Vec3 = [a[0], y, a[2]]
+  const rawTo: Vec3 = [b[0], y, b[2]]
+  const p1 = insetEnd(rawFrom, rawTo, PART_NOZZLE_R[PART_OF[link.from]] ?? 0.4)
+  const p2 = insetEnd(rawTo, rawFrom, PART_NOZZLE_R[PART_OF[link.to]] ?? 0.4)
   const len = Math.hypot(p2[0] - p1[0], p2[2] - p1[2])
-  const r = link.kind === 'pipe' ? 0.09 : 0.05
+  const r = m.r
   const rot = pipeRotation(p1, p2)
   const mid: Vec3 = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2, (p1[2] + p2[2]) / 2]
   const cyl = (radius: number, height: number, at: Vec3, tag: string): PlantObject => {
@@ -210,7 +273,7 @@ function linkObjects(link: (typeof LINKS)[number], byDev: Map<string, Vec3>): Pl
       id: bid,
       bid,
       type: 'CylinderGeometry',
-      name: `${link.kind === 'pipe' ? '水管' : '电缆'} ${link.from}→${link.to}${tag === 'pipe' ? '' : ` ${tag}`}`,
+      name: `${m.label} ${link.from}→${link.to}${tag === 'pipe' ? '' : ` ${tag}`}`,
       visible: true,
       position: { x: at[0], y: at[1], z: at[2] },
       rotation: rot,
@@ -229,11 +292,11 @@ function linkObjects(link: (typeof LINKS)[number], byDev: Map<string, Vec3>): Pl
         },
       },
       material: {
-        color: link.kind === 'pipe' ? C.body : C.live,
+        color: m.color,
         roughness: 0.7,
-        metalness: link.kind === 'pipe' ? 0.25 : 0.1,
-        emissive: link.kind === 'pipe' ? 0x000000 : C.live,
-        emissiveIntensity: link.kind === 'pipe' ? 1 : 0.6,
+        metalness: 0.25,
+        emissive: m.glow,
+        emissiveIntensity: 0.12, // 常态微光；流量绑定会按实测值抬到 0.6 左右
         opacity: 1,
         transparent: false,
       },
@@ -384,7 +447,8 @@ export function buildPlantScene(): SceneDoc {
       field: link.flow,
       devId: link.from,
       kind: 'emissive',
-      config: { color: C.live, scale: 1.2 / span },
+      // 自发光色**同介质色相**：否则燃气/电缆管线会被涂成水的青色，介质语义就断了
+      config: { color: MEDIA[link.medium].glow, scale: 1.2 / span },
     })
   }
 
